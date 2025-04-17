@@ -308,12 +308,16 @@ namespace StockNewsPage.ViewModels
             if (enteredStocks == null || enteredStocks.Count == 0)
                 return true;
 
-            var allStocks = _stocksRepository.GetAllStocks();
+            var allStocks = _stocksRepository.GetAllStocks() 
+                ?? throw new InvalidOperationException("Failed to retrieve stocks from repository");
 
             // check if all entered stocks exist (by name or symbol)
             var invalidStocks = new List<string>();
             foreach (var stock in enteredStocks)
             {
+                if (string.IsNullOrEmpty(stock))
+                    throw new ArgumentException("Stock name cannot be null or empty", nameof(enteredStocks));
+
                 bool stockExists = allStocks.Any(s =>
                     s.Name.Equals(stock, StringComparison.OrdinalIgnoreCase) ||
                     s.Symbol.Equals(stock, StringComparison.OrdinalIgnoreCase));

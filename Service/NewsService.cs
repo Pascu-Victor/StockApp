@@ -45,36 +45,37 @@ namespace StockApp.Service
             }
         }
 
-        public async Task<NewsArticle> GetNewsArticleByIdAsync(string articleId)
+        public async Task<NewsArticle> GetNewsArticleByIdAsync(string lookupId)
         {
-            // Check if this is a preview article and extract the actual ID
-            string lookupId = articleId;
-            if (articleId.StartsWith("preview:"))
-            {
-                lookupId = articleId.Substring(8); // Remove "preview:" prefix
-            }
+            if (string.IsNullOrEmpty(lookupId))
+                throw new ArgumentNullException(nameof(lookupId));
 
             // First check if this is a preview article using the correct lookup ID
             if (_previewArticles.TryGetValue(lookupId, out var previewArticle))
             {
-                return previewArticle;
+                return previewArticle ?? throw new InvalidOperationException($"Preview article with ID {lookupId} is null");
             }
 
             await Task.Delay(200);
 
             try
             {
-                return await Task.Run(() => _repository.GetNewsArticleById(lookupId));
+                var article = await Task.Run(() => _repository.GetNewsArticleById(lookupId));
+                return article ?? throw new InvalidOperationException($"Article with ID {lookupId} not found");
             }
             catch
             {
                 var mockArticles = _repository.GetAllNewsArticles();
-                return mockArticles.FirstOrDefault(a => a.ArticleId == lookupId);
+                return mockArticles.FirstOrDefault(a => a.ArticleId == lookupId) 
+                    ?? throw new InvalidOperationException($"Article with ID {lookupId} not found in mock data");
             }
         }
 
         public async Task<bool> MarkArticleAsReadAsync(string articleId)
         {
+            if (string.IsNullOrEmpty(articleId))
+                throw new ArgumentNullException(nameof(articleId));
+
             await Task.Delay(100);
 
             try
@@ -90,13 +91,15 @@ namespace StockApp.Service
                 {
                     article.IsRead = true;
                 }
-                // rn, return success
                 return true;
             }
         }
 
         public async Task<bool> CreateArticleAsync(NewsArticle article)
         {
+            if (article == null)
+                throw new ArgumentNullException(nameof(article));
+
             // ensure user is logged in
             if (_appState.CurrentUser == null)
             {
@@ -283,13 +286,16 @@ namespace StockApp.Service
             }
 
             await Task.Delay(200);
-            // this supposed to be DIFFERENT BUT AINT NO WAY IT COULD BE CHANGED WITH THE CURRENT CODEBASE
-
-            return null;
+            throw new InvalidOperationException("No user is currently logged in");
         }
 
         public async Task<User> LoginAsync(string username, string password)
         {
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentNullException(nameof(username));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException(nameof(password));
+
             await Task.Delay(300);
 
             if (username == "admin" && password == "admin")
@@ -329,7 +335,7 @@ namespace StockApp.Service
                     "imagine", false);
             }
 
-            return null;
+            throw new UnauthorizedAccessException("Invalid username or password");
         }
 
         public void Logout()

@@ -20,17 +20,11 @@ namespace StockNewsPage.Views
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.Article != null)
-            {
-                if (ViewModel.Article.RelatedStocks != null)
-                {
-                    ViewModel.HasRelatedStocks = ViewModel.Article.RelatedStocks.Any();
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"PAGE LOADED - RelatedStocks is NULL");
-                }
-            }
+            if (ViewModel.Article == null)
+                return;
+
+            // Using null-conditional operator to safely access RelatedStocks
+            ViewModel.HasRelatedStocks = ViewModel.Article.RelatedStocks?.Any() ?? false;
         }
 
         private void RelatedStockClick(object sender, RoutedEventArgs e)
@@ -48,6 +42,10 @@ namespace StockNewsPage.Views
             if (e.Parameter is string articleId)
             {
                 ViewModel.LoadArticle(articleId);
+            }
+            else
+            {
+                throw new ArgumentException("Navigation parameter must be a string article ID", nameof(e));
             }
         }
     }

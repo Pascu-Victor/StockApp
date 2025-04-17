@@ -82,7 +82,7 @@ namespace StockNewsPage.ViewModels
                 if (SetProperty(ref _selectedArticle, value) && value != null)
                 {
                     // nav to preview when selected article changes
-                    NavigateToPreview(value);
+                    NavigateToPreview(value ?? throw new ArgumentNullException(nameof(value)));
                     SelectedArticle = null;
                 }
             }

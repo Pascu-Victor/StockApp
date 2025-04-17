@@ -820,18 +820,20 @@ namespace StockApp.Repository
 
         public void RejectUserArticle(string articleId)
         {
-            var article = GetUserArticleById(articleId);
-            if (article != null)
-            {
-                article.Status = "Rejected";
-                UpdateUserArticle(article);
+            if (string.IsNullOrEmpty(articleId))
+                throw new ArgumentNullException(nameof(articleId));
 
-                // Remove from news articles if it exists
-                var existingNewsArticle = GetNewsArticleById(article.ArticleId);
-                if (existingNewsArticle != null)
-                {
-                    DeleteNewsArticle(article.ArticleId);
-                }
+            var article = GetUserArticleById(articleId) 
+                ?? throw new InvalidOperationException($"User article with ID {articleId} not found");
+            
+            article.Status = "Rejected";
+            UpdateUserArticle(article);
+
+            // Remove from news articles if it exists
+            var existingNewsArticle = GetNewsArticleById(article.ArticleId);
+            if (existingNewsArticle != null)
+            {
+                DeleteNewsArticle(article.ArticleId);
             }
         }
 

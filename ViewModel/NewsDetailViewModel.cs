@@ -92,7 +92,7 @@ namespace StockNewsPage.ViewModels
         public async void LoadArticle(string articleId)
         {
             if (string.IsNullOrEmpty(articleId))
-                return;
+                throw new ArgumentNullException(nameof(articleId));
 
             IsLoading = true;
 
@@ -108,27 +108,29 @@ namespace StockNewsPage.ViewModels
                     // admin preview
                     IsAdminPreview = true;
 
-                    var userArticle = _newsService.GetUserArticleForPreview(_previewId);
-                    if (userArticle != null)
-                    {
-                        ArticleStatus = userArticle.Status;
-                        CanApprove = userArticle.Status != "Approved";
-                        CanReject = userArticle.Status != "Rejected";
-                    }
+                    var userArticle = _newsService.GetUserArticleForPreview(_previewId) 
+                        ?? throw new InvalidOperationException($"User article with ID {_previewId} not found");
+            
+                    ArticleStatus = userArticle.Status;
+                    CanApprove = userArticle.Status != "Approved";
+                    CanReject = userArticle.Status != "Rejected";
 
                     var article = await _newsService.GetNewsArticleByIdAsync(articleId);
-
-                    _dispatcherQueue.TryEnqueue(() =>
+                    if (article != null)
                     {
-                        if (article != null)
+                        _dispatcherQueue.TryEnqueue(() =>
                         {
                             Article = article;
                             HasRelatedStocks = article.RelatedStocks != null && article.RelatedStocks.Any();
                             System.Diagnostics.Debug.WriteLine($"Related stocks count: {article.RelatedStocks?.Count ?? 0}");
-                        }
-                        else
+                            IsLoading = false;
+                        });
+                    }
+                    else
+                    {
+                        // Article not found
+                        _dispatcherQueue.TryEnqueue(() =>
                         {
-                            // Article not found
                             Article = new NewsArticle
                             {
                                 Title = "Article Not Found",
@@ -137,47 +139,47 @@ namespace StockNewsPage.ViewModels
                             };
                             HasRelatedStocks = false;
                             System.Diagnostics.Debug.WriteLine("Preview article not found");
-                        }
-
-                        IsLoading = false;
-                    });
+                            IsLoading = false;
+                        });
+                    }
                 }
                 else
                 {
                     _isPreviewMode = false;
                     _currentArticleId = articleId;
                     IsAdminPreview = false;
-                }
 
-                // For non-preview articles, continue with existing logic
-                var regularArticle = await _newsService.GetNewsArticleByIdAsync(articleId);
-
-                _dispatcherQueue.TryEnqueue(async () =>
-                {
-                    if (regularArticle != null)
+                    var article = await _newsService.GetNewsArticleByIdAsync(articleId);
+                    if (article != null)
                     {
-                        Article = regularArticle;
-                        HasRelatedStocks = regularArticle.RelatedStocks != null && regularArticle.RelatedStocks.Any();
-
-                        // Mark as read if not in preview mode
-                        if (!_isPreviewMode)
+                        _dispatcherQueue.TryEnqueue(async () =>
                         {
-                            await _newsService.MarkArticleAsReadAsync(articleId);
-                        }
+                            Article = article;
+                            HasRelatedStocks = article.RelatedStocks != null && article.RelatedStocks.Any();
+
+                            // Mark as read if not in preview mode
+                            if (!_isPreviewMode)
+                            {
+                                await _newsService.MarkArticleAsReadAsync(articleId);
+                            }
+                            IsLoading = false;
+                        });
                     }
                     else
                     {
                         // Article not found
-                        Article = new NewsArticle
+                        _dispatcherQueue.TryEnqueue(() =>
                         {
-                            Title = "Article Not Found",
-                            Summary = "The requested article could not be found.",
-                            Content = "The article you are looking for may have been removed or is no longer available."
-                        };
+                            Article = new NewsArticle
+                            {
+                                Title = "Article Not Found",
+                                Summary = "The requested article could not be found.",
+                                Content = "The article you are looking for may have been removed or is no longer available."
+                            };
+                            IsLoading = false;
+                        });
                     }
-
-                    IsLoading = false;
-                });
+                }
             }
             catch (Exception ex)
             {
@@ -191,7 +193,6 @@ namespace StockNewsPage.ViewModels
                         Summary = "There was an error loading the article.",
                         Content = "Please try again later or contact support if the problem persists."
                     };
-
                     IsLoading = false;
                 });
             }

@@ -69,7 +69,7 @@ namespace StockApp.Repository
                     }
                 }
             }
-            return null;
+            throw new InvalidOperationException("No CNP found in the database");
         }
 
         public List<HomepageStock> LoadStocks()

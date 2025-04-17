@@ -19,7 +19,7 @@ namespace StockApp.Service
 
         public void Initialize(Frame frame)
         {
-            _frame = frame;
+            _frame = frame ?? throw new ArgumentNullException(nameof(frame));
         }
 
         public bool Navigate(Type pageType, object parameter = null)
@@ -27,7 +27,7 @@ namespace StockApp.Service
             if (_frame == null)
                 throw new InvalidOperationException("NavigationService not initialized. Call Initialize first.");
 
-            return _frame.Navigate(pageType, parameter);
+            return _frame.Navigate(pageType ?? throw new ArgumentNullException(nameof(pageType)), parameter);
         }
 
         public void GoBack()
