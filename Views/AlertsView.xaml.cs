@@ -1,60 +1,44 @@
-namespace StockApp.Views
+namespace Alerts
 {
     using System;
     using System.Collections.ObjectModel;
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Controls;
     using StockApp.Models;
-    using StockApp.Repositories;
+    using StockApp.ViewModel;
 
     public sealed partial class AlertsView : Page
     {
-        private readonly AlertRepository _alertRepository = new AlertRepository();
-        private ObservableCollection<Alert> _alerts;
+        private readonly AlertViewModel alertViewModel = new ();
 
         public AlertsView()
         {
             this.InitializeComponent();
-            LoadAlerts();
+            this.LoadAlerts();
         }
 
-        private void LoadAlerts()
-        {
-            _alerts = new ObservableCollection<Alert>(_alertRepository.GetAllAlerts());
-            AlertsListView.ItemsSource = _alerts;
-        }
+        private void LoadAlerts() => this.AlertsListView.ItemsSource = new ObservableCollection<Alert>(this.alertViewModel.Alerts);
 
         private void PlusButton_Click(object sender, RoutedEventArgs e)
         {
-            var newAlert = new Alert
-            {
-                AlertId = -1, // Temporary ID for new alert
-                StockName = "Tesla",
-                Name = "New Alert",
-                UpperBound = 100,
-                LowerBound = 0,
-                ToggleOnOff = true
-            };
-
-            _alertRepository.AddAlert(newAlert);
-            _alerts.Add(newAlert);
-            AlertsListView.SelectedItem = newAlert;
+            Alert newAlert = this.alertViewModel.CreateAlert("Tesla", "New Alert", 100, 0, true);
+            this.AlertsListView.SelectedItem = newAlert;
         }
 
         private async void MinusButtonClick(object sender, RoutedEventArgs e)
         {
-            if (AlertsListView.SelectedItem is Alert selectedAlert)
+            if (this.AlertsListView.SelectedItem is Alert selectedAlert)
             {
-                _alertRepository.DeleteAlert(selectedAlert.AlertId);
-                _alerts.Remove(selectedAlert);
+                this.alertViewModel.DeleteAlert(selectedAlert.AlertId);
 
                 var dialog = new ContentDialog
                 {
                     Title = "Success",
                     Content = "Alert deleted successfully",
                     CloseButtonText = "OK",
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
                 };
+
                 await dialog.ShowAsync();
             }
             else
@@ -64,8 +48,9 @@ namespace StockApp.Views
                     Title = "Error",
                     Content = "Please select an alert to delete",
                     CloseButtonText = "OK",
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
                 };
+
                 await dialog.ShowAsync();
             }
         }
@@ -74,13 +59,14 @@ namespace StockApp.Views
         {
             try
             {
-                foreach (var alert in _alerts)
+                foreach (var alert in this.alertViewModel.Alerts)
                 {
                     if (alert.LowerBound > alert.UpperBound)
                     {
                         throw new Exception("Lower bound cannot be greater than upper bound");
                     }
-                    _alertRepository.UpdateAlert(alert);
+
+                    this.alertViewModel.UpdateAlert(alert);
                 }
 
                 var dialog = new ContentDialog
@@ -88,8 +74,9 @@ namespace StockApp.Views
                     Title = "Success",
                     Content = "All alerts saved successfully",
                     CloseButtonText = "OK",
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
                 };
+
                 await dialog.ShowAsync();
             }
             catch (Exception ex)
@@ -99,7 +86,7 @@ namespace StockApp.Views
                     Title = "Error",
                     Content = ex.Message,
                     CloseButtonText = "OK",
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
                 };
                 await dialog.ShowAsync();
             }

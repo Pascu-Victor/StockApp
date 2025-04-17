@@ -2,7 +2,7 @@
 {
     public class Alert
     {
-        required public int AlertId { get; set; } // Primary Key
+        public int AlertId { get; set; } // Primary Key
 
         public string StockName { get; set; }
 

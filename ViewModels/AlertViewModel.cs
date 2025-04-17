@@ -3,57 +3,34 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
     using StockApp.Models;
+    using StockApp.Service;
 
-    public class AlertService
+    public class AlertViewModel
     {
-        private readonly List<Alert> _alerts = new List<Alert>();
-        private int _nextId = 1; 
+        private readonly AlertService alertService = new ();
 
-        public List<Alert> GetAllAlerts()
-        {
-            return _alerts;
-        }
+        public List<Alert> Alerts => this.alertService.GetAllAlerts();
 
-        public Alert GetAlertById(int alertId)
-        {
-            return _alerts.FirstOrDefault(a => a.AlertId == alertId);
-        }
+        public Alert GetAlertById(int alertId) =>
+            this.alertService.GetAlertById(alertId) ?? throw new Exception($"Alert with ID {alertId} not found.");
 
-        public void CreateAlert(string stockName, string name, int upperBound, int lowerBound, bool toggleOnOff)
-        {
-            var newAlert = new Alert
-            {
-                AlertId = _nextId++, 
-                StockName = stockName,
-                Name = name,
-                UpperBound = upperBound,
-                LowerBound = lowerBound,
-                ToggleOnOff = toggleOnOff
-            };
-            _alerts.Add(newAlert);
-        }
+        public Alert CreateAlert(string stockName, string name, int upperBound, int lowerBound, bool toggleOnOff) =>
+            this.alertService.CreateAlert(stockName, name, upperBound, lowerBound, toggleOnOff);
 
-        public bool UpdateAlert(int alertId, string stockName, string name, int upperBound, int lowerBound, bool toggleOnOff)
-        {
-            var alert = GetAlertById(alertId);
-            if (alert == null) return false;
+        public void UpdateAlert(int alertId, string stockName, string name, int upperBound, int lowerBound, bool toggleOnOff) =>
+            this.alertService.UpdateAlert(alertId, stockName, name, upperBound, lowerBound, toggleOnOff);
 
-            alert.StockName = stockName;
-            alert.Name = name;
-            alert.UpperBound = upperBound;
-            alert.LowerBound = lowerBound;
-            alert.ToggleOnOff = toggleOnOff;
-            return true;
-        }
+        public void UpdateAlert(Alert alert) =>
+            this.alertService.UpdateAlert(
+                alert.AlertId,
+                alert.StockName,
+                alert.Name,
+                alert.UpperBound,
+                alert.LowerBound,
+                alert.ToggleOnOff);
 
-        public bool DeleteAlert(int alertId)
-        {
-            var alert = GetAlertById(alertId);
-            if (alert == null) return false;
-
-            _alerts.Remove(alert);
-            return true;
-        }
+        public void DeleteAlert(int alertId) => this.alertService.RemoveAlert(alertId);
     }
 }
