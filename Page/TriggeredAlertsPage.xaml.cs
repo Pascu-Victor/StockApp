@@ -1,10 +1,11 @@
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 using StockApp.Repository;
+using StockApp.ViewModel;
 
 namespace StockApp.Views
 {
-    public sealed partial class TriggeredAlertsPage : Page
+    public sealed partial class TriggeredAlertsPage : Microsoft.UI.Xaml.Controls.Page
     {
         private readonly AlertRepository _alertRepository;
 

@@ -12,20 +12,19 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using StocksApp;
+using Windows.UI.Core;
+using LiveChartsCore.Drawing;
+using System.Windows.Input;
+using StockNewsPage.ViewModels;
+using StockApp.Service;
+using StockApp.ViewModel;
+using XamlPage = Microsoft.UI.Xaml.Controls.Page;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
-namespace StockApp
+namespace StockApp.StockPage
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainPage : Microsoft.UI.Xaml.Controls.Page
+    public sealed partial class StockPage : XamlPage
     {
-        public MainPage()
-        {
-            this.InitializeComponent();
-        }
+        // ... existing code ...
     }
-}
+} 

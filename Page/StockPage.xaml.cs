@@ -28,7 +28,7 @@ namespace StockApp.StockPage
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class StockPage : Page
+    public sealed partial class StockPage : Microsoft.UI.Xaml.Controls.Page
     {
         private StockPageViewModel _viewModel;
 

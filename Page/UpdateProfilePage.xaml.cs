@@ -6,10 +6,12 @@ using Catel.MVVM;
 using Microsoft.UI.Xaml.Navigation;
 using StockApp.ViewModel;
 using StockApp.Service;
+using StockApp.Repository;
+using StockApp.Model;
 
-namespace StocksApp
+namespace StockApp.Page
 {
-    public sealed partial class UpdateProfilePage : Page
+    public sealed partial class UpdateProfilePage : Microsoft.UI.Xaml.Controls.Page
     {
         private ModelView viewModelUpdate; 
 

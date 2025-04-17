@@ -6,7 +6,7 @@ using StockApp.Model;
 
 namespace GemStore
 {
-    public sealed partial class GemStoreWindow : Page
+    public sealed partial class GemStoreWindow : Microsoft.UI.Xaml.Controls.Page
     {
         private StoreViewModel viewModel;
 
@@ -34,7 +34,7 @@ namespace GemStore
                 };
 
                 StackPanel dialogContent = new StackPanel();
-                dialogContent.Children.Add(new TextBlock { Text = $"You are about to buy {selectedDeal.GemAmount} Gems for {selectedDeal.Price}€.\n\nSelect a Bank Account:" });
+                dialogContent.Children.Add(new TextBlock { Text = $"You are about to buy {selectedDeal.GemAmount} Gems for {selectedDeal.Price}ï¿½.\n\nSelect a Bank Account:" });
                 dialogContent.Children.Add(bankAccountDropdown);
 
                 ContentDialog confirmDialog = new ContentDialog
@@ -111,7 +111,7 @@ namespace GemStore
             };
 
             StackPanel dialogContent = new StackPanel();
-            dialogContent.Children.Add(new TextBlock { Text = $"You are about to sell {gemsToSell} Gems for {gemsToSell / 100.0}€.\n\nSelect a Bank Account from below:\n" });
+            dialogContent.Children.Add(new TextBlock { Text = $"You are about to sell {gemsToSell} Gems for {gemsToSell / 100.0}ï¿½.\n\nSelect a Bank Account from below:\n" });
             dialogContent.Children.Add(bankAccountDropdown);
 
             ContentDialog sellDialog = new ContentDialog
