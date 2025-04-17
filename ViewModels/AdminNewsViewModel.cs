@@ -18,200 +18,206 @@
         private readonly INewsService _newsService;
         private readonly DispatcherQueue _dispatcherQueue;
 
-        private ObservableCollection<UserArticle> _userArticles = new();
-        public ObservableCollection<UserArticle> UserArticles
-        {
-            get => _userArticles;
-            set => SetProperty(ref _userArticles, value);
-        }
-
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        private ObservableCollection<string> _statuses = new();
-        public ObservableCollection<string> Statuses
-        {
-            get => _statuses;
-            set => SetProperty(ref _statuses, value);
-        }
-
-        private string _selectedStatus;
-        public string SelectedStatus
-        {
-            get => _selectedStatus;
-            set
-            {
-                if (SetProperty(ref _selectedStatus, value))
-                {
-                    RefreshArticlesAsync();
-                }
-            }
-        }
-
-        private ObservableCollection<string> _topics = new();
-        public ObservableCollection<string> Topics
-        {
-            get => _topics;
-            set => SetProperty(ref _topics, value);
-        }
-
-        private string _selectedTopic;
-        public string SelectedTopic
-        {
-            get => _selectedTopic;
-            set
-            {
-                if (SetProperty(ref _selectedTopic, value))
-                {
-                    RefreshArticlesAsync();
-                }
-            }
-        }
-
-        private UserArticle _selectedArticle;
-        public UserArticle SelectedArticle
-        {
-            get => _selectedArticle;
-            set
-            {
-                if (SetProperty(ref _selectedArticle, value))
-                {
-                    if (value == null)
-                        throw new ArgumentNullException(nameof(value));
-
-                    // nav to preview when selected article changes
-                    NavigateToPreview(value);
-                    _selectedArticle = null; // Reset after navigation
-                }
-            }
-        }
-
-        private bool _isEmptyState;
-        public bool IsEmptyState
-        {
-            get => _isEmptyState;
-            set => SetProperty(ref _isEmptyState, value);
-        }
-
-        // Commands
-        public ICommand RefreshCommand { get; }
-        public ICommand ApproveCommand { get; }
-        public ICommand RejectCommand { get; }
-        public ICommand DeleteCommand { get; }
-        public ICommand BackCommand { get; }
-        public ICommand PreviewCommand { get; }
+        private ObservableCollection<UserArticle> userArticles = [];
+        private bool isLoading;
+        private ObservableCollection<string> statuses = [];
+        private string selectedStatus;
+        private ObservableCollection<string> topics = [];
+        private string selectedTopic;
+        private UserArticle? selectedArticle;
+        private bool isEmptyState;
 
         // Constructor
         public AdminNewsViewModel()
         {
-            _newsService = new NewsService();
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            this.newsService = new NewsService();
+            this.dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             // init commands
-            RefreshCommand = new StockNewsRelayCommand(async () => await RefreshArticlesAsync());
-            ApproveCommand = new RelayCommandGeneric<string>(async (id) => await ApproveArticleAsync(id));
-            RejectCommand = new RelayCommandGeneric<string>(async (id) => await RejectArticleAsync(id));
-            DeleteCommand = new RelayCommandGeneric<string>(async (id) => await DeleteArticleAsync(id));
-            BackCommand = new StockNewsRelayCommand(() => NavigationService.Instance.GoBack());
-            PreviewCommand = new RelayCommandGeneric<UserArticle>((article) => NavigateToPreview(article));
+            this.RefreshCommand = new StockNewsRelayCommand(async () => await this.RefreshArticlesAsync());
+            this.ApproveCommand = new RelayCommandGeneric<string>(async (id) => await this.ApproveArticleAsync(id));
+            this.RejectCommand = new RelayCommandGeneric<string>(async (id) => await this.RejectArticleAsync(id));
+            this.DeleteCommand = new RelayCommandGeneric<string>(async (id) => await this.DeleteArticleAsync(id));
+            this.BackCommand = new StockNewsRelayCommand(() => NavigationService.Instance.GoBack());
+            this.PreviewCommand = new RelayCommandGeneric<UserArticle>((article) => this.NavigateToPreview(article));
 
             // init statuses
-            Statuses.Add("All");
-            Statuses.Add("Pending");
-            Statuses.Add("Approved");
-            Statuses.Add("Rejected");
+            this.Statuses.Add("All");
+            this.Statuses.Add("Pending");
+            this.Statuses.Add("Approved");
+            this.Statuses.Add("Rejected");
 
             // init topics
-            Topics.Add("All");
-            Topics.Add("Stock News");
-            Topics.Add("Company News");
-            Topics.Add("Functionality News");
-            Topics.Add("Market Analysis");
-            Topics.Add("Economic News");
+            this.Topics.Add("All");
+            this.Topics.Add("Stock News");
+            this.Topics.Add("Company News");
+            this.Topics.Add("Functionality News");
+            this.Topics.Add("Market Analysis");
+            this.Topics.Add("Economic News");
 
             // set default values
-            _selectedStatus = "All";
-            _selectedTopic = "All";
+            this.selectedStatus = "All";
+            this.selectedTopic = "All";
         }
+
+        public ObservableCollection<UserArticle> UserArticles
+        {
+            get => this.userArticles;
+            set => this.SetProperty(ref this.userArticles, value);
+        }
+
+        public bool IsLoading
+        {
+            get => this.isLoading;
+            set => this.SetProperty(ref this.isLoading, value);
+        }
+
+        public ObservableCollection<string> Statuses
+        {
+            get => this.statuses;
+            set => this.SetProperty(ref this.statuses, value);
+        }
+
+        public string SelectedStatus
+        {
+            get => this.selectedStatus;
+            set
+            {
+                if (this.SetProperty(ref this.selectedStatus, value))
+                {
+                    this.RefreshArticlesAsync();
+                }
+            }
+        }
+
+        public ObservableCollection<string> Topics
+        {
+            get => this.topics;
+            set => this.SetProperty(ref this.topics, value);
+        }
+
+        public string SelectedTopic
+        {
+            get => this.selectedTopic;
+            set
+            {
+                if (this.SetProperty(ref this.selectedTopic, value))
+                {
+                    this.RefreshArticlesAsync();
+                }
+            }
+        }
+
+        public UserArticle? SelectedArticle
+        {
+            get => this.selectedArticle;
+            set
+            {
+                if (this.SetProperty(ref this.selectedArticle, value))
+                {
+                    ArgumentNullException.ThrowIfNull(value);
+
+                    // nav to preview when selected article changes
+                    this.NavigateToPreview(value);
+                    this.selectedArticle = null; // Reset after navigation
+                }
+            }
+        }
+
+        public bool IsEmptyState
+        {
+            get => this.isEmptyState;
+            set => this.SetProperty(ref this.isEmptyState, value);
+        }
+
+        // Commands
+        public ICommand RefreshCommand { get; }
+
+        public ICommand ApproveCommand { get; }
+
+        public ICommand RejectCommand { get; }
+
+        public ICommand DeleteCommand { get; }
+
+        public ICommand BackCommand { get; }
+
+        public ICommand PreviewCommand { get; }
 
         public async void Initialize()
         {
-            await RefreshArticlesAsync();
+            await this.RefreshArticlesAsync();
         }
 
         private async Task RefreshArticlesAsync()
         {
-            IsLoading = true;
-            IsEmptyState = false;
+            this.IsLoading = true;
+            this.IsEmptyState = false;
 
             try
             {
-                var status = SelectedStatus == "All" ? null : SelectedStatus;
-                var topic = SelectedTopic == "All" ? null : SelectedTopic;
+                string? status = this.SelectedStatus == "All" ? null : this.SelectedStatus;
+                string? topic = this.SelectedTopic == "All" ? null : this.SelectedTopic;
 
-                var articles = await _newsService.GetUserArticlesAsync(status, topic);
+                var articles = await this.newsService.GetUserArticlesAsync(status, topic);
 
-                _dispatcherQueue.TryEnqueue(() =>
+                this.dispatcherQueue.TryEnqueue(() =>
                 {
-                    UserArticles.Clear();
+                    this.UserArticles.Clear();
                     foreach (var article in articles)
                     {
-                        UserArticles.Add(article);
+                        this.UserArticles.Add(article);
                     }
 
-                    IsEmptyState = UserArticles.Count == 0;
+                    this.IsEmptyState = this.UserArticles.Count == 0;
                 });
             }
-            catch (Exception ex)
+            catch
             {
-                IsEmptyState = true;
+                this.IsEmptyState = true;
             }
             finally
             {
-                IsLoading = false;
+                this.IsLoading = false;
             }
         }
 
         private void NavigateToPreview(UserArticle article)
         {
-            if (article != null)
+            if (article == null)
             {
-                // convert UserArticle to NewsArticle for preview
-                var previewArticle = new NewsArticle
-                {
-                    ArticleId = article.ArticleId,
-                    Title = article.Title,
-                    Summary = article.Summary ?? "",
-                    Content = article.Content,
-                    Source = $"User: {article.Author}",
-                    PublishedDate = article.SubmissionDate.ToString("MMMM dd, yyyy"),
-                    IsRead = false,
-                    IsWatchlistRelated = false,
-                    Category = article.Topic,
-                    RelatedStocks = article.RelatedStocks ?? new System.Collections.Generic.List<string>()
-                };
-
-                // store preview article in the NewsService for retrieval
-                _newsService.StorePreviewArticle(previewArticle, article);
-
-                // nav to the article view with a flag indicating it's a preview
-                NavigationService.Instance.Navigate(typeof(NewsArticleView), $"preview:{article.ArticleId}");
+                return;
             }
-        }
 
+            // convert UserArticle to NewsArticle for preview
+            var previewArticle = new NewsArticle
+            {
+                ArticleId = article.ArticleId,
+                Title = article.Title,
+                Summary = article.Summary ?? string.Empty,
+                Content = article.Content,
+                Source = $"User: {article.Author}",
+                PublishedDate = article.SubmissionDate.ToString("MMMM dd, yyyy"),
+                IsRead = false,
+                IsWatchlistRelated = false,
+                Category = article.Topic,
+                RelatedStocks = article.RelatedStocks ?? [],
+            };
+
+            // store preview article in the NewsService for retrieval
+            this.newsService.StorePreviewArticle(previewArticle, article);
+
+            // nav to the article view with a flag indicating it's a preview
+            NavigationService.Instance.Navigate(typeof(NewsArticleView), $"preview:{article.ArticleId}");
+        }
 
         private async Task ApproveArticleAsync(string articleId)
         {
             try
             {
-                var success = await _newsService.ApproveUserArticleAsync(articleId);
+                var success = await this.newsService.ApproveUserArticleAsync(articleId);
                 if (success)
                 {
-                    await RefreshArticlesAsync();
+                    await this.RefreshArticlesAsync();
 
                     // success message
                     var dialog = new ContentDialog
@@ -219,20 +225,20 @@
                         Title = "Success",
                         Content = "Article has been approved and will now appear in the news list.",
                         CloseButtonText = "OK",
-                        XamlRoot = App.CurrentWindow.Content.XamlRoot
+                        XamlRoot = App.CurrentWindow.Content.XamlRoot,
                     };
 
                     await dialog.ShowAsync();
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 var dialog = new ContentDialog
                 {
                     Title = "Error",
                     Content = "Failed to approve article. Please try again.",
                     CloseButtonText = "OK",
-                    XamlRoot = App.CurrentWindow.Content.XamlRoot
+                    XamlRoot = App.CurrentWindow.Content.XamlRoot,
                 };
 
                 await dialog.ShowAsync();
@@ -243,10 +249,10 @@
         {
             try
             {
-                var success = await _newsService.RejectUserArticleAsync(articleId);
+                var success = await this.newsService.RejectUserArticleAsync(articleId);
                 if (success)
                 {
-                    await RefreshArticlesAsync();
+                    await this.RefreshArticlesAsync();
 
                     // success message
                     var dialog = new ContentDialog
@@ -254,20 +260,20 @@
                         Title = "Success",
                         Content = "Article has been rejected.",
                         CloseButtonText = "OK",
-                        XamlRoot = App.CurrentWindow.Content.XamlRoot
+                        XamlRoot = App.CurrentWindow.Content.XamlRoot,
                     };
 
                     await dialog.ShowAsync();
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 var dialog = new ContentDialog
                 {
                     Title = "Error",
                     Content = "Failed to reject article. Please try again.",
                     CloseButtonText = "OK",
-                    XamlRoot = App.CurrentWindow.Content.XamlRoot
+                    XamlRoot = App.CurrentWindow.Content.XamlRoot,
                 };
 
                 await dialog.ShowAsync();
@@ -285,17 +291,17 @@
                     Content = "Are you sure you want to delete this article? This action cannot be undone.",
                     PrimaryButtonText = "Delete",
                     CloseButtonText = "Cancel",
-                    XamlRoot = App.CurrentWindow.Content.XamlRoot
+                    XamlRoot = App.CurrentWindow.Content.XamlRoot,
                 };
 
                 var result = await confirmDialog.ShowAsync();
 
                 if (result == ContentDialogResult.Primary)
                 {
-                    var success = await _newsService.DeleteUserArticleAsync(articleId);
+                    var success = await this.newsService.DeleteUserArticleAsync(articleId);
                     if (success)
                     {
-                        await RefreshArticlesAsync();
+                        await this.RefreshArticlesAsync();
 
                         // success message
                         var dialog = new ContentDialog
@@ -303,21 +309,21 @@
                             Title = "Success",
                             Content = "Article has been deleted.",
                             CloseButtonText = "OK",
-                            XamlRoot = App.CurrentWindow.Content.XamlRoot
+                            XamlRoot = App.CurrentWindow.Content.XamlRoot,
                         };
 
                         await dialog.ShowAsync();
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 var dialog = new ContentDialog
                 {
                     Title = "Error",
                     Content = "Failed to delete article. Please try again.",
                     CloseButtonText = "OK",
-                    XamlRoot = App.CurrentWindow.Content.XamlRoot
+                    XamlRoot = App.CurrentWindow.Content.XamlRoot,
                 };
 
                 await dialog.ShowAsync();
@@ -325,15 +331,17 @@
         }
 
         // method to set property and raise PropertyChanged event
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
         {
             if (Equals(storage, value))
+            {
                 return false;
+            }
 
             storage = value;
-            OnPropertyChanged(propertyName);
+            this.OnPropertyChanged(propertyName);
+            
             return true;
         }
     }
 }
-
