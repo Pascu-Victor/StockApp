@@ -50,14 +50,14 @@ namespace StocksApp
 
         private async void UpdateUserProfile(object sender, RoutedEventArgs e)
         {
-            bool DescriptionEmpty = MyDescriptionCheckBox.IsChecked == true;
-            bool newHidden = MyCheckBox.IsChecked == true;
-            string newUsername = UsernameInput.Text;
-            string newImage = ImageInput.Text;
-            string newDescription = DescriptionInput.Text;
+            bool DescriptionEmpty = MyDescriptionCheckBox?.IsChecked == true;
+            bool newHidden = MyCheckBox?.IsChecked == true;
+            string newUsername = UsernameInput?.Text ?? string.Empty;
+            string newImage = ImageInput?.Text ?? string.Empty;
+            string newDescription = DescriptionInput?.Text ?? string.Empty;
 
             if (string.IsNullOrEmpty(newUsername) && string.IsNullOrEmpty(newImage) && string.IsNullOrEmpty(newDescription)
-                && (MyCheckBox.IsChecked == false && viewModelUpdate.IsHidden()==false) && MyDescriptionCheckBox.IsChecked == false)
+                && (MyCheckBox?.IsChecked == false && viewModelUpdate?.IsHidden() == false) && MyDescriptionCheckBox?.IsChecked == false)
             {
                 await ShowErrorDialog("Please fill up at least one of the information fields");
                 return;
@@ -75,27 +75,27 @@ namespace StocksApp
                 return;
             }
 
-            if (newUsername.Length == 0)
+            if (string.IsNullOrEmpty(newUsername))
             {
-                newUsername = viewModelUpdate.GetUsername();    
+                newUsername = viewModelUpdate?.GetUsername() ?? throw new InvalidOperationException("Username cannot be null");
             }
 
             if(DescriptionEmpty == false)
             {
-                newDescription = viewModelUpdate.GetDescription();
+                newDescription = viewModelUpdate?.GetDescription() ?? string.Empty;
             }
 
-            if(newImage.Length == 0)
+            if(string.IsNullOrEmpty(newImage))
             {
-                newImage = viewModelUpdate.GetImage();
+                newImage = viewModelUpdate?.GetImage() ?? string.Empty;
             }
 
             else if(DescriptionEmpty == true)
             {
-                newDescription = "";
+                newDescription = string.Empty;
             }
 
-            viewModelUpdate.UpdateAll(newUsername, newImage, newDescription, newHidden);
+            viewModelUpdate?.UpdateAll(newUsername, newImage, newDescription, newHidden);
             await ShowSuccessDialog("Profile updated successfully!");
         }
 

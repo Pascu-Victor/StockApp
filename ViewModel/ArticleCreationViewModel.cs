@@ -158,15 +158,15 @@ namespace StockNewsPage.ViewModels
                 var article = new NewsArticle
                 {
                     ArticleId = previewId,
-                    Title = Title,
-                    Summary = Summary ?? "",
-                    Content = Content,
+                    Title = Title ?? throw new InvalidOperationException("Title cannot be null"),
+                    Summary = Summary ?? string.Empty,
+                    Content = Content ?? throw new InvalidOperationException("Content cannot be null"),
                     Source = $"User: {_appState.CurrentUser?.Cnp ?? "Anonymous"}",
                     PublishedDate = DateTime.Now.ToString("MMMM dd, yyyy"),
                     IsRead = false,
                     IsWatchlistRelated = false,
-                    Category = SelectedTopic,
-                    RelatedStocks = ParseRelatedStocks()
+                    Category = SelectedTopic ?? throw new InvalidOperationException("Topic cannot be null"),
+                    RelatedStocks = ParseRelatedStocks() ?? new List<string>()
                 };
 
                 // create temp user article

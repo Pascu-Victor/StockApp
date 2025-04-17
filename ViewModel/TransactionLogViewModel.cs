@@ -203,31 +203,26 @@ namespace StockApp.ViewModel
         public void LoadTransactions()
         {
             // Add null checks here for all ComboBoxItem properties to prevent null reference
-            string transactionType = SelectedTransactionType?.Content?.ToString();
-            string sortBy = SelectedSortBy?.Content?.ToString() ?? "Date";  // Default to "Date" if null
-            string sortOrder = SelectedSortOrder?.Content?.ToString() ?? "ASC"; // Default to "ASC" if null
-
-            // Prevent the case where all ComboBoxItem values are null
-            if (string.IsNullOrEmpty(transactionType)) transactionType = "ALL";
-            if (string.IsNullOrEmpty(sortBy)) sortBy = "Date";
-            if (string.IsNullOrEmpty(sortOrder)) sortOrder = "ASC";
+            string transactionType = SelectedTransactionType?.Content?.ToString() ?? "ALL";
+            string sortBy = SelectedSortBy?.Content?.ToString() ?? "Date";
+            string sortOrder = SelectedSortOrder?.Content?.ToString() ?? "ASC";
 
             // Validate MinTotalValue < MaxTotalValue
             if (!ValidateTotalValues(MinTotalValue, MaxTotalValue))
             {
                 ShowMessageBox("Invalid Total Values", "Min Total Value must be less than Max Total Value.");
-                return; // Exit early if validation fails
+                return;
             }
 
             // Validate StartDate < EndDate
             if (!ValidateDateRange(StartDate, EndDate))
             {
                 ShowMessageBox("Invalid Date Range", "Start Date must be earlier than End Date.");
-                return; // Exit early if validation fails
+                return;
             }
 
             DateTime startDate = StartDate ?? DateTime.Now.AddYears(-10);
-            DateTime endDate = EndDate ?? DateTime.Now; // Default to today
+            DateTime endDate = EndDate ?? DateTime.Now;
 
             Transactions.Clear();
 

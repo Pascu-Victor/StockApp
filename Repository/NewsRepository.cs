@@ -833,7 +833,7 @@ namespace StockApp.Repository
             var existingNewsArticle = GetNewsArticleById(article.ArticleId);
             if (existingNewsArticle != null)
             {
-                DeleteNewsArticle(article.ArticleId);
+                DeleteNewsArticle(article.ArticleId ?? throw new InvalidOperationException("Article ID cannot be null"));
             }
         }
 

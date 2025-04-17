@@ -111,7 +111,7 @@ namespace StockNewsPage.ViewModels
                     var userArticle = _newsService.GetUserArticleForPreview(_previewId) 
                         ?? throw new InvalidOperationException($"User article with ID {_previewId} not found");
             
-                    ArticleStatus = userArticle.Status;
+                    ArticleStatus = userArticle.Status ?? "Unknown";
                     CanApprove = userArticle.Status != "Approved";
                     CanReject = userArticle.Status != "Rejected";
 
@@ -121,7 +121,7 @@ namespace StockNewsPage.ViewModels
                         _dispatcherQueue.TryEnqueue(() =>
                         {
                             Article = article;
-                            HasRelatedStocks = article.RelatedStocks != null && article.RelatedStocks.Any();
+                            HasRelatedStocks = article.RelatedStocks?.Any() ?? false;
                             System.Diagnostics.Debug.WriteLine($"Related stocks count: {article.RelatedStocks?.Count ?? 0}");
                             IsLoading = false;
                         });
@@ -155,7 +155,7 @@ namespace StockNewsPage.ViewModels
                         _dispatcherQueue.TryEnqueue(async () =>
                         {
                             Article = article;
-                            HasRelatedStocks = article.RelatedStocks != null && article.RelatedStocks.Any();
+                            HasRelatedStocks = article.RelatedStocks?.Any() ?? false;
 
                             // Mark as read if not in preview mode
                             if (!_isPreviewMode)
@@ -176,6 +176,7 @@ namespace StockNewsPage.ViewModels
                                 Summary = "The requested article could not be found.",
                                 Content = "The article you are looking for may have been removed or is no longer available."
                             };
+                            HasRelatedStocks = false;
                             IsLoading = false;
                         });
                     }
@@ -184,15 +185,15 @@ namespace StockNewsPage.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading article: {ex.Message}");
-
                 _dispatcherQueue.TryEnqueue(() =>
                 {
                     Article = new NewsArticle
                     {
                         Title = "Error Loading Article",
-                        Summary = "There was an error loading the article.",
-                        Content = "Please try again later or contact support if the problem persists."
+                        Summary = "An error occurred while loading the article.",
+                        Content = $"Error details: {ex.Message}"
                     };
+                    HasRelatedStocks = false;
                     IsLoading = false;
                 });
             }
