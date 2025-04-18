@@ -31,13 +31,21 @@
         public NewsArticle Article
         {
             get => article;
-            set => SetProperty(ref article, value);
+            set
+            {
+                System.Diagnostics.Debug.WriteLine($"Setting Article: Title={value?.Title}, Content Length={value?.Content?.Length ?? 0}");
+                SetProperty(ref article, value);
+            }
         }
 
         public bool IsLoading
         {
             get => isLoading;
-            set => SetProperty(ref isLoading, value);
+            set
+            {
+                System.Diagnostics.Debug.WriteLine($"Setting IsLoading: {value}");
+                SetProperty(ref isLoading, value);
+            }
         }
 
         public bool HasRelatedStocks
@@ -98,15 +106,21 @@
         public async void LoadArticle(string articleId)
         {
             if (string.IsNullOrWhiteSpace(articleId))
+            {
+                System.Diagnostics.Debug.WriteLine($"LoadArticle: ArticleId is null or empty");
                 throw new ArgumentNullException(nameof(articleId));
+            }
 
             IsLoading = true;
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"LoadArticle: Loading article with ID: {articleId}");
+                
                 // if this is a preview
                 if (articleId.StartsWith("preview:"))
                 {
+                    System.Diagnostics.Debug.WriteLine($"LoadArticle: Loading preview article");
                     isPreviewMode = true;
                     previewId = articleId.Substring(8); // Remove "preview:"
                     currentArticleId = previewId;
@@ -128,12 +142,14 @@
                     {
                         if (article != null)
                         {
+                            System.Diagnostics.Debug.WriteLine($"LoadArticle: Preview article loaded successfully");
                             Article = article;
                             HasRelatedStocks = article.RelatedStocks != null && article.RelatedStocks.Any();
                             System.Diagnostics.Debug.WriteLine($"Related stocks count: {article.RelatedStocks?.Count ?? 0}");
                         }
                         else
                         {
+                            System.Diagnostics.Debug.WriteLine($"LoadArticle: Preview article not found");
                             // Article not found
                             Article = new NewsArticle
                             {
@@ -142,7 +158,6 @@
                                 Content = "The preview article you are looking for may no longer be available."
                             };
                             HasRelatedStocks = false;
-                            System.Diagnostics.Debug.WriteLine("Preview article not found");
                         }
 
                         IsLoading = false;
@@ -150,29 +165,36 @@
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine($"LoadArticle: Loading regular article");
                     isPreviewMode = false;
                     currentArticleId = articleId;
                     IsAdminPreview = false;
-                }
 
-                // For non-preview articles, continue with existing logic
-                var regularArticle = await newsService.GetNewsArticleByIdAsync(articleId);
+                    // For non-preview articles, handle directly
+                    var regularArticle = await newsService.GetNewsArticleByIdAsync(articleId);
 
-                dispatcherQueue.TryEnqueue(async () =>
-                {
                     if (regularArticle != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"LoadArticle: Regular article loaded successfully");
                         Article = regularArticle;
                         HasRelatedStocks = regularArticle.RelatedStocks != null && regularArticle.RelatedStocks.Any();
 
                         // Mark as read if not in preview mode
                         if (!isPreviewMode)
                         {
-                            await newsService.MarkArticleAsReadAsync(articleId);
+                            try
+                            {
+                                await newsService.MarkArticleAsReadAsync(articleId);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Error marking article as read: {ex.Message}");
+                            }
                         }
                     }
                     else
                     {
+                        System.Diagnostics.Debug.WriteLine($"LoadArticle: Regular article not found");
                         // Article not found
                         Article = new NewsArticle
                         {
@@ -180,14 +202,16 @@
                             Summary = "The requested article could not be found.",
                             Content = "The article you are looking for may have been removed or is no longer available."
                         };
+                        HasRelatedStocks = false;
                     }
 
                     IsLoading = false;
-                });
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading article: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
 
                 dispatcherQueue.TryEnqueue(() =>
                 {
@@ -195,9 +219,9 @@
                     {
                         Title = "Error Loading Article",
                         Summary = "There was an error loading the article.",
-                        Content = "Please try again later or contact support if the problem persists."
+                        Content = $"Error details: {ex.Message}\n\nPlease try again later or contact support if the problem persists."
                     };
-
+                    HasRelatedStocks = false;
                     IsLoading = false;
                 });
             }

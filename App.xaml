@@ -18,7 +18,7 @@
             <converters:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
             <converters:BoolToStringConverter x:Key="BoolToStringConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
-            <converters:StatusToVisibilityConverter x:Key="BoolToInverseVisibilityConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToInverseVisibilityConverter" />
             <converters:StatusToVisibilityConverter x:Key="StatusToApproveVisibilityConverter" />
             <converters:StatusToVisibilityConverter x:Key="StatusToRejectVisibilityConverter" />
         </ResourceDictionary>

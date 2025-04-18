@@ -28,24 +28,50 @@
         {
             lock (LockObject)
             {
+                if (isInitialized)
+                {
+                    System.Diagnostics.Debug.WriteLine("NewsRepository already initialized");
+                    return;
+                }
+
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine("Initializing NewsRepository...");
+                    
+                    // Check if database exists and has data
                     bool hasData = CheckIfDataExists();
+                    System.Diagnostics.Debug.WriteLine($"Database has data: {hasData}");
+
+                    // Load articles
                     this.LoadNewsArticles();
+                    System.Diagnostics.Debug.WriteLine($"Loaded {this.newsArticles.Count} news articles");
+
+                    // Load user articles
                     this.LoadUserArticles();
+                    System.Diagnostics.Debug.WriteLine($"Loaded {this.userArticles.Count} user articles");
+
                     isInitialized = true;
+                    System.Diagnostics.Debug.WriteLine("NewsRepository initialization completed successfully");
                 }
                 catch (SqlException ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"SQL error during initialization: {ex.Message}");
                     throw new NewsPersistenceException("SQL error during initialization.", ex);
                 }
                 catch (InvalidOperationException ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Invalid operation during initialization: {ex.Message}");
                     throw new NewsPersistenceException("Invalid operation during initialization.", ex);
                 }
                 catch (FormatException ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Format error during initialization: {ex.Message}");
                     throw new NewsPersistenceException("Format error during initialization.", ex);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Unexpected error during initialization: {ex.Message}");
+                    throw new NewsPersistenceException("Unexpected error during initialization.", ex);
                 }
             }
         }
@@ -548,16 +574,56 @@
         {
             if (string.IsNullOrWhiteSpace(articleId))
             {
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: ArticleId is null or empty");
                 throw new ArgumentNullException(nameof(articleId));
             }
 
             try
             {
-                var article = this.newsArticles.FirstOrDefault(a => a.ArticleId == articleId)
-                    ?? throw new KeyNotFoundException($"Article with ID {articleId} not found");
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Looking for article with ID: {articleId}");
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Total articles in memory: {this.newsArticles.Count}");
+
+                var article = this.newsArticles.FirstOrDefault(a => a.ArticleId == articleId);
+                if (article == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Article not found in memory, checking database");
+                    
+                    // Try to load the article directly from the database
+                    using var connection = DatabaseHelper.GetConnection();
+                    using var command = new SqlCommand("SELECT * FROM NEWS_ARTICLE WHERE ARTICLE_ID = @ArticleId", connection);
+                    command.Parameters.AddWithValue("@ArticleId", articleId);
+                    
+                    using var reader = command.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        article = new NewsArticle
+                        {
+                            ArticleId = reader.GetString(0),
+                            Title = reader.GetString(1),
+                            Summary = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                            Content = reader.GetString(3),
+                            Source = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                            PublishedDate = reader.GetString(5),
+                            IsRead = reader.GetBoolean(6),
+                            IsWatchlistRelated = reader.GetBoolean(7),
+                            Category = reader.GetString(8),
+                            RelatedStocks = [],
+                        };
+                        
+                        // Add to memory cache
+                        this.newsArticles.Add(article);
+                        System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Article loaded from database and added to memory cache");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Article not found in database");
+                        throw new KeyNotFoundException($"Article with ID {articleId} not found");
+                    }
+                }
 
                 if (article.RelatedStocks == null || !article.RelatedStocks.Any())
                 {
+                    System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Loading related stocks for article");
                     article.RelatedStocks = this.GetRelatedStocksForArticle(articleId);
                 }
 
@@ -565,18 +631,22 @@
             }
             catch (KeyNotFoundException)
             {
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: KeyNotFoundException - Article not found");
                 throw;
             }
             catch (SqlException ex)
             {
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: SQL error - {ex.Message}");
                 throw new NewsPersistenceException($"SQL error while retrieving article {articleId}.", ex);
             }
             catch (InvalidOperationException ex)
             {
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Invalid operation - {ex.Message}");
                 throw new NewsPersistenceException($"Invalid operation while retrieving article {articleId}.", ex);
             }
             catch (FormatException ex)
             {
+                System.Diagnostics.Debug.WriteLine($"GetNewsArticleById: Format error - {ex.Message}");
                 throw new NewsPersistenceException($"Format error while retrieving article {articleId}.", ex);
             }
         }
@@ -585,7 +655,11 @@
         /// Retrieves all news articles.
         /// </summary>
         /// <returns>A list of all news articles.</returns>
-        public List<NewsArticle> GetAllNewsArticles() => [.. this.newsArticles];
+        public List<NewsArticle> GetAllNewsArticles()
+        {
+            LoadNewsArticles(); // Reload articles from database
+            return [.. this.newsArticles];
+        }
 
 
         public List<NewsArticle> GetNewsArticlesByStock(string stockName)

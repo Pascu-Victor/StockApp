@@ -10,6 +10,7 @@
 
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid Padding="20">
@@ -65,7 +66,7 @@
                               Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}"/>
 
                 <!-- Article Content -->
-                <StackPanel Spacing="16" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToInverseVisibilityConverter}}">
+                <StackPanel Spacing="16" Visibility="{x:Bind ViewModel.Article.Content, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}">
                     <TextBlock Text="{x:Bind ViewModel.Article.Title, Mode=OneWay}" 
                                Style="{StaticResource TitleTextBlockStyle}" 
                                FontSize="28" 
@@ -73,9 +74,9 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{x:Bind ViewModel.Article.Source, Mode=OneWay}" Opacity="0.7"/>
-                        <TextBlock Text="•" Opacity="0.7"/>
+                        <TextBlock Text="ï¿½" Opacity="0.7"/>
                         <TextBlock Text="{x:Bind ViewModel.Article.PublishedDate, Mode=OneWay}" Opacity="0.7"/>
-                        <TextBlock Text="•" Opacity="0.7"/>
+                        <TextBlock Text="ï¿½" Opacity="0.7"/>
                         <TextBlock Text="{x:Bind ViewModel.Article.Category, Mode=OneWay}" Opacity="0.7"/>
                     </StackPanel>
 
@@ -109,8 +110,13 @@
                     <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
 
                     <TextBlock Text="{x:Bind ViewModel.Article.Content, Mode=OneWay}" 
-                               Style="{StaticResource BodyTextBlockStyle}" 
-                               TextWrapping="Wrap"/>
+                               TextWrapping="Wrap" 
+                               Margin="0,16,0,0" 
+                               FontSize="16" 
+                               LineHeight="24"
+                               TextTrimming="None"
+                               TextAlignment="Left"
+                               IsTextSelectionEnabled="True"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

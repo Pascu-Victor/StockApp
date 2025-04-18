@@ -88,8 +88,13 @@
             {
                 if (SetProperty(ref _selectedArticle, value) && value != null)
                 {
-                    NavigateToArticleDetail(value.ArticleId);
-                    SelectedArticle = null; // reset selection
+                    // Store the article ID before clearing the selection
+                    var articleId = value.ArticleId;
+                    // Clear selection first to prevent UI issues
+                    _selectedArticle = null;
+                    OnPropertyChanged(nameof(SelectedArticle));
+                    // Then navigate
+                    NavigateToArticleDetail(articleId);
                 }
             }
         }
@@ -296,10 +301,14 @@
 
         private void NavigateToArticleDetail(string articleId)
         {
-            if (!string.IsNullOrEmpty(articleId))
+            if (string.IsNullOrWhiteSpace(articleId))
             {
-                NavigationService.Instance.Navigate(typeof(NewsArticleView), articleId);
+                System.Diagnostics.Debug.WriteLine("NavigateToArticleDetail: ArticleId is null or empty");
+                return;
             }
+
+            System.Diagnostics.Debug.WriteLine($"NavigateToArticleDetail: Navigating to article {articleId}");
+            NavigationService.Instance.NavigateToArticleDetail(articleId);
         }
 
         private void NavigateToCreateArticle()

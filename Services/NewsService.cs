@@ -33,14 +33,25 @@
 
         public async Task<List<NewsArticle>> GetNewsArticlesAsync()
         {
-            await Task.Delay(200);
-
             try
             {
-                return await Task.Run(() => this.repository.GetAllNewsArticles());
+                var articles = await Task.Run(() => this.repository.GetAllNewsArticles());
+                
+                // Update the cached articles
+                this.cachedArticles.Clear();
+                this.cachedArticles.AddRange(articles);
+                
+                // Load related stocks for each article
+                foreach (var article in articles)
+                {
+                    article.RelatedStocks = this.repository.GetRelatedStocksForArticle(article.ArticleId);
+                }
+                
+                return articles;
             }
             catch (NewsPersistenceException ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Failed to retrieve news articles: {ex.Message}");
                 throw new NewsPersistenceException("Failed to retrieve news articles.", ex);
             }
         }
@@ -414,3 +425,4 @@
         }
     }
 }
+

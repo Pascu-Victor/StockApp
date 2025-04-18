@@ -45,5 +45,15 @@
         }
 
         public bool CanGoBack => RootFrame?.CanGoBack ?? false;
+
+        public void NavigateToArticleDetail(string articleId)
+        {
+            if (RootFrame == null)
+            {
+                throw new InvalidOperationException("NavigationService not initialized. Call Initialize first.");
+            }
+
+            Navigate(typeof(StockApp.Views.NewsArticleView), articleId);
+        }
     }
 }

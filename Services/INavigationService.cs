@@ -11,5 +11,6 @@ namespace StockApp.Services
         static abstract void Initialize(Frame frame);
         void GoBack();
         bool Navigate(Type pageType, object? parameter = null);
+        void NavigateToArticleDetail(string articleId);
     }
 }
