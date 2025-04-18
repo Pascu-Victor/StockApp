@@ -17,7 +17,7 @@ namespace StockApp.Pages
 
         private void LoadAlerts()
         {
-            AlertListView.ItemsSource = _alertRepository.GetTriggeredAlerts();
+            //AlertListView.ItemsSource = _alertRepository.GetTriggeredAlerts();
         }
 
         private void RefreshClick(object sender, RoutedEventArgs e)

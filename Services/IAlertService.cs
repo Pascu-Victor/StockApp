@@ -9,10 +9,10 @@ namespace StockApp.Services
 
         List<Alert> GetAllAlertsOn();
 
-        void CreateAlert(Alert alert);
+        Alert CreateAlert(string stockName, string name, int upperBound, int lowerBound, bool toggleOnOff);
+
+        void UpdateAlert(int alertId, string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff);
 
         void RemoveAlert(int alertId);
-
-        void UpdateAlert(Alert alert);
     }
 }

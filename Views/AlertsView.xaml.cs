@@ -1,15 +1,15 @@
-namespace Alerts
+namespace StockApp.Views
 {
     using System;
     using System.Collections.ObjectModel;
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Controls;
     using StockApp.Models;
-    using StockApp.ViewModel;
+    using StockApp.ViewModels;
 
     public sealed partial class AlertsView : Page
     {
-        private readonly AlertViewModel alertViewModel = new ();
+        private readonly AlertViewModel alertViewModel = new();
 
         public AlertsView()
         {
@@ -19,13 +19,13 @@ namespace Alerts
 
         private void LoadAlerts() => this.AlertsListView.ItemsSource = new ObservableCollection<Alert>(this.alertViewModel.Alerts);
 
-        private void PlusButton_Click(object sender, RoutedEventArgs e)
+        public void PlusButton_Click(object sender, RoutedEventArgs e)
         {
             Alert newAlert = this.alertViewModel.CreateAlert("Tesla", "New Alert", 100, 0, true);
             this.AlertsListView.SelectedItem = newAlert;
         }
 
-        private async void MinusButtonClick(object sender, RoutedEventArgs e)
+        public async void MinusButtonClick(object sender, RoutedEventArgs e)
         {
             if (this.AlertsListView.SelectedItem is Alert selectedAlert)
             {
@@ -55,7 +55,7 @@ namespace Alerts
             }
         }
 
-        private async void SaveButtonClick(object sender, RoutedEventArgs e)
+        public async void SaveButtonClick(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace Alerts
             }
         }
 
-        private void ExitButtonClick(object sender, RoutedEventArgs e)
+        public void ExitButtonClick(object sender, RoutedEventArgs e)
         {
             Application.Current.Exit();
         }

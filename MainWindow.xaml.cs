@@ -1,12 +1,9 @@
 namespace StockApp
 {
     using System;
-    using System.Collections.Generic;
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Navigation;
     using StockApp.Database;
-    using StockApp.Models;
-    using StockApp.Repositories;
     using StockApp.Services;
     using StockApp.Views;
 
@@ -19,8 +16,6 @@ namespace StockApp
         {
             this.InitializeComponent();
             DatabaseHelper.InitializeDatabase();
-
-            CheckAndHandleAlerts();
 
             //rootFrame.Navigate(typeof(CreateStockPage), null);
             // rootFrame.Navigate(typeof(ProfilePage), null);
@@ -60,25 +55,6 @@ namespace StockApp
             // Alerts
             //rootFrame.Navigate(typeof(Alerts.AlertWindow), null);
         }
-        private void CheckAndHandleAlerts()
-        {
-            var alertRepository = new AlertRepository();
-            var triggeredAlerts = alertRepository.GetTriggeredAlerts();
-
-            if (triggeredAlerts.Count > 0)
-            {
-                DisplayTriggeredAlerts(triggeredAlerts);
-            }
-            else
-            {
-                rootFrame.Navigate(typeof(HomepageView), null);
-            }
-        }
-        private void DisplayTriggeredAlerts(List<TriggeredAlert> triggeredAlerts)
-        {
-            rootFrame.Navigate(typeof(AlertsView), triggeredAlerts);
-        }
-
         void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
             throw new Exception("Failed to load Page: " + e.SourcePageType.FullName);

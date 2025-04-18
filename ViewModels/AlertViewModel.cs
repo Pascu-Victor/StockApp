@@ -2,14 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using StockApp.Models;
-    using StockApp.Service;
+    using StockApp.Services;
 
     public class AlertViewModel
     {
-        private readonly AlertService alertService = new ();
+        private readonly AlertService alertService = new();
 
         public List<Alert> Alerts => this.alertService.GetAllAlerts();
 
