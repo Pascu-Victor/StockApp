@@ -1,148 +1,71 @@
 ﻿namespace StockApp.Models
 {
     using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
 
     /// <summary>
     /// Represents an application user, with profile details, financial information, and permissions.
     /// </summary>
-    public class User(
-        int? id = null,
-        string? cnp = null,
-        string? username = null,
-        string? firstName = null,
-        string? lastName = null,
-        string? email = null,
-        string? phoneNumber = null,
-        string? hashedPassword = null,
-        string? description = null,
-        bool? isModerator = null,
-        string? image = null,
-        bool? isHidden = null,
-        int? gem_balance = null,
-        int? numberOfOffenses = null,
-        int? riskScore = null,
-        decimal? roi = null,
-        int? creditScore = null,
-        DateOnly? birthday = null,
-        string? zodiacSign = null,
-        string? zodiacAttribute = null,
-        int? numberOfBillSharesPaid = null,
-        int? income = null,
-        decimal? balance = null)
+    public class User
     {
-        /// <summary>
-        /// Gets or sets the user's unique identifier.
-        /// </summary>
-        public int Id { get; set; } = id ?? 0;
+        [Key]
+        public int Id { get; set; }
 
-        /// <summary>
-        /// Gets or sets the user's CNP identifier.
-        /// </summary>
-        public string CNP { get; set; } = cnp ?? string.Empty;
+        [Required]
+        [MaxLength(50)]
+        public string CNP { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's display name.
-        /// </summary>
-        public string Username { get; set; } = username ?? string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public string Username { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's first name.
-        /// </summary>
-        public string FirstName { get; set; } = firstName ?? string.Empty;
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's last name.
-        /// </summary>
-        public string LastName { get; set; } = lastName ?? string.Empty;
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's email address.
-        /// </summary>
-        public string Email { get; set; } = email ?? string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public string Email { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's phone number.
-        /// </summary>
-        public string PhoneNumber { get; set; } = phoneNumber ?? string.Empty;
+        [MaxLength(20)]
+        public string PhoneNumber { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's hashed password.
-        /// </summary>
-        public string HashedPassword { get; set; } = hashedPassword ?? string.Empty;
+        [Required]
+        public string HashedPassword { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's profile description or bio.
-        /// </summary>
-        public string Description { get; set; } = description ?? string.Empty;
+        public string Description { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether this user is a moderator.
-        /// </summary>
-        public bool IsModerator { get; set; } = isModerator ?? false;
+        public bool IsModerator { get; set; } = false;
 
-        /// <summary>
-        /// Gets or sets the path or URL to the user's avatar image.
-        /// </summary>
-        public string Image { get; set; } = image ?? string.Empty;
+        public string Image { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the user's profile is hidden.
-        /// </summary>
-        public bool IsHidden { get; set; } = isHidden ?? false;
+        public bool IsHidden { get; set; } = false;
 
-        /// <summary>
-        /// Gets or sets the user's gem balance.
-        /// </summary>
-        public int GemBalance { get; set; } = gem_balance ?? 0;
+        public int GemBalance { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the number of offenses committed by the user.
-        /// </summary>
-        public int NumberOfOffenses { get; set; } = numberOfOffenses ?? 0;
+        public int NumberOfOffenses { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's risk score.
-        /// </summary>
-        public int RiskScore { get; set; } = riskScore ?? 0;
+        public int RiskScore { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's return on investment.
-        /// </summary>
-        public decimal ROI { get; set; } = roi ?? 0;
+        public decimal ROI { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's credit score.
-        /// </summary>
-        public int CreditScore { get; set; } = creditScore ?? 0;
+        public int CreditScore { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's birthday.
-        /// </summary>
-        public DateOnly Birthday { get; set; } = birthday ?? new DateOnly();
+        public DateOnly Birthday { get; set; }
 
-        /// <summary>
-        /// Gets or sets the user's zodiac sign.
-        /// </summary>
-        public string ZodiacSign { get; set; } = zodiacSign ?? string.Empty;
+        public string ZodiacSign { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the user's zodiac attribute.
-        /// </summary>
-        public string ZodiacAttribute { get; set; } = zodiacAttribute ?? string.Empty;
+        public string ZodiacAttribute { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the number of bill shares paid by the user.
-        /// </summary>
-        public int NumberOfBillSharesPaid { get; set; } = numberOfBillSharesPaid ?? 0;
+        public int NumberOfBillSharesPaid { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's income.
-        /// </summary>
-        public int Income { get; set; } = income ?? 0;
+        public int Income { get; set; } = 0;
 
-        /// <summary>
-        /// Gets or sets the user's account balance.
-        /// </summary>
-        public decimal Balance { get; set; } = balance ?? 0;
+        public decimal Balance { get; set; } = 0;
     }
 }

@@ -3,4 +3,112 @@
 GET {{BankApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
+### Get all users
+GET {{BankApi_HostAddress}}/api/user
+Accept: application/json
+
+###
+
+### Get user by CNP
+GET {{BankApi_HostAddress}}/api/user/1234567890123
+Accept: application/json
+
+###
+
+### Get user by username
+GET {{BankApi_HostAddress}}/api/user/username/JohnDoe
+Accept: application/json
+
+###
+
+### Create a new user
+POST {{BankApi_HostAddress}}/api/user
+Content-Type: application/json
+
+{
+  "cnp": "1234567890123",
+  "username": "JohnDoe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phoneNumber": "0123456789",
+  "hashedPassword": "securehashedpassword",
+  "description": "Sample description",
+  "isModerator": false,
+  "image": "https://example.com/image.png",
+  "isHidden": false,
+  "gemBalance": 100,
+  "numberOfOffenses": 0,
+  "riskScore": 50,
+  "roi": 12.5,
+  "creditScore": 700,
+  "birthday": "2000-01-01",
+  "zodiacSign": "Capricorn",
+  "zodiacAttribute": "Earth",
+  "numberOfBillSharesPaid": 10,
+  "income": 3000,
+  "balance": 1500.50
+}
+
+###
+
+### Update existing user
+PUT {{BankApi_HostAddress}}/api/user/1234567890123
+Content-Type: application/json
+
+{
+  "cnp": "1234567890123",
+  "username": "JohnDoeUpdated",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.updated@example.com",
+  "phoneNumber": "0987654321",
+  "hashedPassword": "newsecurehashedpassword",
+  "description": "Updated description",
+  "isModerator": true,
+  "image": "https://example.com/newimage.png",
+  "isHidden": true,
+  "gemBalance": 200,
+  "numberOfOffenses": 1,
+  "riskScore": 60,
+  "roi": 15.0,
+  "creditScore": 750,
+  "birthday": "2000-01-01",
+  "zodiacSign": "Capricorn",
+  "zodiacAttribute": "Earth",
+  "numberOfBillSharesPaid": 15,
+  "income": 4000,
+  "balance": 2000.00
+}
+
+###
+
+### Delete a user
+DELETE {{BankApi_HostAddress}}/api/user/1234567890123
+
+###
+
+### Penalize a user
+POST {{BankApi_HostAddress}}/api/user/1234567890123/penalize/10
+
+###
+
+### Increment offenses count for a user
+POST {{BankApi_HostAddress}}/api/user/1234567890123/increment-offenses
+
+###
+
+### Update user's credit score
+POST {{BankApi_HostAddress}}/api/user/1234567890123/update-creditscore/750
+
+###
+
+### Update user's ROI
+POST {{BankApi_HostAddress}}/api/user/1234567890123/update-roi/20.5
+
+###
+
+### Update user's risk score
+POST {{BankApi_HostAddress}}/api/user/1234567890123/update-riskscore/45
+
 ###
