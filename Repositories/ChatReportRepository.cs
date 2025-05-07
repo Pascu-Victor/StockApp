@@ -6,14 +6,17 @@
     using Microsoft.Data.SqlClient;
     using Src.Data;
     using Src.Model;
+    using System.Threading.Tasks;
 
     public class ChatReportRepository : IChatReportRepository
     {
         private readonly DatabaseConnection dbConnection;
+        private readonly IActivityRepository _activityRepository;
 
-        public ChatReportRepository(DatabaseConnection dbConnection)
+        public ChatReportRepository(DatabaseConnection dbConnection, IActivityRepository activityRepository)
         {
             this.dbConnection = dbConnection;
+            _activityRepository = activityRepository ?? throw new ArgumentNullException(nameof(activityRepository));
         }
 
         public int GetNumberOfGivenTipsForUser(string reportedUserCnp)
@@ -27,17 +30,13 @@
             return countTips;
         }
 
-        public void UpdateActivityLog(string reportedUserCnp, int amount)
+        public async Task UpdateActivityLog(string reportedUserCnp, int amount)
         {
-            SqlParameter[] activityParameters = new SqlParameter[]
-            {
-                new SqlParameter("@UserCnp", reportedUserCnp),
-                new SqlParameter("@ActivityName", "Chat"),
-                new SqlParameter("@LastModifiedAmount", amount),
-                new SqlParameter("@ActivityDetails", "Chat abuse")
-            };
-            const string UpdateQuery = "DECLARE @count INT; SELECT @count = COUNT(*) FROM ActivityLog a WHERE a.UserCnp = @UserCnp and a.ActivityName = @ActivityName; IF @count = 0 BEGIN INSERT INTO ActivityLog (ActivityName, UserCnp, LastModifiedAmount, ActivityDetails) VALUES (@ActivityName, @UserCnp, @LastModifiedAmount, @ActivityDetails); END ELSE BEGIN UPDATE ActivityLog SET LastModifiedAmount = @LastModifiedAmount, ActivityDetails = @ActivityDetails WHERE UserCnp = @UserCnp AND ActivityName = @ActivityName; END;";
-            this.dbConnection.ExecuteNonQuery(UpdateQuery, activityParameters, CommandType.Text);
+            await _activityRepository.AddActivityAsync(
+                reportedUserCnp,
+                "Chat",
+                amount,
+                "Chat abuse");
         }
 
         public List<ChatReport> GetChatReports()

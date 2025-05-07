@@ -2,169 +2,142 @@ namespace StockApp.Views.Pages
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.UI.Xaml;
-    using OxyPlot;
-    using OxyPlot.Axes;
-    using OxyPlot.Series;
+    using LiveChartsCore;
+    using LiveChartsCore.SkiaSharpView;
+    using LiveChartsCore.SkiaSharpView.Painting;
+    using LiveChartsCore.Defaults;
+    using SkiaSharp;
     using Src.Data;
     using Src.Model;
     using StockApp.Models;
     using StockApp.Repositories;
     using StockApp.Services;
+    using StockApp.ViewModels;
 
     public sealed partial class AnalysisWindow : Window
     {
-        private User user;
-        private readonly IActivityService activityService;
-        private readonly IHistoryService historyService;
+        private readonly User _user;
+        private readonly ActivityViewModel _activityViewModel;
+        private readonly IHistoryService _historyService;
 
         public AnalysisWindow(User selectedUser)
         {
             this.InitializeComponent();
-            this.user = selectedUser;
-            this.activityService = new ActivityService(new ActivityRepository(new DatabaseConnection(), new UserRepository()));
-            this.historyService = new HistoryService(new HistoryRepository(new DatabaseConnection()));
-            this.LoadUserData();
-            this.LoadHistory(this.historyService.GetHistoryMonthly(this.user.CNP));
-            this.LoadUserActivities();
+            _user = selectedUser ?? throw new ArgumentNullException(nameof(selectedUser));
+            
+            // Get services from DI container
+            var activityService = App.Host.Services.GetRequiredService<IActivityService>();
+            _historyService = App.Host.Services.GetRequiredService<IHistoryService>();
+
+            _activityViewModel = new ActivityViewModel(activityService);
+            
+            LoadUserData();
+            LoadHistory(_historyService.GetHistoryMonthly(_user.CNP));
+            _ = LoadUserActivitiesAsync(); // Fire and forget, but in a real app you might want to handle this differently
         }
 
-        public void LoadUserData()
+        private void LoadUserData()
         {
-            this.IdTextBlock.Text = $"Id: {this.user.Id}";
-            this.FirstNameTextBlock.Text = $"First name: {this.user.FirstName}";
-            this.LastNameTextBlock.Text = $"Last name: {this.user.LastName}";
-            this.CNPTextBlock.Text = $"CNP: {this.user.CNP}";
-            this.EmailTextBlock.Text = $"Email: {this.user.Email}";
-            this.PhoneNumberTextBlock.Text = $"Phone number: {this.user.PhoneNumber}";
+            IdTextBlock.Text = $"Id: {_user.Id}";
+            FirstNameTextBlock.Text = $"First name: {_user.FirstName}";
+            LastNameTextBlock.Text = $"Last name: {_user.LastName}";
+            CNPTextBlock.Text = $"CNP: {_user.CNP}";
+            EmailTextBlock.Text = $"Email: {_user.Email}";
+            PhoneNumberTextBlock.Text = $"Phone number: {_user.PhoneNumber}";
         }
 
-        public void LoadUserActivities()
-        {
-            try
-            {
-                var activities = this.activityService.GetActivityForUser(this.user.CNP);
-
-                this.ActivityListView.ItemsSource = activities;
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine($"Error loading activities: {exception.Message}");
-            }
-        }
-
-        public void LoadHistory(List<CreditScoreHistory> history)
+        private async Task LoadUserActivitiesAsync()
         {
             try
             {
-                if (history.Count == 0)
-                {
-                    return;
-                }
-
-                var plotModel = new PlotModel { Title = string.Empty };
-
-                var barSeries = new BarSeries
-                {
-                    Title = "Credit Score",
-                    StrokeThickness = 1
-                };
-
-                for (int i = 0; i < history.Count; i++)
-                {
-                    var record = history[i];
-                    OxyColor barColor;
-
-                    if (i == 0)
-                    {
-                        barColor = OxyColor.FromRgb(0, 255, 0);
-                    }
-                    else
-                    {
-                        var previousRecord = history[i - 1];
-                        if (record.Score > previousRecord.Score)
-                        {
-                            barColor = OxyColor.FromRgb(0, 255, 0);
-                        }
-                        else if (record.Score == previousRecord.Score)
-                        {
-                            barColor = OxyColor.FromRgb(255, 255, 0);
-                        }
-                        else
-                        {
-                            barColor = OxyColor.FromRgb(255, 0, 0);
-                        }
-                    }
-
-                    barSeries.Items.Add(new BarItem
-                    {
-                        Value = record.Score,
-                        Color = barColor
-                    });
-                }
-
-                foreach (var record in history)
-                {
-                    barSeries.Items.Add(new BarItem { Value = record.Score });
-                }
-
-                var categoryAxis = new CategoryAxis
-                {
-                    Position = AxisPosition.Left
-                };
-                foreach (var record in history)
-                {
-                    categoryAxis.Labels.Add(record.Date.ToString("MM/dd"));
-                }
-
-                plotModel.Axes.Add(categoryAxis);
-                plotModel.Series.Add(barSeries);
-
-                this.CreditScorePlotView.Model = plotModel;
-                this.CreditScorePlotView.InvalidatePlot(true);
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine($"Error loading credit score history: {exception.Message}");
-            }
-        }
-
-        private async void OnMonthlyClick(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var history = this.historyService.GetHistoryMonthly(this.user.CNP);
-                this.LoadHistory(history);
+                await _activityViewModel.LoadActivitiesForUserAsync(_user.CNP);
+                ActivityListView.ItemsSource = _activityViewModel.Activities;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading credit score history: {ex.Message}");
+                // In a real app, you would want to show this error to the user in a more user-friendly way
+                System.Diagnostics.Debug.WriteLine($"Error loading activities: {ex.Message}");
             }
         }
 
-        private async void OnYearlyClick(object sender, RoutedEventArgs e)
+        private void LoadHistory(List<CreditScoreHistory> history)
+        {
+            var points = new List<DateTimePoint>();
+            foreach (var item in history)
+            {
+                points.Add(new DateTimePoint(item.Date.ToDateTime(TimeOnly.MinValue), item.Score));
+            }
+
+            var series = new ISeries[]
+            {
+                new LineSeries<DateTimePoint>
+                {
+                    Values = points,
+                    GeometrySize = 8,
+                    Stroke = new SolidColorPaint(SKColors.Blue, 2),
+                    GeometryStroke = new SolidColorPaint(SKColors.Blue, 2),
+                    Fill = null
+                }
+            };
+
+            CreditScorePlotView.Series = series;
+            CreditScorePlotView.XAxes = new[]
+            {
+                new Axis
+                {
+                    Labeler = value => new DateTime((long)value).ToString("MM/dd/yyyy"),
+                    UnitWidth = TimeSpan.FromDays(1).Ticks
+                }
+            };
+            CreditScorePlotView.YAxes = new[]
+            {
+                new Axis
+                {
+                    MinLimit = 0,
+                    MaxLimit = 1000
+                }
+            };
+        }
+
+        private async void OnWeeklyButtonClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                var history = this.historyService.GetHistoryYearly(this.user.CNP);
-                this.LoadHistory(history);
+                var history = _historyService.GetHistoryWeekly(_user.CNP);
+                LoadHistory(history);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error loading credit score history: {exception.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error loading weekly history: {ex.Message}");
             }
         }
 
-        private async void OnWeeklyClick(object sender, RoutedEventArgs e)
+        private async void OnMonthlyButtonClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                var history = this.historyService.GetHistoryWeekly(this.user.CNP);
-                this.LoadHistory(history);
+                var history = _historyService.GetHistoryMonthly(_user.CNP);
+                LoadHistory(history);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error loading credit score history: {exception.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error loading monthly history: {ex.Message}");
+            }
+        }
+
+        private async void OnYearlyButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var history = _historyService.GetHistoryYearly(_user.CNP);
+                LoadHistory(history);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading yearly history: {ex.Message}");
             }
         }
     }

@@ -2,116 +2,76 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
-    using Microsoft.Data.SqlClient;
-    using Src.Data;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
+    using StockApp.Database;
     using Src.Model;
-    using StockApp.Models;
 
     public class ActivityRepository : IActivityRepository
     {
-        private readonly DatabaseConnection dbConnection;
-        private readonly UserRepository userRepository;
+        private readonly AppDbContext _dbContext;
 
-        public ActivityRepository(DatabaseConnection dbConnection, UserRepository userRepository)
+        public ActivityRepository(AppDbContext dbContext)
         {
-            this.dbConnection = dbConnection;
-            this.userRepository = userRepository;
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public void AddActivity(string userCnp, string activityName, int amount, string details)
-        {
-            if (string.IsNullOrWhiteSpace(userCnp) || string.IsNullOrWhiteSpace(activityName) || amount <= 0)
-            {
-                throw new ArgumentException("User CNP, activity name and amount cannot be empty or less than 0");
-            }
-
-            try
-            {
-                User? existingUser = this.userRepository.GetUserByCnpAsync(userCnp).Result;
-                if (existingUser == null)
-                {
-                    throw new ArgumentException("User not found");
-                }
-            }
-            catch (ArgumentException exception)
-            {
-                throw new ArgumentException("Invalid user CNP", exception);
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Error retrieving user", exception);
-            }
-
-            const string InsertQuery = @"
-                INSERT INTO ActivityLog (UserCnp, ActivityName, LastModifiedAmount, ActivityDetails)
-                VALUES (@UserCnp, @ActivityName, @LastModifiedAmount, @ActivityDetails)";
-
-            SqlParameter[] activityParameters = new SqlParameter[]
-            {
-                new SqlParameter("@UserCnp", userCnp),
-                new SqlParameter("@ActivityName", activityName),
-                new SqlParameter("@LastModifiedAmount", amount),
-                new SqlParameter("@ActivityDetails", details ?? (object)DBNull.Value)
-            };
-
-            try
-            {
-                int rowsAffected = this.dbConnection.ExecuteNonQuery(InsertQuery, activityParameters, CommandType.Text);
-                if (rowsAffected == 0)
-                {
-                    throw new Exception("No rows were inserted");
-                }
-            }
-            catch (SqlException exception)
-            {
-                throw new Exception($"Database error: {exception.Message}", exception);
-            }
-        }
-
-        public List<ActivityLog> GetActivityForUser(string userCnp)
+        public async Task AddActivityAsync(string userCnp, string activityName, int amount, string details)
         {
             if (string.IsNullOrWhiteSpace(userCnp))
-            {
-                throw new ArgumentException("User CNP cannot be empty");
-            }
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+            
+            if (string.IsNullOrWhiteSpace(activityName))
+                throw new ArgumentException("Activity name cannot be empty", nameof(activityName));
+            
+            if (amount <= 0)
+                throw new ArgumentException("Amount must be greater than 0", nameof(amount));
 
-            const string SelectQuery = @"
-                SELECT Id, UserCnp, ActivityName, LastModifiedAmount, ActivityDetails 
-                FROM ActivityLog 
-                WHERE UserCnp = @UserCnp";
-
-            SqlParameter[] selectQueryParameter = new SqlParameter[]
+            var activity = new ActivityLog
             {
-                new SqlParameter("@UserCnp", userCnp)
+                UserCnp = userCnp,
+                ActivityName = activityName,
+                LastModifiedAmount = amount,
+                ActivityDetails = details,
+                CreatedAt = DateTime.UtcNow
             };
 
-            try
+            await _dbContext.ActivityLogs.AddAsync(activity);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<ActivityLog>> GetActivityForUserAsync(string userCnp)
+        {
+            if (string.IsNullOrWhiteSpace(userCnp))
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+
+            return await _dbContext.ActivityLogs
+                .Where(a => a.UserCnp == userCnp)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<ActivityLog>> GetAllActivitiesAsync()
+        {
+            return await _dbContext.ActivityLogs
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<ActivityLog> GetActivityByIdAsync(int id)
+        {
+            return await _dbContext.ActivityLogs
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task DeleteActivityAsync(int id)
+        {
+            var activity = await _dbContext.ActivityLogs.FindAsync(id);
+            if (activity != null)
             {
-                DataTable? userActivityTable = this.dbConnection.ExecuteReader(SelectQuery, selectQueryParameter, CommandType.Text);
-
-                if (userActivityTable == null || userActivityTable.Rows.Count == 0)
-                {
-                    return new List<ActivityLog>();
-                }
-
-                List<ActivityLog> activitiesList = new List<ActivityLog>();
-
-                foreach (DataRow row in userActivityTable.Rows)
-                {
-                    activitiesList.Add(new ActivityLog(
-                        id: Convert.ToInt32(row["Id"]),
-                        userCNP: row["UserCnp"].ToString()!,
-                        name: row["ActivityName"].ToString()!,
-                        amount: Convert.ToInt32(row["LastModifiedAmount"]),
-                        details: row["ActivityDetails"].ToString() ?? string.Empty));
-                }
-
-                return activitiesList;
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Error retrieving activity for user", exception);
+                _dbContext.ActivityLogs.Remove(activity);
+                await _dbContext.SaveChangesAsync();
             }
         }
     }

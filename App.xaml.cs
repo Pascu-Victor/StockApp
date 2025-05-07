@@ -27,7 +27,7 @@ namespace StockApp
     {
         public static Window? MainWindow { get; private set; } = null!;
 
-        public static IHost Host { get; private set; }
+        public static IHost? Host { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="App"/> class.
@@ -75,7 +75,8 @@ namespace StockApp
                         return new BankStocksProxyRepo(client);
                     });
                     
-                    services.AddSingleton<IActivityRepository, ActivityRepository>();
+                    services.AddScoped<IActivityRepository, ActivityRepository>();
+                    services.AddScoped<IActivityService, ActivityApiService>();
                     services.AddSingleton<IBillSplitReportRepository, BillSplitReportRepository>();
                     services.AddSingleton<IChatReportRepository, ChatReportRepository>();
                     services.AddSingleton<IHistoryRepository, HistoryRepository>();
@@ -85,7 +86,6 @@ namespace StockApp
                     services.AddSingleton<IUserRepository, UserRepository>();
 
                     // Other Services
-                    services.AddSingleton<IActivityService, ActivityService>();
                     services.AddSingleton<IBillSplitReportService, BillSplitReportService>();
                     services.AddSingleton<IChatReportService, ChatReportService>();
                     services.AddSingleton<IHistoryService, HistoryService>();

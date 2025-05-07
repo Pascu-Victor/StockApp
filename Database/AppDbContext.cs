@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using StockApp.Models;
-
 namespace StockApp.Database
 {
+    using Microsoft.EntityFrameworkCore;
+    using StockApp.Models;
+    using Src.Model;
+
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -15,6 +16,7 @@ namespace StockApp.Database
         }
 
         public DbSet<BaseStock> BaseStocks { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +30,23 @@ namespace StockApp.Database
                 entity.Property(e => e.Name).HasColumnName("STOCK_NAME");
                 entity.Property(e => e.Symbol).HasColumnName("STOCK_SYMBOL");
                 entity.Property(e => e.AuthorCNP).HasColumnName("AUTHOR_CNP");
+            });
+
+            // Configure ActivityLog entity
+            modelBuilder.Entity<ActivityLog>(entity =>
+            {
+                entity.ToTable("ActivityLog");
+                entity.HasKey(e => e.Id);
+                
+                // Configure relationship with User
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserCnp)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure indexes
+                entity.HasIndex(e => e.UserCnp);
+                entity.HasIndex(e => e.CreatedAt);
             });
         }
 

@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using Src.Model;
+    using System.Threading.Tasks;
 
     public interface IChatReportRepository
     {
@@ -14,6 +15,6 @@
 
         int GetNumberOfGivenTipsForUser(string reportedUserCnp);
 
-        void UpdateActivityLog(string reportedUserCnp, int amount);
+        Task UpdateActivityLog(string reportedUserCnp, int amount);
     }
 }
