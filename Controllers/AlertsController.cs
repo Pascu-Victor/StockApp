@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using StockApp.Models;
 using StockApp.Repositories;
+using StockApp.Exceptions;
 
 namespace StockApp.Controllers
 {
@@ -51,7 +52,7 @@ namespace StockApp.Controllers
         public ActionResult<Alert> Create(Alert alert)
         {
             if (alert == null)
-                return BadRequest();
+                return BadRequest("Alert cannot be null.");
 
             try
             {
@@ -60,7 +61,7 @@ namespace StockApp.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new AlertRepositoryException("Failed to create alert", ex).Message);
             }
         }
 
@@ -71,7 +72,7 @@ namespace StockApp.Controllers
         public IActionResult Update(int id, Alert alert)
         {
             if (alert == null || id != alert.AlertId)
-                return BadRequest();
+                return BadRequest("Invalid alert data.");
 
             try
             {
@@ -84,7 +85,7 @@ namespace StockApp.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new AlertRepositoryException("Failed to update alert", ex).Message);
             }
         }
 
@@ -118,7 +119,7 @@ namespace StockApp.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new AlertRepositoryException("Failed to trigger alert", ex).Message);
             }
         }
 
