@@ -1,31 +1,34 @@
-﻿namespace Src.Model
-{
-    using System;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace StockApp.Models
+{
     public class CreditScoreHistory
     {
+        [Key]
         public int Id { get; set; }
 
-        public string UserCnp { get; set; }
+        [Required]
+        [MaxLength(13)]
+        public string UserCnp { get; set; } = string.Empty;
 
+        [Required]
         public DateOnly Date { get; set; }
 
+        [Required]
         public int Score { get; set; }
-
-        public CreditScoreHistory(int id, string userCnp, DateOnly date, int creditScore)
-        {
-            this.Id = id;
-            this.UserCnp = userCnp;
-            this.Date = date;
-            this.Score = creditScore;
-        }
 
         public CreditScoreHistory()
         {
-            this.Id = 0;
-            this.UserCnp = string.Empty;
-            this.Date = new DateOnly();
-            this.Score = 0;
+        }
+
+        public CreditScoreHistory(int id, string userCnp, DateOnly date, int creditScore)
+        {
+            Id = id;
+            UserCnp = userCnp;
+            Date = date;
+            Score = creditScore;
         }
     }
 }

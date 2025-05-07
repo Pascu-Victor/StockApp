@@ -6,11 +6,12 @@ namespace StockApp.Views.Pages
     using OxyPlot;
     using OxyPlot.Axes;
     using OxyPlot.Series;
-    using Src.Data;
-    using Src.Model;
+    using StockApp.Database;
     using StockApp.Models;
     using StockApp.Repositories;
     using StockApp.Services;
+    using System.Net.Http;
+    using Src.Data;
 
     public sealed partial class AnalysisWindow : Window
     {
@@ -22,8 +23,15 @@ namespace StockApp.Views.Pages
         {
             this.InitializeComponent();
             this.user = selectedUser;
+            
+            // Create HTTP client for HistoryApiService
+            var httpClient = new HttpClient();
+            var historyApiService = new HistoryApiService(httpClient, "http://localhost:5000");
+            
+            // Initialize services with correct dependencies
             this.activityService = new ActivityService(new ActivityRepository(new DatabaseConnection(), new UserRepository()));
-            this.historyService = new HistoryService(new HistoryRepository(new DatabaseConnection()));
+            this.historyService = new HistoryService(historyApiService);
+            
             this.LoadUserData();
             this.LoadHistory(this.historyService.GetHistoryMonthly(this.user.CNP));
             this.LoadUserActivities();

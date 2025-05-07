@@ -1,132 +1,104 @@
-﻿namespace StockApp.Services
-{
-    using System;
-    using System.Collections.Generic;
-    using Src.Model;
-    using StockApp.Repositories;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using StockApp.Models;
 
+namespace StockApp.Services
+{
     public class HistoryService : IHistoryService
     {
-        private readonly IHistoryRepository historyRepository;
+        private readonly HistoryApiService _apiService;
 
-        public HistoryService(IHistoryRepository historyRepository)
+        public HistoryService(HistoryApiService apiService)
         {
-            this.historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
+            _apiService = apiService ?? throw new ArgumentNullException(nameof(apiService));
         }
 
-        public List<CreditScoreHistory> GetHistoryByUserCNP(string userCNP)
+        public List<CreditScoreHistory> GetHistoryForUser(string userCnp)
         {
-            if (string.IsNullOrWhiteSpace(userCNP))
+            if (string.IsNullOrWhiteSpace(userCnp))
             {
-                throw new ArgumentException("User CNP cannot be null");
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
             }
-
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
 
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                // Since we're using async methods in the API service, we need to run this synchronously
+                return Task.Run(() => _apiService.GetHistoryForUserAsync(userCnp)).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new Exception("Error retrieving credit score history", ex);
             }
-
-            return history;
         }
 
-        public List<CreditScoreHistory> GetHistoryWeekly(string userCNP)
+        public async Task<List<CreditScoreHistory>> GetHistoryForUserAsync(string userCnp)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
+            if (string.IsNullOrWhiteSpace(userCnp))
+            {
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+            }
 
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                return await _apiService.GetHistoryForUserAsync(userCnp);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new Exception("Error retrieving credit score history", ex);
             }
-
-            List<CreditScoreHistory> weeklyHistory = new List<CreditScoreHistory>();
-
-            foreach (CreditScoreHistory h in history)
-            {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddDays(-7)))
-                {
-                    weeklyHistory.Add(h);
-                }
-            }
-
-            return weeklyHistory;
         }
 
-        public List<CreditScoreHistory> GetHistoryMonthly(string userCNP)
+        public async Task<CreditScoreHistory> AddHistoryEntryAsync(CreditScoreHistory history)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
+            if (history == null)
+            {
+                throw new ArgumentNullException(nameof(history));
+            }
 
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                return await _apiService.AddHistoryEntryAsync(history);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new Exception("Error adding credit score history entry", ex);
             }
-
-            List<CreditScoreHistory> monthlyHistory = new List<CreditScoreHistory>();
-
-            foreach (CreditScoreHistory h in history)
-            {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddMonths(-1)))
-                {
-                    monthlyHistory.Add(h);
-                }
-            }
-
-            return monthlyHistory;
         }
 
-        public List<CreditScoreHistory> GetHistoryYearly(string userCNP)
+        public async Task<bool> DeleteHistoryEntryAsync(int id)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
-
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                await _apiService.DeleteHistoryEntryAsync(id);
+                return true;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new Exception("Error deleting credit score history entry", ex);
             }
+        }
 
-            List<CreditScoreHistory> yearlyHistory = new List<CreditScoreHistory>();
+        public List<CreditScoreHistory> GetHistoryWeekly(string userCnp)
+        {
+            var history = GetHistoryForUser(userCnp);
+            var oneWeekAgo = DateOnly.FromDateTime(DateTime.Now.AddDays(-7));
+            return history.Where(h => h.Date >= oneWeekAgo).ToList();
+        }
 
-            foreach (CreditScoreHistory h in history)
-            {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddYears(-1)))
-                {
-                    yearlyHistory.Add(h);
-                }
-            }
+        public List<CreditScoreHistory> GetHistoryMonthly(string userCnp)
+        {
+            var history = GetHistoryForUser(userCnp);
+            var oneMonthAgo = DateOnly.FromDateTime(DateTime.Now.AddMonths(-1));
+            return history.Where(h => h.Date >= oneMonthAgo).ToList();
+        }
 
-            return yearlyHistory;
+        public List<CreditScoreHistory> GetHistoryYearly(string userCnp)
+        {
+            var history = GetHistoryForUser(userCnp);
+            var oneYearAgo = DateOnly.FromDateTime(DateTime.Now.AddYears(-1));
+            return history.Where(h => h.Date >= oneYearAgo).ToList();
         }
     }
 }

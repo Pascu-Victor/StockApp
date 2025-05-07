@@ -16,6 +16,7 @@ namespace StockApp.Database
 
         public DbSet<BaseStock> BaseStocks { get; set; }
         public DbSet<Alert> Alerts { get; set; } = null!;
+        public DbSet<CreditScoreHistory> CreditScoreHistories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,15 @@ namespace StockApp.Database
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.UpperBound).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.LowerBound).HasColumnType("decimal(18,2)");
+            });
+
+            modelBuilder.Entity<CreditScoreHistory>(entity =>
+            {
+                entity.ToTable("CreditScoreHistory");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserCnp).IsRequired().HasMaxLength(13);
+                entity.Property(e => e.Date).IsRequired();
+                entity.Property(e => e.Score).IsRequired();
             });
         }
 
