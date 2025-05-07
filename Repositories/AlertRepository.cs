@@ -1,89 +1,41 @@
-﻿namespace StockApp.Repositories
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Microsoft.Data.SqlClient;
-    using StockApp.Database;
-    using StockApp.Exceptions;
-    using StockApp.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using StockApp.Database;
+using StockApp.Exceptions;
+using StockApp.Models;
 
+namespace StockApp.Repositories
+{
     /// <summary>
     /// Repository for managing <see cref="Alert"/> entities and their triggered instances in the database.
     /// </summary>
-    public class AlertRepository
+    public class AlertRepository : IAlertRepository
     {
-        // Connection pulled from helper for executing commands
-        private readonly SqlConnection dbConnection = DatabaseHelper.GetConnection();
+        private readonly AppDbContext _context;
+        private readonly List<TriggeredAlert> _triggeredAlerts = new();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AlertRepository"/> class and loads alerts into memory.
-        /// </summary>
         public AlertRepository()
         {
-            this.LoadAlerts();
+            _context = new AppDbContext();
         }
 
         /// <summary>
-        /// Gets the list of all configured alerts.
+        /// Initializes a new instance of the <see cref="AlertRepository"/> class.
         /// </summary>
-        public List<Alert> Alerts { get; } = [];
-
-        /// <summary>
-        /// Gets the collection of alerts that have been triggered since load or last clear.
-        /// </summary>
-        public List<TriggeredAlert> TriggeredAlerts { get; private set; } = [];
-
-        /// <summary>
-        /// Clears the in-memory list of triggered alerts.
-        /// </summary>
-        public void ClearTriggeredAlerts() => this.TriggeredAlerts.Clear();
-
-        // Shared Method for SQL Command Execution
-        private void ExecuteSql(string query, Action<SqlCommand> parameterize)
+        /// <param name="context">The database context.</param>
+        public AlertRepository(AppDbContext context)
         {
-            using var command = new SqlCommand(query, this.dbConnection);
-
-            // Inline: apply parameters via provided lambda
-            parameterize?.Invoke(command);
-            command.ExecuteNonQuery();
-        }
-
-        // Shared Method for SQL Reader
-        private List<T> ExecuteReader<T>(string query, Func<SqlDataReader, T> map)
-        {
-            using var command = new SqlCommand(query, this.dbConnection);
-            using var reader = command.ExecuteReader();
-            List<T> results = [];
-
-            // Inline: iterate rows and map to objects
-            while (reader.Read())
-            {
-                results.Add(map(reader));
-            }
-
-            return results;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
-        /// Loads all alerts from the database into the <see cref="Alerts"/> list.
+        /// Gets all alerts from the database.
         /// </summary>
-        public void LoadAlerts()
+        public List<Alert> GetAllAlerts()
         {
-            const string query = "SELECT * FROM ALERTS";
-            this.Alerts.Clear();
-
-            // Inline: map each row to an Alert instance
-            this.Alerts.AddRange(
-                this.ExecuteReader(query, reader => new Alert
-                {
-                    AlertId = reader.GetInt32(0),
-                    StockName = reader.GetString(1),
-                    Name = reader.GetString(2),
-                    LowerBound = reader.GetInt32(3),
-                    UpperBound = reader.GetInt32(4),
-                    ToggleOnOff = reader.GetBoolean(5),
-                }));
+            return _context.Alerts.ToList();
         }
 
         /// <summary>
@@ -94,121 +46,60 @@
         /// <exception cref="KeyNotFoundException">Thrown if no alert with the given ID exists.</exception>
         public Alert GetAlertById(int alertId)
         {
-            return this.Alerts.FirstOrDefault(a => a.AlertId == alertId)
+            return _context.Alerts.FirstOrDefault(a => a.AlertId == alertId)
                 ?? throw new KeyNotFoundException($"Alert with ID {alertId} not found.");
         }
 
         /// <summary>
-        /// Adds a new alert to the database and in-memory collection.
+        /// Adds a new alert to the database.
         /// </summary>
-        /// <param name="stockName">Name of the stock to monitor.</param>
-        /// <param name="name">Descriptive name of the alert.</param>
-        /// <param name="upperBound">Upper price bound for triggering.</param>
-        /// <param name="lowerBound">Lower price bound for triggering.</param>
-        /// <param name="toggleOnOff">Whether the alert is active.</param>
-        /// <returns>The newly created <see cref="Alert"/> with assigned ID.</returns>
-        public Alert AddAlert(string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
+        /// <param name="alert">The alert to add.</param>
+        public void AddAlert(Alert alert)
         {
-            const string insertQuery = @"
-                INSERT INTO ALERTS 
-                    (STOCK_NAME, NAME, LOWER_BOUND, UPPER_BOUND, TOGGLE) 
-                VALUES 
-                    (@stockName, @name, @lowerBound, @upperBound, @toggleOnOff);
-                
-                SELECT SCOPE_IDENTITY();";
+            if (alert == null)
+                throw new ArgumentNullException(nameof(alert));
 
-            int alertId = -1;
-
-            // Inline: execute insert and retrieve new ID
-            this.ExecuteSql(insertQuery, command =>
-            {
-                command.Parameters.AddWithValue("@stockName", stockName);
-                command.Parameters.AddWithValue("@name", name);
-                command.Parameters.AddWithValue("@lowerBound", lowerBound);
-                command.Parameters.AddWithValue("@upperBound", upperBound);
-                command.Parameters.AddWithValue("@toggleOnOff", toggleOnOff);
-                alertId = Convert.ToInt32(command.ExecuteScalar());
-            });
-
-            var alert = new Alert
-            {
-                AlertId = alertId,
-                StockName = stockName,
-                Name = name,
-                LowerBound = lowerBound,
-                UpperBound = upperBound,
-                ToggleOnOff = toggleOnOff,
-            };
-
-            this.Alerts.Add(alert);
-            return alert;
+            _context.Alerts.Add(alert);
+            _context.SaveChanges();
         }
 
         /// <summary>
         /// Updates an existing alert's properties.
         /// </summary>
-        /// <param name="alertId">ID of the alert to update.</param>
-        /// <param name="stockName">New stock name.</param>
-        /// <param name="name">New alert name.</param>
-        /// <param name="upperBound">New upper bound.</param>
-        /// <param name="lowerBound">New lower bound.</param>
-        /// <param name="toggleOnOff">New toggle state.</param>
+        /// <param name="alert">The alert to update.</param>
         /// <exception cref="AlertRepositoryException">Thrown if the database update fails.</exception>
-        public void UpdateAlert(int alertId, string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
+        public void UpdateAlert(Alert alert)
         {
-            string updateQuery = @"
-        UPDATE ALERTS SET 
-            STOCK_NAME = @stockName, 
-            NAME = @name, 
-            LOWER_BOUND = @lowerBound, 
-            UPPER_BOUND = @upperBound, 
-            TOGGLE = @toggleOnOff
-        WHERE ALERT_ID = @alertId";
+            if (alert == null)
+                throw new ArgumentNullException(nameof(alert));
 
             try
             {
-                this.ExecuteSql(updateQuery, command =>
-                {
-                    command.Parameters.AddWithValue("@alertId", alertId);
-                    command.Parameters.AddWithValue("@stockName", stockName);
-                    command.Parameters.AddWithValue("@name", name);
-                    command.Parameters.AddWithValue("@lowerBound", lowerBound);
-                    command.Parameters.AddWithValue("@upperBound", upperBound);
-                    command.Parameters.AddWithValue("@toggleOnOff", toggleOnOff);
-                });
+                var existingAlert = _context.Alerts.FirstOrDefault(a => a.AlertId == alert.AlertId);
+                if (existingAlert == null)
+                    throw new KeyNotFoundException($"Alert with ID {alert.AlertId} not found.");
 
-                // Inline: update in-memory object
-                var existingAlert = this.Alerts.FirstOrDefault(a => a.AlertId == alertId);
-                if (existingAlert != null)
-                {
-                    existingAlert.StockName = stockName;
-                    existingAlert.Name = name;
-                    existingAlert.LowerBound = lowerBound;
-                    existingAlert.UpperBound = upperBound;
-                    existingAlert.ToggleOnOff = toggleOnOff;
-                }
+                _context.Entry(existingAlert).CurrentValues.SetValues(alert);
+                _context.SaveChanges();
             }
-            catch (SqlException ex)
+            catch (DbUpdateException ex)
             {
-                throw new AlertRepositoryException($"Failed to update alert with ID {alertId}.", ex);
+                throw new AlertRepositoryException($"Failed to update alert with ID {alert.AlertId}.", ex);
             }
         }
 
         /// <summary>
-        /// Deletes an alert from the database and removes it from memory.
+        /// Deletes an alert from the database.
         /// </summary>
         /// <param name="alertId">ID of the alert to delete.</param>
         public void DeleteAlert(int alertId)
         {
-            string deleteQuery = "DELETE FROM ALERTS WHERE ALERT_ID = @alertId";
-
-            this.ExecuteSql(deleteQuery, command =>
+            var alert = _context.Alerts.FirstOrDefault(a => a.AlertId == alertId);
+            if (alert != null)
             {
-                command.Parameters.AddWithValue("@alertId", alertId);
-            });
-
-            // Inline: remove from in-memory list
-            this.Alerts.RemoveAll(a => a.AlertId == alertId);
+                _context.Alerts.Remove(alert);
+                _context.SaveChanges();
+            }
         }
 
         /// <summary>
@@ -219,10 +110,10 @@
         /// <returns><c>true</c> if an enabled alert is triggered; otherwise, <c>false</c>.</returns>
         public bool IsAlertTriggered(string stockName, decimal currentPrice)
         {
-            var alert = this.Alerts.FirstOrDefault(a => a.StockName == stockName);
-            return alert != null
-                   && alert.ToggleOnOff
-                   && (currentPrice >= alert.UpperBound || currentPrice <= alert.LowerBound);
+            return _context.Alerts.Any(a => 
+                a.StockName == stockName && 
+                a.ToggleOnOff && 
+                (currentPrice >= a.UpperBound || currentPrice <= a.LowerBound));
         }
 
         /// <summary>
@@ -232,19 +123,33 @@
         /// <param name="currentPrice">Current price of the stock.</param>
         public void TriggerAlert(string stockName, decimal currentPrice)
         {
-            if (!this.IsAlertTriggered(stockName, currentPrice))
-            {
-                return; // Inline: do nothing if not triggered
-            }
+            if (!IsAlertTriggered(stockName, currentPrice))
+                return;
 
-            var alert = this.Alerts.First(a => a.StockName == stockName);
+            var alert = _context.Alerts.First(a => a.StockName == stockName);
             string message = $"Alert triggered for {stockName}: Price = {currentPrice}, Bounds: [{alert.LowerBound} - {alert.UpperBound}]";
 
-            this.TriggeredAlerts.Add(new TriggeredAlert
+            _triggeredAlerts.Add(new TriggeredAlert
             {
                 StockName = stockName,
-                Message = message,
+                Message = message
             });
+        }
+
+        /// <summary>
+        /// Gets the collection of alerts that have been triggered since load or last clear.
+        /// </summary>
+        public List<TriggeredAlert> GetTriggeredAlerts()
+        {
+            return _triggeredAlerts.ToList();
+        }
+
+        /// <summary>
+        /// Clears the in-memory list of triggered alerts.
+        /// </summary>
+        public void ClearTriggeredAlerts()
+        {
+            _triggeredAlerts.Clear();
         }
     }
 }

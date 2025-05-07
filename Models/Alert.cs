@@ -1,8 +1,10 @@
-﻿namespace StockApp.Models
-{
-    using System.ComponentModel;
-    using System.Runtime.CompilerServices;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 
+namespace StockApp.Models
+{
     /// <summary>
     /// Represents a stock alert with upper and lower price bounds and an on/off toggle.
     /// </summary>
@@ -23,6 +25,8 @@
         /// <summary>
         /// Gets or sets the unique identifier for this alert.
         /// </summary>
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AlertId
         {
             get => this.alertId;
@@ -39,6 +43,8 @@
         /// <summary>
         /// Gets or sets the stock symbol or name that this alert monitors.
         /// </summary>
+        [Required]
+        [StringLength(50)]
         public string StockName
         {
             get => this.stockName;
@@ -55,6 +61,8 @@
         /// <summary>
         /// Gets or sets the user-defined name for this alert.
         /// </summary>
+        [Required]
+        [StringLength(100)]
         public string Name
         {
             get => this.name;
@@ -71,6 +79,8 @@
         /// <summary>
         /// Gets or sets the upper price boundary for triggering the alert.
         /// </summary>
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal UpperBound
         {
             get => this.upperBound;
@@ -87,6 +97,8 @@
         /// <summary>
         /// Gets or sets the lower price boundary for triggering the alert.
         /// </summary>
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal LowerBound
         {
             get => this.lowerBound;
@@ -103,6 +115,7 @@
         /// <summary>
         /// Gets or sets a value indicating whether the alert is active.
         /// </summary>
+        [Required]
         public bool ToggleOnOff
         {
             get => this.toggleOnOff;

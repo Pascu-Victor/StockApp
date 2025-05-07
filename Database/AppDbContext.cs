@@ -15,6 +15,7 @@ namespace StockApp.Database
         }
 
         public DbSet<BaseStock> BaseStocks { get; set; }
+        public DbSet<Alert> Alerts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,15 @@ namespace StockApp.Database
                 entity.Property(e => e.Name).HasColumnName("STOCK_NAME");
                 entity.Property(e => e.Symbol).HasColumnName("STOCK_SYMBOL");
                 entity.Property(e => e.AuthorCNP).HasColumnName("AUTHOR_CNP");
+            });
+
+            modelBuilder.Entity<Alert>(entity =>
+            {
+                entity.HasKey(e => e.AlertId);
+                entity.Property(e => e.StockName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UpperBound).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.LowerBound).HasColumnType("decimal(18,2)");
             });
         }
 
