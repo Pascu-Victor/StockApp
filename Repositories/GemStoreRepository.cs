@@ -1,41 +1,30 @@
-﻿using System.Runtime.CompilerServices;
-
-[assembly: InternalsVisibleTo("StockApp.Repository.Tests")]
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using StockApp.Database;
+using StockApp.Models;
+using StockApp.Exceptions;
 
 namespace StockApp.Repositories
 {
-    using System;
-    using Microsoft.Data.SqlClient;
-    using StockApp.Database;
-
     /// <summary>
     /// Repository for retrieving and updating user gem balances and CNP values.
     /// </summary>
-    internal class GemStoreRepository : IGemStoreRepository
+    public class GemStoreRepository : IGemStoreRepository
     {
-        private readonly IDbExecutor dbConnection;
-        private readonly string cnp;
+        private readonly AppDbContext _context;
+        private readonly IUserRepository _userRepository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GemStoreRepository"/> class with the default SQL executor.
+        /// Initializes a new instance of the <see cref="GemStoreRepository"/> class with the specified database context.
         /// </summary>
-        public GemStoreRepository()
-            : this(new SqlDbExecutor(DatabaseHelper.GetConnection()))
+        /// <param name="context">The database context.</param>
+        /// <param name="userRepository">The user repository for accessing current user information.</param>
+        public GemStoreRepository(AppDbContext context, IUserRepository userRepository)
         {
-            var userRepo = new UserRepository();
-            this.cnp = userRepo.CurrentUserCNP;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GemStoreRepository"/> class with the specified database executor.
-        /// </summary>
-        /// <param name="executor">Executor used to run SQL commands.</param>
-        internal GemStoreRepository(IDbExecutor executor)
-        {
-            this.dbConnection = executor ?? throw new ArgumentNullException(nameof(executor));
-
-            var userRepo = new UserRepository();
-            this.cnp = userRepo.CurrentUserCNP;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         /// <summary>
@@ -44,60 +33,80 @@ namespace StockApp.Repositories
         /// <returns>The CNP string, or empty if not found.</returns>
         public string GetCnp()
         {
-            return new UserRepository().CurrentUserCNP;
+            return _userRepository.CurrentUserCNP;
         }
 
         /// <summary>
         /// Retrieves the current gem balance for the specified user.
         /// </summary>
-        /// <param name="userCnp">User identifier (CNP).</param>
+        /// <param name="cnp">User identifier (CNP).</param>
         /// <returns>User's gem balance as an integer.</returns>
-        public int GetUserGemBalance(string userCnp)
+        public async Task<int> GetUserGemBalanceAsync(string cnp)
         {
-            string checkQuery = "SELECT GEM_BALANCE FROM [USER] WHERE CNP = @CNP";
-
-            var result = this.dbConnection.ExecuteScalar(checkQuery, cmd =>
+            try
             {
-                cmd.Parameters.AddWithValue("@CNP", userCnp);
-            });
+                var gemStore = await _context.GemStores
+                    .FirstOrDefaultAsync(g => g.UserCnp == cnp);
 
-            // FIXME: consider throwing an exception if the user is not found
-            return result != null ? Convert.ToInt32(result) : 0;
+                return gemStore?.GemBalance ?? 0;
+            }
+            catch (Exception ex)
+            {
+                throw new RepositoryPersistenceException("Error retrieving gem balance", ex);
+            }
         }
 
         /// <summary>
         /// Updates the gem balance for a given user.
         /// </summary>
-        /// <param name="userCnp">User identifier (CNP).</param>
+        /// <param name="cnp">User identifier (CNP).</param>
         /// <param name="newBalance">New gem balance to set.</param>
-        public void UpdateUserGemBalance(string userCnp, int newBalance)
+        public async Task UpdateUserGemBalanceAsync(string cnp, int newBalance)
         {
-            string updateQuery = "UPDATE [USER] SET GEM_BALANCE = @NewBalance WHERE CNP = @CNP";
-
-            this.dbConnection.ExecuteNonQuery(updateQuery, cmd =>
+            try
             {
-                cmd.Parameters.AddWithValue("@NewBalance", newBalance);
-                cmd.Parameters.AddWithValue("@CNP", userCnp);
-            });
+                var gemStore = await _context.GemStores
+                    .FirstOrDefaultAsync(g => g.UserCnp == cnp);
+
+                if (gemStore == null)
+                {
+                    gemStore = new GemStore
+                    {
+                        UserCnp = cnp,
+                        GemBalance = newBalance,
+                        LastUpdated = DateTime.UtcNow
+                    };
+                    await _context.GemStores.AddAsync(gemStore);
+                }
+                else
+                {
+                    gemStore.GemBalance = newBalance;
+                    gemStore.LastUpdated = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new RepositoryPersistenceException("Error updating gem balance", ex);
+            }
         }
 
         /// <summary>
         /// Determines if the specified user is considered a guest (no record in the database).
         /// </summary>
-        /// <param name="userCnp">User identifier (CNP).</param>
+        /// <param name="cnp">User identifier (CNP).</param>
         /// <returns><c>true</c> if no user record exists; otherwise, <c>false</c>.</returns>
-        public bool IsGuest(string userCnp)
+        public async Task<bool> IsGuestAsync(string cnp)
         {
-            string checkQuery = "SELECT COUNT(*) FROM [USER] WHERE CNP = @CNP";
-
-            var result = this.dbConnection.ExecuteScalar(checkQuery, cmd =>
+            try
             {
-                cmd.Parameters.AddWithValue("@CNP", userCnp);
-            });
-
-            // TODO: consider caching the result to avoid constant database hits
-            var count = result != null ? Convert.ToInt32(result) : 0;
-            return count == 0;
+                return !await _context.GemStores.AnyAsync(g => g.UserCnp == cnp);
+            }
+            catch (Exception ex)
+            {
+                throw new RepositoryPersistenceException("Error checking if user is guest", ex);
+            }
         }
     }
 }

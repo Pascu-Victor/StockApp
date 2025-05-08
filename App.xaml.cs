@@ -86,6 +86,7 @@ namespace StockApp
                     services.AddSingleton<ILoanRepository, LoanRepository>();
                     services.AddSingleton<ILoanRequestRepository, LoanRequestRepository>();
                     services.AddSingleton<IUserRepository, UserRepository>();
+                    services.AddSingleton<IGemStoreRepository, GemStoreRepository>();
 
                     // Other Services
                     services.AddSingleton<IActivityService, ActivityService>();
@@ -100,6 +101,17 @@ namespace StockApp
                     services.AddSingleton<ITipsService, TipsService>();
                     services.AddSingleton<IUserService, UserService>();
                     services.AddSingleton<IZodiacService, ZodiacService>();
+
+                    // Gem Store Services
+                    services.AddSingleton<IGemStoreApiService>(provider =>
+                    {
+                        var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+                        var client = httpClientFactory.CreateClient("BankApi");
+                        return new GemStoreApiService(client);
+                    });
+                    services.AddSingleton<IGemStoreService, GemStoreService>();
+                    services.AddSingleton<IStoreService, StoreService>();
+
                     services.AddSingleton<MainWindow>();
 
                     // UI Components

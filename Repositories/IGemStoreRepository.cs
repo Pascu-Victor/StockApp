@@ -1,19 +1,20 @@
-﻿namespace StockApp.Repositories
+﻿using System.Threading.Tasks;
+
+namespace StockApp.Repositories
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
 
     public interface IGemStoreRepository
     {
         string GetCnp();
 
-        int GetUserGemBalance(string cnp);
+        Task<int> GetUserGemBalanceAsync(string cnp);
 
-        void UpdateUserGemBalance(string cnp, int newBalance);
+        Task UpdateUserGemBalanceAsync(string cnp, int newBalance);
 
-        bool IsGuest(string cnp);
+        Task<bool> IsGuestAsync(string cnp);
     }
 }

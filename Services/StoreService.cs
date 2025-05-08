@@ -1,13 +1,18 @@
 ﻿namespace StockApp.Services
 {
+    using System;
     using System.Threading.Tasks;
     using StockApp.Exceptions;
     using StockApp.Models;
-    using StockApp.Repositories;
 
     public class StoreService : IStoreService
     {
-        private readonly GemStoreRepository repository = new();
+        private readonly IGemStoreService _gemStoreService;
+
+        public StoreService(IGemStoreService gemStoreService)
+        {
+            _gemStoreService = gemStoreService ?? throw new ArgumentNullException(nameof(gemStoreService));
+        }
 
         /// <summary>
         /// Retrieves the CNP for the current user.
@@ -15,7 +20,7 @@
         /// <returns></returns>
         public string GetCnp()
         {
-            return this.repository.GetCnp();
+            return _gemStoreService.GetCnp();
         }
 
         /// <summary>
@@ -25,7 +30,7 @@
         /// <returns></returns>
         public bool IsGuest(string cnp)
         {
-            return this.repository.IsGuest(cnp);
+            return _gemStoreService.IsGuest(cnp);
         }
 
         /// <summary>
@@ -35,7 +40,7 @@
         /// <returns></returns>
         public int GetUserGemBalance(string cnp)
         {
-            return this.repository.GetUserGemBalance(cnp);
+            return _gemStoreService.GetUserGemBalance(cnp);
         }
 
         /// <summary>
@@ -45,21 +50,20 @@
         /// <param name="newBalance"></param>
         public void UpdateUserGemBalance(string cnp, int newBalance)
         {
-            this.repository.UpdateUserGemBalance(cnp, newBalance);
+            _gemStoreService.UpdateUserGemBalance(cnp, newBalance);
         }
 
         /// <summary>
         /// Processes a bank transaction for buying or selling gems.
         /// </summary>
-        /// <param name="userCNP"></param>
-        /// <param name="deal"></param>
-        /// <param name="selectedAccountId"></param>
-        /// <returns></returns>
-        /// <exception cref="GuestUserOperationException"></exception>
-        /// <exception cref="GemTransactionFailedException"></exception>
-        public async Task<string> BuyGems(string userCNP, GemDeal deal, string selectedAccountId)
+        /// <param name="deal">The gem deal to purchase.</param>
+        /// <param name="selectedAccountId">The selected account ID for the transaction.</param>
+        /// <returns>A message indicating the result of the transaction.</returns>
+        /// <exception cref="GuestUserOperationException">Thrown when a guest user attempts to buy gems.</exception>
+        /// <exception cref="GemTransactionFailedException">Thrown when the bank transaction fails.</exception>
+        public async Task<string> BuyGemsAsync(GemDeal deal, string selectedAccountId)
         {
-            if (this.IsGuest(userCNP))
+            if (await _gemStoreService.IsCurrentUserGuestAsync())
             {
                 throw new GuestUserOperationException("Guests cannot buy gems.");
             }
@@ -70,8 +74,8 @@
                 throw new GemTransactionFailedException("Transaction failed. Please check your bank account balance.");
             }
 
-            int currentBalance = this.GetUserGemBalance(userCNP);
-            this.UpdateUserGemBalance(userCNP, currentBalance + deal.GemAmount);
+            int currentBalance = await _gemStoreService.GetCurrentUserGemBalanceAsync();
+            await _gemStoreService.UpdateCurrentUserGemBalanceAsync(currentBalance + deal.GemAmount);
 
             return $"Successfully purchased {deal.GemAmount} gems for {deal.Price}€";
         }
@@ -79,21 +83,20 @@
         /// <summary>
         /// Processes a bank transaction for selling gems.
         /// </summary>
-        /// <param name="cnp"> The CNP of the user.</param>
-        /// <param name="gemAmount"> The amount of gems to sell.</param>
-        /// <param name="selectedAccountId"> The selected account ID for the transaction.</param>
-        /// <returns></returns>
-        /// <exception cref="GuestUserOperationException"></exception>
-        /// <exception cref="InsufficientGemsException"></exception>
-        /// <exception cref="GemTransactionFailedException"></exception>
-        public async Task<string> SellGems(string cnp, int gemAmount, string selectedAccountId)
+        /// <param name="gemAmount">The amount of gems to sell.</param>
+        /// <param name="selectedAccountId">The selected account ID for the transaction.</param>
+        /// <returns>A message indicating the result of the transaction.</returns>
+        /// <exception cref="GuestUserOperationException">Thrown when a guest user attempts to sell gems.</exception>
+        /// <exception cref="InsufficientGemsException">Thrown when the user doesn't have enough gems to sell.</exception>
+        /// <exception cref="GemTransactionFailedException">Thrown when the bank transaction fails.</exception>
+        public async Task<string> SellGemsAsync(int gemAmount, string selectedAccountId)
         {
-            if (this.IsGuest(cnp))
+            if (await _gemStoreService.IsCurrentUserGuestAsync())
             {
                 throw new GuestUserOperationException("Guests cannot sell gems.");
             }
 
-            int currentBalance = this.GetUserGemBalance(cnp);
+            int currentBalance = await _gemStoreService.GetCurrentUserGemBalanceAsync();
             if (gemAmount > currentBalance)
             {
                 throw new InsufficientGemsException($"Not enough gems to sell. You have {currentBalance}, attempted to sell {gemAmount}.");
@@ -106,12 +109,13 @@
                 throw new GemTransactionFailedException("Transaction failed. Unable to deposit funds.");
             }
 
-            this.UpdateUserGemBalance(cnp, currentBalance - gemAmount);
+            await _gemStoreService.UpdateCurrentUserGemBalanceAsync(currentBalance - gemAmount);
             return $"Successfully sold {gemAmount} gems for {moneyEarned}€";
         }
 
         private static async Task<bool> ProcessBankTransaction(string accountId, double amount)
         {
+            // TODO: Implement actual bank transaction logic
             return true;
         }
     }

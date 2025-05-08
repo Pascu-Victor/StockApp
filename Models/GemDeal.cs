@@ -67,6 +67,16 @@
                || DateTime.UtcNow <= this.ExpirationTime;
 
         /// <summary>
+        /// Gets a value indicating whether this deal has expired.
+        /// </summary>
+        public bool IsExpired
+
+            // Expired if special, has duration, and current time is after expiration
+            => this.IsSpecial
+               && this.DurationMinutes.HasValue
+               && DateTime.UtcNow > this.ExpirationTime;
+
+        /// <summary>
         /// Gets the price formatted with two decimals and the euro symbol.
         /// </summary>
         public string FormattedPrice

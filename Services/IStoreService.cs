@@ -13,8 +13,8 @@
 
         void UpdateUserGemBalance(string cnp, int newBalance);
 
-        Task<string> BuyGems(string cnp, GemDeal deal, string selectedAccountId);
+        Task<string> BuyGemsAsync(GemDeal deal, string selectedAccountId);
 
-        Task<string> SellGems(string cnp, int gemAmount, string selectedAccountId);
+        Task<string> SellGemsAsync(int gemAmount, string selectedAccountId);
     }
 }

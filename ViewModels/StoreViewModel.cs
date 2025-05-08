@@ -1,28 +1,29 @@
-﻿namespace StockApp.ViewModels
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.ComponentModel;
-    using System.Linq;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
-    using StockApp.Models;
-    using StockApp.Services;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using StockApp.Models;
+using StockApp.Services;
+using StockApp.Repositories;
 
+namespace StockApp.ViewModels
+{
     /// <summary>
     /// ViewModel for the store page, managing gem deals and user gem balance.
     /// </summary>
     public class StoreViewModel : INotifyPropertyChanged
     {
-        private readonly IStoreService storeService;
+        private readonly IStoreService _storeService;
+        private readonly IGemStoreService _gemStoreService;
+        private readonly bool _testMode = false; // Set to true for testing without the database
 
-        private readonly bool testMode = false; // Set to true for testing without the database
-
-        private int userGems;
-        private string currentUserCnp;
-        private ObservableCollection<GemDeal> availableDeals = [];
-        private List<GemDeal> possibleDeals = [];
+        private int _userGems;
+        private ObservableCollection<GemDeal> _availableDeals = [];
+        private List<GemDeal> _possibleDeals = [];
 
         /// <summary>
         /// Occurs when a property value changes.
@@ -30,33 +31,34 @@
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StoreViewModel"/> class with the specified service.
+        /// Initializes a new instance of the <see cref="StoreViewModel"/> class with the specified services.
         /// </summary>
-        /// <param name="service">Service used to retrieve and update store data.</param>
-        public StoreViewModel(IStoreService service)
+        /// <param name="storeService">Service used to retrieve and update store data.</param>
+        /// <param name="gemStoreService">Service used to manage gem store operations.</param>
+        public StoreViewModel(IStoreService storeService, IGemStoreService gemStoreService)
         {
-            this.storeService = service ?? throw new ArgumentNullException(nameof(service));
-            this.Initialize();
+            _storeService = storeService ?? throw new ArgumentNullException(nameof(storeService));
+            _gemStoreService = gemStoreService ?? throw new ArgumentNullException(nameof(gemStoreService));
+            Initialize();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StoreViewModel"/> class with default service.
+        /// Initializes a new instance of the <see cref="StoreViewModel"/> class with default services.
         /// </summary>
         public StoreViewModel()
-            : this(new StoreService())
+            : this(new StoreService(new GemStoreService(new GemStoreApiService(new HttpClient()), new UserRepository())), new GemStoreService(new GemStoreApiService(new HttpClient()), new UserRepository()))
         {
         }
 
         /// <summary>
         /// Initializes user data and gem deals.
         /// </summary>
-        private void Initialize()
+        private async void Initialize()
         {
-            this.currentUserCnp = this.storeService.GetCnp();
-            this.LoadUserData();
-            this.LoadGemDeals();
-            this.LoadPossibleDeals();
-            this.GenerateRandomDeals();
+            await LoadUserData();
+            LoadGemDeals();
+            LoadPossibleDeals();
+            GenerateRandomDeals();
         }
 
         /// <summary>
@@ -65,13 +67,26 @@
         /// <returns><c>true</c> if the user is a guest; otherwise, <c>false</c>.</returns>
         public bool IsGuest()
         {
-            if (this.testMode)
+            if (_testMode)
             {
                 return false;
             }
 
-            bool guest = this.storeService.IsGuest(this.currentUserCnp);
-            return guest;
+            return _gemStoreService.IsGuest(_gemStoreService.GetCnp());
+        }
+
+        /// <summary>
+        /// Determines whether the current user is a guest asynchronously.
+        /// </summary>
+        /// <returns><c>true</c> if the user is a guest; otherwise, <c>false</c>.</returns>
+        public async Task<bool> IsGuestAsync()
+        {
+            if (_testMode)
+            {
+                return false;
+            }
+
+            return await _gemStoreService.IsCurrentUserGuestAsync();
         }
 
         /// <summary>
@@ -79,11 +94,11 @@
         /// </summary>
         public int UserGems
         {
-            get => this.userGems;
+            get => _userGems;
             set
             {
-                this.userGems = value;
-                this.OnPropertyChanged();
+                _userGems = value;
+                OnPropertyChanged();
             }
         }
 
@@ -92,36 +107,34 @@
         /// </summary>
         public ObservableCollection<GemDeal> AvailableDeals
         {
-            get => this.availableDeals;
+            get => _availableDeals;
             set
             {
-                this.availableDeals = value;
-                this.OnPropertyChanged();
+                _availableDeals = value;
+                OnPropertyChanged();
             }
         }
 
         /// <summary>
         /// Loads the user gem balance asynchronously.
         /// </summary>
-
-        // FIXME: Change async void to async Task for better error handling
-        public async void LoadUserData()
+        public async Task LoadUserData()
         {
-            if (this.testMode)
+            if (_testMode)
             {
                 // Inline: use mocked balance in test mode
-                this.UserGems = 1234;
+                UserGems = 1234;
             }
             else
             {
-                bool guest = this.storeService.IsGuest(this.currentUserCnp);
-                if (guest)
+                bool isGuest = await _gemStoreService.IsCurrentUserGuestAsync();
+                if (isGuest)
                 {
-                    this.UserGems = 0;
+                    UserGems = 0;
                 }
                 else
                 {
-                    this.UserGems = await Task.Run(() => this.storeService.GetUserGemBalance(this.currentUserCnp));
+                    UserGems = await _gemStoreService.GetCurrentUserGemBalanceAsync();
                 }
             }
         }
@@ -139,31 +152,31 @@
                 return "No bank account selected.";
             }
 
-            if (this.testMode)
+            if (_testMode)
             {
                 // Inline: simulate purchase in test mode
-                this.UserGems += deal.GemAmount;
+                UserGems += deal.GemAmount;
                 if (deal.IsSpecial)
                 {
-                    this.AvailableDeals.Remove(deal);
+                    AvailableDeals.Remove(deal);
                 }
 
-                this.OnPropertyChanged(nameof(this.UserGems));
-                this.OnPropertyChanged(nameof(this.AvailableDeals));
+                OnPropertyChanged(nameof(UserGems));
+                OnPropertyChanged(nameof(AvailableDeals));
                 return $"(TEST) Bought {deal.GemAmount} gems.";
             }
 
-            var result = await this.storeService.BuyGems(this.currentUserCnp, deal, selectedBankAccount);
+            var result = await _storeService.BuyGemsAsync(deal, selectedBankAccount);
             if (result.StartsWith("Successfully"))
             {
-                this.UserGems += deal.GemAmount;
+                UserGems += deal.GemAmount;
                 if (deal.IsSpecial)
                 {
-                    this.AvailableDeals.Remove(deal);
+                    AvailableDeals.Remove(deal);
                 }
 
-                this.OnPropertyChanged(nameof(this.UserGems));
-                this.OnPropertyChanged(nameof(this.AvailableDeals));
+                OnPropertyChanged(nameof(UserGems));
+                OnPropertyChanged(nameof(AvailableDeals));
             }
 
             return result;
@@ -187,24 +200,24 @@
                 return "Invalid amount.";
             }
 
-            if (amount > this.UserGems)
+            if (amount > UserGems)
             {
                 return "Not enough Gems.";
             }
 
-            if (this.testMode)
+            if (_testMode)
             {
                 // Inline: simulate sell in test mode
-                this.UserGems -= amount;
-                this.OnPropertyChanged(nameof(this.UserGems));
+                UserGems -= amount;
+                OnPropertyChanged(nameof(UserGems));
                 return $"(TEST) Sold {amount} gems for {amount / 100.0}€.";
             }
 
-            var result = await this.storeService.SellGems(this.currentUserCnp, amount, selectedBankAccount);
+            var result = await _storeService.SellGemsAsync(amount, selectedBankAccount);
             if (result.StartsWith("Successfully"))
             {
-                this.UserGems -= amount;
-                this.OnPropertyChanged(nameof(this.UserGems));
+                UserGems -= amount;
+                OnPropertyChanged(nameof(UserGems));
             }
 
             return result;
@@ -225,7 +238,7 @@
         /// </summary>
         private void LoadGemDeals()
         {
-            this.AvailableDeals =
+            AvailableDeals =
             [
                 new GemDeal("LEGENDARY DEAL!!!!", 4999, 100.0),
                 new GemDeal("MYTHIC DEAL!!!!", 3999, 90.0),
@@ -240,7 +253,7 @@
                 new GemDeal("BAD DEAL!!!!", 1, 35.0),
                 new GemDeal("🔥 SPECIAL DEAL", 2, 2.0, true, 1),
             ];
-            this.SortDeals();
+            SortDeals();
         }
 
         /// <summary>
@@ -248,68 +261,69 @@
         /// </summary>
         private void LoadPossibleDeals()
         {
-            this.possibleDeals =
+            _possibleDeals =
             [
                 new GemDeal("🔥 Limited Deal!", 6000, 120.0, true, 1),
-                new GemDeal("🔥 Flash Sale!", 5000, 100.0, true, 60),
-                new GemDeal("🔥 Mega Discount!", 4000, 80.0, true, 30),
-                new GemDeal("🔥 Special Offer!", 3000, 60.0, true, 5),
-                new GemDeal("🔥 Exclusive Deal!", 2000, 40.0, true, 1),
+                new GemDeal("🔥 Flash Sale!", 5000, 110.0, true, 1),
+                new GemDeal("🔥 Weekend Special!", 4500, 95.0, true, 1),
+                new GemDeal("🔥 Holiday Deal!", 4000, 85.0, true, 1),
+                new GemDeal("🔥 Birthday Special!", 3500, 75.0, true, 1),
             ];
         }
 
         /// <summary>
-        /// Continuously generates random special deals.
+        /// Generates random special deals.
         /// </summary>
-        // FIXME: Consider adding cancellation token to stop the loop
         private async void GenerateRandomDeals()
         {
-            this.CheckAndRemoveExpiredDeals();
-            var random = new Random();
-            while (true)
+            if (_testMode)
             {
-                await Task.Delay(TimeSpan.FromSeconds(15));
-                var randomDeal = this.possibleDeals[random.Next(this.possibleDeals.Count)];
-                var specialDeal = new GemDeal(randomDeal.Title, randomDeal.GemAmount, randomDeal.Price, true, randomDeal.DurationMinutes);
-                this.AvailableDeals.Add(specialDeal);
-                this.SortDeals();
-                this.OnPropertyChanged(nameof(this.AvailableDeals));
+                return;
             }
+
+            var random = new Random();
+            var specialDeal = _possibleDeals[random.Next(_possibleDeals.Count)];
+            AvailableDeals.Add(specialDeal);
+            SortDeals();
         }
 
         /// <summary>
-        /// Periodically removes expired deals from available deals.
+        /// Checks and removes expired deals.
         /// </summary>
         private async void CheckAndRemoveExpiredDeals()
         {
-            while (true)
+            if (_testMode)
             {
-                await Task.Delay(TimeSpan.FromSeconds(60));
+                return;
+            }
 
-                // Inline: filter out expired deals
-                this.AvailableDeals = [.. this.AvailableDeals.Where(deal => deal.IsAvailable)];
-                this.SortDeals();
-                this.OnPropertyChanged(nameof(this.AvailableDeals));
+            var expiredDeals = AvailableDeals.Where(d => d.IsExpired).ToList();
+            foreach (var deal in expiredDeals)
+            {
+                AvailableDeals.Remove(deal);
             }
         }
 
         /// <summary>
-        /// Sorts the available deals by expiration time.
+        /// Sorts the available deals by price.
         /// </summary>
         private void SortDeals()
         {
-            var sortedDeals = this.AvailableDeals.OrderBy(deal => deal.ExpirationTime).ToList();
-            this.AvailableDeals = [.. sortedDeals];
-            this.OnPropertyChanged(nameof(this.AvailableDeals));
+            var sortedDeals = AvailableDeals.OrderByDescending(d => d.Price).ToList();
+            AvailableDeals.Clear();
+            foreach (var deal in sortedDeals)
+            {
+                AvailableDeals.Add(deal);
+            }
         }
 
         /// <summary>
-        /// Raises the <see cref="PropertyChanged"/> event.
+        /// Raises the PropertyChanged event.
         /// </summary>
-        /// <param name="propertyName">Name of the changed property.</param>
+        /// <param name="propertyName">Name of the property that changed.</param>
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

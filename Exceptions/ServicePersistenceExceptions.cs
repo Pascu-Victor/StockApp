@@ -18,6 +18,10 @@
     {
     }
 
+    public class GemStorePersistenceException(string message, Exception? innerException = null) : Exception(message, innerException)
+    {
+    }
+
     public class ExportFormatNotSupportedException(string format) : Exception($"Export format '{format}' is not supported.")
     {
     }
