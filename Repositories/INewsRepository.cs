@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using Microsoft.Data.SqlClient;
-    using StockApp.Models;
+    using StockApp.Models.Articles;
 
     /// <summary>
     /// Defines the contract for a repository that manages news articles and user articles.

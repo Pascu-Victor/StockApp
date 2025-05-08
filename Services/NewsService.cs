@@ -21,6 +21,9 @@
         private readonly NewsArticlesApiService newsArticlesApi;
         private readonly UserArticlesApiService userArticlesApi;
 
+        private readonly IUserRepository userRepository;
+        private readonly INewsRepository newsRepository;
+
         private static readonly Dictionary<int, NewsArticle> PreviewArticles = [];
         private static readonly Dictionary<int, UserArticle> PreviewUserArticles = [];
 
@@ -36,23 +39,11 @@
         /// Initializes a new instance of the <see cref="NewsService"/> class
         /// with default repository implementations.
         /// </summary>
-        public NewsService()
+        public NewsService(IUserRepository userRepository, INewsRepository newsRepository, ILogger<NewsService> logger)
         {
-            try
-            {
-                var dbContext = new AppDbContext();
-                // Try to get the repository from the service provider
-                if (App.Host != null)
-                {
-                    this.stocksRepository = App.Host.Services.GetService<IBaseStocksRepository>();
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log the error but continue with empty collections
-                Debug.WriteLine($"Error initializing NewsService: {ex.Message}");
-                this.stocksRepository = null;
-            }
+            this.userRepository = userRepository;
+            this.newsRepository = newsRepository;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -183,7 +174,7 @@
         /// <exception cref="NewsPersistenceException">If creation fails.</exception>
         public async Task<bool> CreateArticle(NewsArticle article)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to create an article");
             }
@@ -209,12 +200,12 @@
         /// <exception cref="NewsPersistenceException">If loading fails.</exception>
         public async Task<List<UserArticle>> GetUserArticles(Status status = Status.Pending, string? topic = null)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -255,12 +246,12 @@
         /// <exception cref="NewsPersistenceException">If approval fails.</exception>
         public async Task<bool> ApproveUserArticle(int articleId)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -288,12 +279,12 @@
         /// <exception cref="NewsPersistenceException">If rejection fails.</exception>
         public async Task<bool> RejectUserArticle(int articleId)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -321,12 +312,12 @@
         /// <exception cref="NewsPersistenceException">If deletion fails.</exception>
         public async Task<bool> DeleteUserArticle(int articleId)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -355,12 +346,12 @@
         /// <exception cref="NewsPersistenceException">If submission fails.</exception>
         public async Task<bool> SubmitUserArticle(UserArticle article)
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -390,12 +381,12 @@
         /// <exception cref="InvalidOperationException">If no user is logged in.</exception>
         public User GetCurrentUser()
         {
-            if (UserRepo.CurrentUserCNP == null)
+            if (userRepository.CurrentUserCNP == null)
             {
                 throw new UnauthorizedAccessException("User must be logged in to access user articles");
             }
 
-            User user = UserRepo.GetUserByCnpAsync(UserRepo.CurrentUserCNP).Result;
+            User user = userRepository.GetUserByCnpAsync(userRepository.CurrentUserCNP).Result;
             if (user.IsModerator)
             {
                 throw new UnauthorizedAccessException("User must be an admin to access user articles");
@@ -459,13 +450,13 @@
             }
             else if (password == "user")
             {
-                User user = UserRepo.GetUserByUsernameAsync(username).Result;
+                User user = userRepository.GetUserByUsernameAsync(username).Result;
                 if (user == null)
                 {
                     throw new UnauthorizedAccessException("Invalid username or password");
                 }
 
-                UserRepo.CurrentUserCNP = user.CNP;
+                userRepository.CurrentUserCNP = user.CNP;
                 return user;
             }
 
@@ -504,7 +495,7 @@
             {
                 try
                 {
-                    await this.newsArticlesApi.AddRelatedStocksAsync(article.Id, [..article.RelatedStocks.Select(stock => stock.Id)]);
+                    await this.newsArticlesApi.AddRelatedStocksAsync(article.Id, [.. article.RelatedStocks.Select(stock => stock.Id)]);
                 }
                 catch (NewsPersistenceException ex)
                 {
@@ -538,20 +529,22 @@
         /// <exception cref="NewsPersistenceException">If retrieval fails.</exception>
         public List<string> GetRelatedStocksForArticle(int articleId)
         {
+            return [];
+            //FIXME: this needs to be reimplemented
             // Return preview stocks if available
             if (PreviewUserArticles.TryGetValue(articleId, out var previewUserArticle) &&
                 previewUserArticle.RelatedStocks != null &&
                 previewUserArticle.RelatedStocks.Any())
             {
-                return [..previewUserArticle.RelatedStocks.Select(stock => stock.Name)];
+                return [.. previewUserArticle.RelatedStocks.Select(stock => stock.Name)];
             }
 
             try
             {
                 // NEEDS CALL TO THE STOCK API, NOT THE ARTICLE SERVICE OR REPO FFS!!!!!!
-                var stocks = NewsRepository.GetRelatedStocksForArticle(articleId);
-                System.Diagnostics.Debug.WriteLine($"GetRelatedStocksForArticle: Found {stocks.Count} stocks");
-                return stocks;
+                //var stocks = NewsRepository.GetRelatedStocksForArticle(articleId);
+                //System.Diagnostics.Debug.WriteLine($"GetRelatedStocksForArticle: Found {stocks.Count} stocks");
+                //return stocks;
             }
             catch (NewsPersistenceException ex)
             {

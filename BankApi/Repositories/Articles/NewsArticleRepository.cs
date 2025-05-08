@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using BankApi.Data;
+    using BankApi.Models;
     using BankApi.Models.Articles;
     using Microsoft.EntityFrameworkCore;
 
@@ -44,7 +45,14 @@
 
         public async Task AddRelatedStocksAsync(int articleId, List<int> stockIds)
         {
-            await _context.NewsArticleStocks.AddRangeAsync(stockIds.Select(stockId => new Models.NewsArticleStock(articleId, stockId)));
+            await _context.NewsArticleStocks.AddRangeAsync(stockIds.Select(stockId =>
+            {
+                return new NewsArticleStock
+                {
+                    ArticleId = articleId,
+                    StockId = stockId
+                };
+            }));
             await _context.SaveChangesAsync();
         }
 

@@ -75,7 +75,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{x:Bind ViewModel.Article.Source, Mode=OneWay}" Opacity="0.7"/>
                         <TextBlock Text="�" Opacity="0.7"/>
-                        <TextBlock Text="{x:Bind ViewModel.Article.PublishedDate, Mode=OneWay}" Opacity="0.7"/>
+                        <TextBlock Text="{x:Bind ViewModel.Article.PublishedOn, Mode=OneWay}" Opacity="0.7"/>
                         <TextBlock Text="�" Opacity="0.7"/>
                         <TextBlock Text="{x:Bind ViewModel.Article.Category, Mode=OneWay}" Opacity="0.7"/>
                     </StackPanel>

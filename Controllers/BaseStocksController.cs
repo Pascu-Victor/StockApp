@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using StockApp.Exceptions;
 using StockApp.Models;
 using StockApp.Repositories;
@@ -61,9 +61,14 @@ namespace StockApp.Controllers
 
             try
             {
-                var stock = new BaseStock(stockDto.Name, stockDto.Symbol, stockDto.AuthorCNP);
+                BaseStock stock = new()
+                {
+                    Name = stockDto.Name,
+                    Symbol = stockDto.Symbol,
+                    AuthorCNP = stockDto.AuthorCNP
+                };
                 var createdStock = await _repository.AddStockAsync(stock, stockDto.InitialPrice ?? 100);
-                
+
                 return CreatedAtAction(
                     nameof(GetStock),
                     new { name = createdStock.Name },
@@ -98,7 +103,12 @@ namespace StockApp.Controllers
 
             try
             {
-                var stock = new BaseStock(stockDto.Name, stockDto.Symbol, stockDto.AuthorCNP);
+                BaseStock stock = new()
+                {
+                    Name = stockDto.Name,
+                    Symbol = stockDto.Symbol,
+                    AuthorCNP = stockDto.AuthorCNP,
+                };
                 var updatedStock = await _repository.UpdateStockAsync(stock);
                 return Ok(updatedStock);
             }
@@ -121,12 +131,12 @@ namespace StockApp.Controllers
             try
             {
                 var result = await _repository.DeleteStockAsync(name);
-                
+
                 if (!result)
                 {
                     return NotFound($"Stock with name '{name}' not found.");
                 }
-                
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -165,4 +175,4 @@ namespace StockApp.Controllers
         [Required]
         public string AuthorCNP { get; set; } = string.Empty;
     }
-} 
+}

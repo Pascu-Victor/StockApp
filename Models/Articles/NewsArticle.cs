@@ -12,7 +12,7 @@
         /// </summary>
         public NewsArticle()
         {
-            Source = string.Empty;
+            this.Source = 0;
         }
 
         /// <summary>
@@ -28,16 +28,16 @@
             string summary,
             string content,
             DateTime publishedOn,
-            string source)
+            int source)
             : base(title, summary, content, publishedOn)
         {
-            Source = source;
+            this.Source = source;
         }
 
         /// <summary>
         /// Gets or sets the source of the news article.
         /// </summary>
-        public string Source { get; set; }
+        public int Source { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the article has been read.

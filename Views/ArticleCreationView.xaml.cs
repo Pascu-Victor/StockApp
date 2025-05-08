@@ -9,15 +9,16 @@ namespace StockApp.Views
         /// <summary>
         /// Initializes a new instance of the <see cref="ArticleCreationView"/> class.
         /// </summary>
-        public ArticleCreationView()
+        public ArticleCreationView(ArticleCreationViewModel articleCreationViewModel)
         {
-            this.InitializeComponent();
+            this.ViewModel = articleCreationViewModel ?? throw new System.ArgumentNullException(nameof(articleCreationViewModel));
             this.DataContext = this.ViewModel;
+            this.InitializeComponent();
         }
 
         /// <summary>
         /// Gets the view model for the article creation view.
         /// </summary>
-        public ArticleCreationViewModel ViewModel { get; } = new();
+        public ArticleCreationViewModel ViewModel { get; }
     }
 }

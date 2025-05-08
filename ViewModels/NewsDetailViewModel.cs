@@ -5,10 +5,10 @@
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using System.Windows.Input;
-    using Microsoft.UI.Dispatching;
     using Microsoft.UI.Xaml.Controls;
     using StockApp.Commands;
     using StockApp.Models;
+    using StockApp.Models.Articles;
     using StockApp.Services;
 
     /// <summary>
@@ -19,15 +19,15 @@
     {
         private readonly INewsService newsService;
         private readonly IDispatcher dispatcherQueue;
-        private string currentArticleId;
+        private int currentArticleId;
         private bool isPreviewMode;
-        private string previewId;
+        private int previewId;
 
         private NewsArticle article;
         private bool isLoading;
         private bool hasRelatedStocks;
         private bool isAdminPreview;
-        private string articleStatus;
+        private Status articleStatus;
         private bool canApprove;
         private bool canReject;
 
@@ -80,7 +80,7 @@
         /// <summary>
         /// Gets or sets the current status of the article (e.g., "Pending", "Approved").
         /// </summary>
-        public string ArticleStatus
+        public Status ArticleStatus
         {
             get => this.articleStatus;
             set => this.SetProperty(ref this.articleStatus, value);
@@ -141,26 +141,12 @@
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NewsDetailViewModel"/> class with default implementations.
-        /// </summary>
-        public NewsDetailViewModel()
-          : this(new NewsService(), new DispatcherAdapter())
-        {
-        }
-
-        /// <summary>
         /// Loads the article with the given identifier, handling both preview and regular modes.
         /// </summary>
         /// <param name="articleId">The ID or preview token of the article to load.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="articleId"/> is null or empty.</exception>
-        public async void LoadArticle(string articleId)
+        public async void LoadArticle(int articleId, bool preview)
         {
-            if (string.IsNullOrWhiteSpace(articleId))
-            {
-                System.Diagnostics.Debug.WriteLine("LoadArticle: ArticleId is null or empty");
-                throw new ArgumentNullException(nameof(articleId));
-            }
-
             this.IsLoading = true;
 
             try
@@ -168,10 +154,9 @@
                 System.Diagnostics.Debug.WriteLine($"LoadArticle: Loading article with ID: {articleId}");
 
                 // Determine if this is a preview mode request
-                if (articleId.StartsWith("preview:"))
+                if (preview)
                 {
                     this.isPreviewMode = true;
-                    this.previewId = articleId.Substring(8); // Inline: strip "preview:" prefix
                     this.currentArticleId = this.previewId;
                     this.IsAdminPreview = true;
 
@@ -179,11 +164,11 @@
                     if (userArticle != null)
                     {
                         this.ArticleStatus = userArticle.Status;
-                        this.CanApprove = userArticle.Status != "Approved";
-                        this.CanReject = userArticle.Status != "Rejected";
+                        this.CanApprove = userArticle.Status != Status.Approved;
+                        this.CanReject = userArticle.Status != Status.Rejected;
                     }
 
-                    var article = this.newsService.GetNewsArticleById(articleId);
+                    var article = await this.newsService.GetNewsArticleById(articleId);
 
                     this.dispatcherQueue.TryEnqueue(() =>
                     {
@@ -197,14 +182,12 @@
                             // FIXME: Provide fallback Article for missing preview
                             // Update the fallback NewsArticle instantiation to include all required parameters
                             this.Article = new NewsArticle(
-                                articleId: "N/A",
                                 title: "Article Not Found",
                                 summary: "The requested article could not be found.",
                                 content: "This article may have been removed.",
-                                source: "Unknown",
-                                publishedDate: DateTime.MinValue,
-                                relatedStocks: [],
-                                status: Status.Pending);
+                                source: 0,
+                                publishedOn: DateTime.MinValue);
+
                             this.HasRelatedStocks = false;
                         }
 
@@ -217,36 +200,24 @@
                     this.currentArticleId = articleId;
                     this.IsAdminPreview = false;
 
-                    var regularArticle = this.newsService.GetNewsArticleById(articleId);
+                    var regularArticle = await this.newsService.GetNewsArticleById(articleId);
 
                     if (regularArticle != null)
                     {
                         this.Article = regularArticle;
                         this.HasRelatedStocks = regularArticle.RelatedStocks?.Any() == true;
 
-                        // Inline: mark article as read once loaded
-                        try
-                        {
-                            this.newsService.MarkArticleAsRead(articleId);
-                        }
-                        catch (Exception ex)
-                        {
-                            // Inline: log failure to mark as read
-                            System.Diagnostics.Debug.WriteLine($"Error marking article as read: {ex.Message}");
-                        }
+                        await this.newsService.MarkArticleAsRead(articleId);
                     }
                     else
                     {
                         // Provide fallback for missing article
                         this.Article = new NewsArticle(
-                                articleId: "N/A",
                                 title: "Article Not Found",
                                 summary: "The requested article could not be found.",
                                 content: "This article may have been removed.",
-                                source: "Unknown",
-                                publishedDate: DateTime.MinValue,
-                                relatedStocks: [],
-                                status: Status.Pending);
+                                source: 0,
+                                publishedOn: DateTime.MinValue);
                         this.HasRelatedStocks = false;
                     }
 
@@ -266,19 +237,14 @@
         /// </summary>
         private async Task ApproveArticleAsync()
         {
-            if (!this.isPreviewMode || string.IsNullOrEmpty(this.previewId))
-            {
-                return;
-            }
-
             this.IsLoading = true;
 
             try
             {
-                var success = this.newsService.ApproveUserArticle(this.previewId);
+                var success = await this.newsService.ApproveUserArticle(this.previewId);
                 if (success)
                 {
-                    this.ArticleStatus = "Approved";
+                    this.ArticleStatus = Status.Approved;
                     this.CanApprove = false;
                     this.CanReject = true;
 
@@ -317,19 +283,14 @@
         /// </summary>
         private async Task RejectArticleAsync()
         {
-            if (!this.isPreviewMode || string.IsNullOrEmpty(this.previewId))
-            {
-                return;
-            }
-
             this.IsLoading = true;
 
             try
             {
-                var success = this.newsService.RejectUserArticle(this.previewId);
+                var success = await this.newsService.RejectUserArticle(this.previewId);
                 if (success)
                 {
-                    this.ArticleStatus = "Rejected";
+                    this.ArticleStatus = Status.Rejected;
                     this.CanApprove = true;
                     this.CanReject = false;
 
@@ -366,11 +327,6 @@
         /// </summary>
         private async Task DeleteArticleAsync()
         {
-            if (!this.isPreviewMode || string.IsNullOrEmpty(this.previewId))
-            {
-                return;
-            }
-
             try
             {
                 var confirmDialog = new ContentDialog
@@ -387,7 +343,7 @@
                 {
                     this.IsLoading = true;
 
-                    var success = this.newsService.DeleteUserArticle(this.previewId);
+                    var success = await this.newsService.DeleteUserArticle(this.previewId);
                     if (success)
                     {
                         var dialog = new ContentDialog

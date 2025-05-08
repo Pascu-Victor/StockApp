@@ -8,6 +8,7 @@
     using Microsoft.UI.Xaml.Controls;
     using StockApp.Commands;
     using StockApp.Models;
+    using StockApp.Models.Articles;
     using StockApp.Services;
     using StockApp.Views;
 
@@ -123,7 +124,7 @@
                 if (this.SetProperty(ref this.selectedArticle, value) && value != null)
                 {
                     // Store the article ID before clearing the selection
-                    var articleId = value.ArticleId;
+                    var articleId = value.Id;
 
                     // Clear selection first to prevent UI issues
                     this.selectedArticle = null;
@@ -219,15 +220,7 @@
 
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NewsListViewModel"/> class with default services.
-        /// </summary>
-        public NewsListViewModel()
-          : this(new NewsService())
-        {
-        }
-
-        public void RefreshArticles()
+        public async Task RefreshArticles()
         {
             if (this.IsRefreshing)
             {
@@ -239,7 +232,7 @@
 
             try
             {
-                var articles = this.newsService.GetNewsArticles();
+                var articles = await this.newsService.GetNewsArticles();
 
                 // store the full list of articles for filtering
                 this.newsService.UpdateCachedArticles(articles);
@@ -259,7 +252,7 @@
             }
         }
 
-        private void FilterArticles()
+        private async Task FilterArticles()
         {
             if (this.Articles == null)
             {
@@ -268,7 +261,7 @@
             }
 
             // get all articles from the original source
-            var allArticles = this.newsService.GetCachedArticles();
+            var allArticles = await this.newsService.GetCachedArticles();
             if (allArticles == null || !allArticles.Any())
             {
                 this.Articles.Clear();
@@ -283,22 +276,23 @@
             {
                 filteredArticles = [.. filteredArticles.Where(a => a.Category == this.SelectedCategory)];
             }
-
-            // filter by search query
+            // Updated filtering logic for RelatedStocks to fix CS1929 error
             if (!string.IsNullOrEmpty(this.SearchQuery))
             {
                 var query = this.SearchQuery.ToLower();
                 filteredArticles = [.. filteredArticles.Where(a =>
-                    a.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                    a.Summary.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                    a.Content.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                    (a.RelatedStocks != null && a.RelatedStocks.Any(s => s.Contains(query, StringComparison.CurrentCultureIgnoreCase))))];
+                        a.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                        a.Summary.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                        a.Content.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                        (a.RelatedStocks != null && a.RelatedStocks.Any(s =>
+                            s.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                            s.Symbol.Contains(query, StringComparison.CurrentCultureIgnoreCase))))];
             }
 
             // Inline: Sort watchlist items first, then by date (newest first)
-            filteredArticles = [.. filteredArticles
-                .OrderByDescending(a => a.IsWatchlistRelated)
-                .ThenByDescending(a => a.PublishedDate)];
+            filteredArticles = [..filteredArticles
+            .OrderByDescending(a => a.IsWatchlistRelated)
+                .ThenByDescending(a => a.PublishedOn)];
 
 
             this.Articles.Clear();
@@ -310,16 +304,15 @@
             this.IsEmptyState = !this.Articles.Any();
         }
 
-        private static void NavigateToArticleDetail(string articleId)
+        private static void NavigateToArticleDetail(int articleId)
         {
-            if (string.IsNullOrWhiteSpace(articleId))
-            {
-                System.Diagnostics.Debug.WriteLine("NavigateToArticleDetail: ArticleId is null or empty");
-                return;
-            }
-
             System.Diagnostics.Debug.WriteLine($"NavigateToArticleDetail: Navigating to article {articleId}");
-            NavigationService.Instance.NavigateToArticleDetail(articleId);
+            //FIXME: make this not use the "navigation service" just poop out some modal thinggie
+            //this.Navigate(typeof(StockApp.Views.NewsArticleView), new ArticleNavigationParameter
+            //{
+            //    ArticleId = articleId,
+            //    IsPreview = false,
+            //});
         }
 
         private static void NavigateToCreateArticle()

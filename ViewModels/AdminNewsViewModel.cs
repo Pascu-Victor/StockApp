@@ -5,11 +5,11 @@
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using System.Windows.Input;
-    using Microsoft.UI.Dispatching;
     using Microsoft.UI.Xaml.Controls;
     using StockApp;
     using StockApp.Commands;
     using StockApp.Models;
+    using StockApp.Models.Articles;
     using StockApp.Services;
     using StockApp.Views;
 
@@ -25,7 +25,7 @@
         private ObservableCollection<UserArticle> userArticles = [];
         private bool isLoading;
         private ObservableCollection<string> statuses = [];
-        private string selectedStatus;
+        private Status selectedStatus;
         private ObservableCollection<string> topics = [];
         private string selectedTopic;
         private UserArticle? selectedArticle;
@@ -46,23 +46,15 @@
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="AdminNewsViewModel"/> using default implementations.
-        /// </summary>
-        public AdminNewsViewModel()
-            : this(new NewsService(), new DispatcherAdapter())
-        {
-        }
-
-        /// <summary>
         /// Sets up commands and default filter values.
         /// </summary>
         private void InitializeCommandsAndFilters()
         {
             // Initialize command bindings
             this.RefreshCommand = new StockNewsRelayCommand(async () => await this.RefreshArticlesAsync());
-            this.ApproveCommand = new RelayCommandGeneric<string>(async (id) => await this.ApproveArticleAsync(id));
-            this.RejectCommand = new RelayCommandGeneric<string>(async (id) => await this.RejectArticleAsync(id));
-            this.DeleteCommand = new RelayCommandGeneric<string>(async (id) => await this.DeleteArticleAsync(id));
+            this.ApproveCommand = new RelayCommandGeneric<int>(async (id) => await this.ApproveArticleAsync(id));
+            this.RejectCommand = new RelayCommandGeneric<int>(async (id) => await this.RejectArticleAsync(id));
+            this.DeleteCommand = new RelayCommandGeneric<int>(async (id) => await this.DeleteArticleAsync(id));
             this.BackCommand = new StockNewsRelayCommand(() => NavigationService.Instance.GoBack());
             this.PreviewCommand = new RelayCommandGeneric<UserArticle>((article) => this.NavigateToPreview(article));
 
@@ -81,7 +73,7 @@
             this.Topics.Add("Economic News");
 
             // Set default selections
-            this.selectedStatus = "All";
+            this.selectedStatus = Status.All;
             this.selectedTopic = "All";
         }
 
@@ -116,7 +108,7 @@
         /// Gets or sets the currently selected status filter.
         /// Changing this triggers an article refresh.
         /// </summary>
-        public string SelectedStatus
+        public Status SelectedStatus
         {
             get => this.selectedStatus;
             set
@@ -233,10 +225,10 @@
             try
             {
                 // Determine filter values (null means no filter for "All")
-                string? status = this.SelectedStatus == "All" ? null : this.SelectedStatus;
+                //FIXME: do not convert this to string
                 string? topic = this.SelectedTopic == "All" ? null : this.SelectedTopic;
 
-                var articles = this.newsService.GetUserArticles(status, topic);
+                var articles = await this.newsService.GetUserArticles(this.selectedStatus, topic);
 
                 // Update the collection on the UI thread
                 this.dispatcherQueue.TryEnqueue(() =>
@@ -276,33 +268,34 @@
 
             // Prepare a preview NewsArticle from the user-submitted article
             var previewArticle = new NewsArticle(
-                articleId: article.ArticleId,
                 title: article.Title,
                 summary: article.Summary,
                 content: article.Content,
-                source: $"User: {article.Author.Username}",
-                publishedDate: article.SubmissionDate,
-                relatedStocks: article.RelatedStocks,
-                status: Enum.TryParse<Status>(article.Status, out var status) ? status : Status.Pending);
+                source: article.AuthorId,
+                publishedOn: article.PublishedOn
+                );
 
             // Store the preview for later retrieval
             this.newsService.StorePreviewArticle(previewArticle, article);
 
             // Navigate to the article view in preview mode
             NavigationService.Instance.Navigate(
-                typeof(NewsArticleView),
-                $"preview:{article.ArticleId}");
+                typeof(NewsArticleView), new ArticleNavigationParameter
+                {
+                    ArticleId = article.Id,
+                    IsPreview = true,
+                });
         }
 
         /// <summary>
         /// Approves a user-submitted article and shows a confirmation dialog.
         /// </summary>
         /// <param name="articleId">The identifier of the article to approve.</param>
-        private async Task ApproveArticleAsync(string articleId)
+        private async Task ApproveArticleAsync(int articleId)
         {
             try
             {
-                var success = this.newsService.ApproveUserArticle(articleId);
+                var success = await this.newsService.ApproveUserArticle(articleId);
                 if (success)
                 {
                     await this.RefreshArticlesAsync();
@@ -338,11 +331,11 @@
         /// Rejects a user-submitted article and shows a confirmation dialog.
         /// </summary>
         /// <param name="articleId">The identifier of the article to reject.</param>
-        private async Task RejectArticleAsync(string articleId)
+        private async Task RejectArticleAsync(int articleId)
         {
             try
             {
-                var success = this.newsService.RejectUserArticle(articleId);
+                var success = await this.newsService.RejectUserArticle(articleId);
                 if (success)
                 {
                     await this.RefreshArticlesAsync();
@@ -378,7 +371,7 @@
         /// Deletes a user-submitted article after confirmation and shows a result dialog.
         /// </summary>
         /// <param name="articleId">The identifier of the article to delete.</param>
-        private async Task DeleteArticleAsync(string articleId)
+        private async Task DeleteArticleAsync(int articleId)
         {
             try
             {
@@ -395,7 +388,7 @@
                 var result = await confirmDialog.ShowAsync();
                 if (result == ContentDialogResult.Primary)
                 {
-                    var success = this.newsService.DeleteUserArticle(articleId);
+                    var success = await this.newsService.DeleteUserArticle(articleId);
                     if (success)
                     {
                         await this.RefreshArticlesAsync();

@@ -6,16 +6,14 @@
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Input;
-    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.UI.Xaml.Controls;
     using StockApp;
     using StockApp.Commands;
-    using StockApp.Models;
+    using StockApp.Database;
+    using StockApp.Models.Articles;
     using StockApp.Repositories;
     using StockApp.Services;
     using StockApp.Views;
-    using StockApp.Database;
-    using StockApp.Models.Articles;
 
     /// <summary>
     /// ViewModel for creating, previewing, and submitting user‐authored news articles.
@@ -183,18 +181,6 @@
 
             // Set default selected topic
             this.selectedTopic = "Stock News";
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ArticleCreationViewModel"/> class using default implementations.
-        /// </summary>
-        public ArticleCreationViewModel()
-          : this(
-              new NewsService(),
-              new DispatcherAdapter(),
-              new AppDbContext(),
-              App.Host.Services.GetRequiredService<IBaseStocksRepository>())
-        {
         }
 
         /// <summary>

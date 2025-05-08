@@ -4,6 +4,7 @@ namespace StockApp.Views
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Controls;
     using Microsoft.UI.Xaml.Navigation;
+    using StockApp.Models;
     using StockApp.Pages;
     using StockApp.Services;
     using StockApp.ViewModels;
@@ -13,7 +14,7 @@ namespace StockApp.Views
         /// <summary>
         /// Gets a new instance of the <see cref="NewsArticleView"/> class.
         /// </summary>
-        public NewsDetailViewModel ViewModel { get; } = new();
+        public NewsDetailViewModel ViewModel { get; }
 
         /// <summary>
         /// The ID of the selected article.
@@ -23,8 +24,10 @@ namespace StockApp.Views
         /// <summary>
         /// Initializes a new instance of the <see cref="NewsArticleView"/> class.
         /// </summary>
-        public NewsArticleView()
+        public NewsArticleView(NewsDetailViewModel newsArticleViewModel)
         {
+            this.ViewModel = newsArticleViewModel;
+            this.DataContext = this.ViewModel;
             this.InitializeComponent();
         }
 
@@ -53,12 +56,12 @@ namespace StockApp.Views
         {
             base.OnNavigatedTo(e);
 
-            if (e.Parameter is not string articleId)
+            if (e.Parameter is not ArticleNavigationParameter parameter)
             {
-                throw new ArgumentException("Navigation parameter is not a valid article ID", nameof(e));
+                throw new ArgumentException("Navigation parameter is not a valid ArticleNavigationParameter", nameof(e));
             }
 
-            this.ViewModel.LoadArticle(articleId);
+            this.ViewModel.LoadArticle(parameter.ArticleId, parameter.IsPreview);
         }
     }
 }

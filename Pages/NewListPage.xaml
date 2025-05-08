@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:StockApp"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:converters="using:StockApp.Views.Converters" xmlns:models="using:StockApp.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:converters="using:StockApp.Views.Converters" xmlns:models="using:StockApp.Models" xmlns:articles="using:StockApp.Models.Articles"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -153,7 +153,7 @@
                           IsItemClickEnabled="True"
                           ItemContainerStyle="{StaticResource DefaultListViewItemStyle}">
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="models:NewsArticle">
+                        <DataTemplate x:DataType="articles:NewsArticle">
                             <Grid Padding="16" 
                                   Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
                                   BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" 
@@ -197,7 +197,7 @@
                                         <TextBlock Text="•" 
                                                    Style="{StaticResource CaptionTextBlockStyle}" 
                                                    Opacity="0.7"/>
-                                        <TextBlock Text="{x:Bind PublishedDate}" 
+                                        <TextBlock Text="{x:Bind PublishedOn}" 
                                                    Style="{StaticResource CaptionTextBlockStyle}" 
                                                    Opacity="0.7"/>
                                         <TextBlock Text="•" 

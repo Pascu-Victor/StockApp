@@ -1,7 +1,6 @@
 ﻿namespace StockApp.Services
 {
     using System;
-    using Microsoft.UI.Xaml.Controls;
 
     public class NavigationService : INavigationService
     {
@@ -71,19 +70,5 @@
         /// </summary>
         public bool CanGoBack => rootFrame?.CanGoBack ?? false;
 
-        /// <summary>
-        /// Navigates to the article detail page with the specified article ID.
-        /// </summary>
-        /// <param name="articleId"></param>
-        /// <exception cref="InvalidOperationException"></exception>
-        public void NavigateToArticleDetail(string articleId)
-        {
-            if (rootFrame == null)
-            {
-                throw new InvalidOperationException("NavigationService not initialized. Call Initialize first.");
-            }
-
-            this.Navigate(typeof(StockApp.Views.NewsArticleView), articleId);
-        }
     }
 }

@@ -1,5 +1,6 @@
 namespace StockApp.Views
 {
+    using System;
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Controls;
     using StockApp.ViewModels;
@@ -9,17 +10,18 @@ namespace StockApp.Views
         /// <summary>
         /// Initializes a new instance of the <see cref="AdminNewsControlView"/> class.
         /// </summary>
-        public AdminNewsControlView()
+        public AdminNewsControlView(AdminNewsViewModel adminNewsViewModel)
         {
-            this.InitializeComponent();
+            this.ViewModel = adminNewsViewModel ?? throw new ArgumentNullException(nameof(adminNewsViewModel));
             this.DataContext = this.ViewModel;
+            this.InitializeComponent();
             this.Loaded += this.OnLoaded;
         }
 
         /// <summary>
         /// Gets the view model for the AdminNewsControlView.
         /// </summary>
-        public AdminNewsViewModel ViewModel { get; } = new();
+        public AdminNewsViewModel ViewModel { get; }
 
         /// <summary>
         /// Handles the Loaded event of the AdminNewsControlView control.

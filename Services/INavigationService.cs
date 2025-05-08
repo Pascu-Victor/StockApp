@@ -1,7 +1,6 @@
 ﻿namespace StockApp.Services
 {
     using System;
-    using Microsoft.UI.Xaml.Controls;
 
     public interface INavigationService
     {
@@ -15,6 +14,5 @@
 
         bool Navigate(Type pageType, object? parameter = null);
 
-        void NavigateToArticleDetail(string articleId);
     }
 }

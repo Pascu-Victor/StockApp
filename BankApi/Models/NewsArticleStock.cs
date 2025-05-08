@@ -1,17 +1,11 @@
 ﻿namespace BankApi.Models
 {
-    using BankApi.Models.Articles;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using BankApi.Models.Articles;
 
     public class NewsArticleStock
     {
-        public NewsArticleStock(int newsArticleId, int stockId)
-        {
-            ArticleId = newsArticleId;
-            StockId = stockId;
-        }
-
         [Required]
         public int ArticleId { get; set; }
 
