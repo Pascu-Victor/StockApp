@@ -1,241 +1,183 @@
-﻿namespace StockApp.Repositories
-{
-    using System;
-    using System.Collections.Generic;
-    using Microsoft.Data.SqlClient;
-    using StockApp.Database;
-    using StockApp.Exceptions;
-    using StockApp.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using StockApp.Database;
+using StockApp.Models;
+using StockApp.Exceptions;
 
+namespace StockApp.Repositories
+{
     /// <summary>
     /// Repository for managing user profiles and related operations.
     /// </summary>
     /// <remarks>
     /// Initializes a new instance of the <see cref="ProfileRepository"/> class.
     /// </remarks>
-    /// <param name="authorCnp">The CNP of the user whose profile is being managed.</param>
-    public class ProfileRepository(string authorCnp) : IProfileRepository
+    /// <param name="currentUserCnp">The CNP of the user whose profile is being managed.</param>
+    public class ProfileRepository : IProfileRepository
     {
-        private readonly SqlConnection dbConnection = DatabaseHelper.GetConnection();
-        private readonly string loggedInUserCnp = authorCnp;
+        private readonly AppDbContext _context;
+        private readonly string _currentUserCnp;
+
+        public ProfileRepository(AppDbContext context, string currentUserCnp)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _currentUserCnp = currentUserCnp ?? throw new ArgumentNullException(nameof(currentUserCnp));
+        }
 
         /// <summary>
         /// Gets the current user's profile.
         /// </summary>
         /// <returns>A <see cref="User"/> object representing the current user.</returns>
-        public User CurrentUser()
+        public Profile CurrentUser()
         {
-            const string query = @"
-        SELECT CNP, NAME, PROFILE_PICTURE, DESCRIPTION, IS_HIDDEN, GEM_BALANCE
-        FROM [USER]
-        WHERE CNP = @CNP";
+            return _context.Profiles
+                .FirstOrDefault(p => p.CNP == _currentUserCnp)
+                ?? throw new ProfileNotFoundException($"Profile not found for CNP: {_currentUserCnp}");
+        }
 
-            try
+        /// <summary>
+        /// Gets the profile of a user by their CNP.
+        /// </summary>
+        /// <param name="cnp">The CNP of the user whose profile is being retrieved.</param>
+        /// <returns>A <see cref="User"/> object representing the user.</returns>
+        public async Task<Profile> GetUserProfileAsync(string cnp)
+        {
+            var profile = await _context.Profiles
+                .Include(p => p.UserStocks)
+                .FirstOrDefaultAsync(p => p.CNP == cnp);
+
+            if (profile == null)
             {
-                using SqlCommand command = new(query, this.dbConnection);
-                command.Parameters.AddWithValue("@CNP", this.loggedInUserCnp);
-
-                using SqlDataReader reader = command.ExecuteReader();
-                if (reader.Read())
-                {
-                    return new User(
-                        cnp: reader["CNP"]?.ToString(),
-                        username: reader["NAME"]?.ToString(),
-                        description: reader["DESCRIPTION"]?.ToString(),
-                        isModerator: false,
-                        image: reader["PROFILE_PICTURE"]?.ToString(),
-                        isHidden: reader["IS_HIDDEN"] != DBNull.Value && (bool)reader["IS_HIDDEN"],
-                        gem_balance: reader["GEM_BALANCE"] != DBNull.Value ? (int)reader["GEM_BALANCE"] : 0);
-                }
-
-                throw new ProfilePersistenceException("User not found.");
+                throw new ProfileNotFoundException($"Profile with CNP {cnp} not found.");
             }
-            catch (SqlException ex)
-            {
-                throw new ProfilePersistenceException("SQL error while retrieving current user.", ex);
-            }
+
+            return profile;
         }
 
         /// <summary>
         /// Generates a random username from a predefined list.
         /// </summary>
         /// <returns>A randomly selected username.</returns>
-        public string GenerateUsername()
+        public async Task<string> GenerateUsernameAsync()
         {
-            List<string> randomUsernames =
-            [
-                "macaroane_cu_branza", "ecler_cu_fistic", "franzela_", "username1",
-                    "snitel_cu_piure", "ceai_de_musetel", "vita_de_vie", "paine_cu_pateu",
-                    "floare_de_tei", "cirese_si_visine", "inghetata_roz", "tort_de_afine",
-                    "paste_carbonara", "amandina", "orez_cu_lapte"
-            ];
+            var random = new Random();
+            string username;
+            do
+            {
+                username = $"user{random.Next(1000, 9999)}";
+            } while (await _context.Profiles.AnyAsync(p => p.Username == username));
 
-            Random random = new();
-            return randomUsernames[random.Next(randomUsernames.Count)];
+            return username;
         }
 
         /// <summary>
-        /// Gets the profile of a user by their CNP.
+        /// Updates the profile of the current user.
         /// </summary>
-        /// <param name="authorCnp">The CNP of the user whose profile is being retrieved.</param>
-        /// <returns>A <see cref="User"/> object representing the user.</returns>
-        public User GetUserProfile(string authorCnp)
+        /// <param name="cnp">The CNP of the user whose profile is being updated.</param>
+        /// <param name="newUsername">The new username.</param>
+        /// <param name="newImage">The new profile picture URL.</param>
+        /// <param name="newDescription">The new description.</param>
+        /// <param name="newHidden">A value indicating whether the profile should be hidden.</param>
+        public async Task UpdateProfileAsync(string cnp, string newUsername, string newImage, string newDescription, bool newHidden)
         {
-            const string query = @"
-        SELECT CNP, NAME, PROFILE_PICTURE, DESCRIPTION, IS_HIDDEN
-        FROM [USER]
-        WHERE CNP = @CNP";
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.CNP == cnp);
+            if (profile == null)
+            {
+                throw new ProfileNotFoundException($"Profile with CNP {cnp} not found.");
+            }
+
+            profile.Username = newUsername;
+            profile.Image = newImage;
+            profile.Description = newDescription;
+            profile.IsHidden = newHidden;
+            profile.LastModifiedAt = DateTime.UtcNow;
 
             try
             {
-                return this.ExecuteScalar<User>(query, command =>
-                {
-                    command.Parameters.AddWithValue("@CNP", authorCnp);
-                }) ?? throw new ProfilePersistenceException("User not found.");
+                await _context.SaveChangesAsync();
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
-                throw new ProfilePersistenceException("SQL error while retrieving user profile.", ex);
+                throw new ProfilePersistenceException("Failed to update profile.", ex);
             }
         }
 
         /// <summary>
         /// Updates the admin status of the current user.
         /// </summary>
+        /// <param name="cnp">The CNP of the user whose admin status is being updated.</param>
         /// <param name="isAdmin">A value indicating whether the user should be an admin.</param>
-        public void UpdateRepoIsAdmin(bool isAdmin)
+        public async Task UpdateIsAdminAsync(string cnp, bool isAdmin)
         {
-            this.ExecuteNonQuery("UPDATE [USER] SET IS_ADMIN = @IsAdmin WHERE CNP = @CNP", command =>
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.CNP == cnp);
+            if (profile == null)
             {
-                command.Parameters.AddWithValue("@IsAdmin", isAdmin ? 1 : 0);
-                command.Parameters.AddWithValue("@CNP", this.loggedInUserCnp);
-            });
-        }
+                throw new ProfileNotFoundException($"Profile with CNP {cnp} not found.");
+            }
 
-        /// <summary>
-        /// Updates the profile of the current user.
-        /// </summary>
-        /// <param name="newUsername">The new username.</param>
-        /// <param name="newImage">The new profile picture URL.</param>
-        /// <param name="newDescription">The new description.</param>
-        /// <param name="newHidden">A value indicating whether the profile should be hidden.</param>
-        public void UpdateMyUser(string newUsername, string newImage, string newDescription, bool newHidden)
-        {
-            this.ExecuteNonQuery(
-                @"UPDATE [USER]
-                      SET NAME = @NewName, PROFILE_PICTURE = @NewProfilePicture, 
-                          DESCRIPTION = @NewDescription, IS_HIDDEN = @NewIsHidden 
-                      WHERE CNP = @CNP",
-                command =>
-                {
-                    command.Parameters.AddWithValue("@NewName", newUsername);
-                    command.Parameters.AddWithValue("@NewProfilePicture", newImage);
-                    command.Parameters.AddWithValue("@NewDescription", newDescription);
-                    command.Parameters.AddWithValue("@NewIsHidden", newHidden ? 1 : 0);
-                    command.Parameters.AddWithValue("@CNP", this.loggedInUserCnp);
-                });
+            profile.IsModerator = isAdmin;
+            profile.LastModifiedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ProfilePersistenceException("Failed to update admin status.", ex);
+            }
         }
 
         /// <summary>
         /// Gets the list of stocks owned by the current user.
         /// </summary>
+        /// <param name="cnp">The CNP of the user whose stocks are being retrieved.</param>
         /// <returns>A list of the user's stocks.</returns>
-        public List<Stock> UserStocks()
+        public async Task<List<Stock>> GetUserStocksAsync(string cnp)
         {
-            const string query = @"
-        WITH UserStocks AS (
-            SELECT STOCK_NAME
-            FROM USER_STOCK
-            WHERE USER_CNP = @UserCNP
-        ),
-        LatestStockValue AS (
-            SELECT DISTINCT sv1.STOCK_NAME, sv1.PRICE
-            FROM STOCK_VALUE sv1
-            WHERE sv1.STOCK_NAME IN (SELECT STOCK_NAME FROM UserStocks)
-              AND sv1.PRICE = (
-                  SELECT MAX(sv2.PRICE)
-                  FROM STOCK_VALUE sv2
-                  WHERE sv2.STOCK_NAME = sv1.STOCK_NAME
-              )
-        )
-        SELECT 
-            s.STOCK_SYMBOL,
-            us.STOCK_NAME,
-            us.QUANTITY,
-            COALESCE(lsv.PRICE, 0) AS PRICE
-        FROM USER_STOCK us
-        JOIN STOCK s ON us.STOCK_NAME = s.STOCK_NAME
-        LEFT JOIN LatestStockValue lsv ON s.STOCK_NAME = lsv.STOCK_NAME
-        WHERE us.USER_CNP = @UserCNP";
+            var profile = await _context.Profiles
+                .Include(p => p.UserStocks)
+                .FirstOrDefaultAsync(p => p.CNP == cnp);
 
-            try
+            if (profile == null)
             {
-                using var command = new SqlCommand(query, this.dbConnection);
-                command.Parameters.AddWithValue("@UserCNP", this.loggedInUserCnp);
-
-                using var reader = command.ExecuteReader();
-                List<Stock> stocks = [];
-
-                while (reader.Read())
-                {
-                    stocks.Add(new Stock(
-                        symbol: reader["STOCK_SYMBOL"]?.ToString() ?? throw new ProfilePersistenceException("Stock symbol missing."),
-                        name: reader["STOCK_NAME"]?.ToString() ?? throw new ProfilePersistenceException("Stock name missing."),
-                        quantity: reader["QUANTITY"] != DBNull.Value ? (int)reader["QUANTITY"] : throw new ProfilePersistenceException("Stock quantity missing."),
-                        price: reader["PRICE"] != DBNull.Value ? (int)reader["PRICE"] : throw new ProfilePersistenceException("Stock price missing."),
-                        authorCNP: this.loggedInUserCnp));
-                }
-
-                return stocks;
+                throw new ProfileNotFoundException($"Profile with CNP {cnp} not found.");
             }
-            catch (SqlException ex)
-            {
-                throw new ProfilePersistenceException("SQL error while fetching user stocks.", ex);
-            }
+
+            return profile.UserStocks?.ToList() ?? new List<Stock>();
         }
 
-        /// <summary>
-        /// Executes a SQL query and returns a scalar value.
-        /// </summary>
-        /// <typeparam name="T">The type of the scalar value to return.</typeparam>
-        /// <param name="query">The SQL query to execute.</param>
-        /// <param name="parameterize">An action to parameterize the SQL command.</param>
-        /// <returns>The scalar value of type <typeparamref name="T"/>.</returns>
-        private T? ExecuteScalar<T>(string query, Action<SqlCommand> parameterize)
+        private static User MapToUser(Profile profile)
         {
-            try
+            return new User
             {
-                using SqlCommand command = new(query, this.dbConnection);
-                parameterize?.Invoke(command);
-
-                var result = command.ExecuteScalar();
-                return result == null || result == DBNull.Value
-                    ? default
-                    : (T)Convert.ChangeType(result, typeof(T));
-            }
-            catch (SqlException ex)
-            {
-                throw new ProfilePersistenceException("SQL error in scalar query.", ex);
-            }
-        }
-
-        /// <summary>
-        /// Executes a non-query SQL command.
-        /// </summary>
-        /// <param name="query">The SQL query to execute.</param>
-        /// <param name="parameterize">An action to parameterize the SQL command.</param>
-        private void ExecuteNonQuery(string query, Action<SqlCommand> parameterize)
-        {
-            try
-            {
-                using SqlCommand command = new(query, this.dbConnection);
-                parameterize?.Invoke(command);
-                command.ExecuteNonQuery();
-            }
-            catch (SqlException ex)
-            {
-                throw new ProfilePersistenceException("SQL error in non-query command.", ex);
-            }
+                Id = profile.Id,
+                CNP = profile.CNP,
+                Username = profile.Username,
+                FirstName = profile.FirstName,
+                LastName = profile.LastName,
+                Email = profile.Email,
+                PhoneNumber = profile.PhoneNumber,
+                Description = profile.Description,
+                IsModerator = profile.IsModerator,
+                Image = profile.Image,
+                IsHidden = profile.IsHidden,
+                GemBalance = profile.GemBalance,
+                NumberOfOffenses = profile.NumberOfOffenses,
+                RiskScore = profile.RiskScore,
+                ROI = profile.ROI,
+                CreditScore = profile.CreditScore,
+                Birthday = profile.Birthday,
+                ZodiacSign = profile.ZodiacSign,
+                ZodiacAttribute = profile.ZodiacAttribute,
+                NumberOfBillSharesPaid = profile.NumberOfBillSharesPaid,
+                Income = profile.Income,
+                Balance = profile.Balance,
+                HashedPassword = profile.HashedPassword
+            };
         }
     }
 }

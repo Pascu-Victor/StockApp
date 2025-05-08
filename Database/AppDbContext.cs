@@ -21,6 +21,8 @@ namespace StockApp.Database
         public DbSet<Alert> Alerts { get; set; } = null!;
         public DbSet<CreditScoreHistory> CreditScoreHistories { get; set; } = null!;
 
+        public DbSet<Profile> Profiles { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -65,6 +67,20 @@ namespace StockApp.Database
                       .IsRequired();
             });
 
+            modelBuilder.Entity<Profile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.CNP).IsUnique();
+                entity.HasIndex(e => e.Username).IsUnique();
+                entity.HasIndex(e => e.Email).IsUnique();
+
+                entity.Property(e => e.CNP).IsRequired().HasMaxLength(13);
+                entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.HashedPassword).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ROI).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Balance).HasColumnType("decimal(18,2)");
+            });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

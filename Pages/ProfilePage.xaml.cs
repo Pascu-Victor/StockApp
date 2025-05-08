@@ -9,10 +9,12 @@ namespace StockApp.Pages
     using StockApp.Models;
     using StockApp.Services;
     using StockApp.ViewModels;
+    using StockApp.Repositories;
+    using StockApp.Database;
 
     public sealed partial class ProfilePage : Page
     {
-        private ProfilePageViewModel viewModel;
+        public ProfilePageViewModel ViewModel { get; }
 
         private ICommand UpdateProfileButton { get; }
 
@@ -22,6 +24,10 @@ namespace StockApp.Pages
         public ProfilePage()
         {
             this.InitializeComponent();
+            var dbContext = new AppDbContext();
+            var profileRepository = new ProfileRepository(dbContext, "current_user_cnp"); // Replace with actual CNP
+            var profileService = new ProfileService(profileRepository, "current_user_cnp"); // Replace with actual CNP
+            ViewModel = new ProfilePageViewModel(profileService);
             this.UpdateProfileButton = new StockNewsRelayCommand(() => this.GoToUpdatePage());
         }
 
@@ -29,13 +35,10 @@ namespace StockApp.Pages
         {
             base.OnNavigatedTo(e);
 
-            this.viewModel = new ProfilePageViewModel();
-            this.DataContext = this.viewModel;
-
             this.ShowUserInformation();
-            this.StocksListView.ItemsSource = this.viewModel.GetUserStocks();
+            this.StocksListView.ItemsSource = this.ViewModel.GetUserStocks();
 
-            if (this.viewModel.IsHidden())
+            if (this.ViewModel.IsHidden())
             {
                 this.HideProfile();
             }
@@ -45,14 +48,14 @@ namespace StockApp.Pages
 
         private void ShowUserInformation()
         {
-            this.UsernameTextBlock.Text = this.viewModel.GetUsername();
-            this.ProfileDescription.Text = this.viewModel.GetDescription();
-            this.ProfileImage.Source = this.viewModel.ImageSource;
+            this.UsernameTextBlock.Text = this.ViewModel.GetUsername();
+            this.ProfileDescription.Text = this.ViewModel.GetDescription();
+            this.ProfileImage.Source = this.ViewModel.ImageSource;
         }
 
         private void GoToUpdatePage()
         {
-            NavigationService.Instance.Navigate(typeof(UpdateProfilePage), this.viewModel.GetLoggedInUserCnp());
+            NavigationService.Instance.Navigate(typeof(UpdateProfilePage), this.ViewModel.GetLoggedInUserCnp());
         }
 
         private void GetSelectedStock(object sender, RoutedEventArgs e)
@@ -90,7 +93,7 @@ namespace StockApp.Pages
         /// </summary>
         public void UserStocksShowUsername()
         {
-            this.UsernameMyStocks.Text = this.viewModel.GetUsername() + "'s STOCKS: ";
+            this.UsernameMyStocks.Text = this.ViewModel.GetUsername() + "'s STOCKS: ";
         }
 
         /// <summary>

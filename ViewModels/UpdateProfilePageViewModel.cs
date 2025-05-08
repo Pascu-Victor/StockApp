@@ -2,8 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Windows.Input;
     using StockApp.Models;
     using StockApp.Services;
+    using StockApp.Repositories;
+    using StockApp.Database;
 
     /// <summary>
     /// ViewModel for updating user profile details including username, image, description, and visibility.
@@ -12,17 +16,109 @@
     /// Initializes a new instance of the <see cref="UpdateProfilePageViewModel"/> class with a specified service.
     /// </remarks>
     /// <param name="service">Service used to retrieve and update profile information.</param>
-    internal class UpdateProfilePageViewModel(IProfileService service)
+    public class UpdateProfilePageViewModel : ViewModelBase
     {
-        private readonly IProfileService profileService = service ?? throw new ArgumentNullException(nameof(service));
+        private readonly IProfileService _profileService;
+        private string _username;
+        private string _description;
+        private string _image;
+        private bool _isProfileHidden;
+        private bool _isLoading;
+        private string _errorMessage;
+        private Profile _currentProfile;
+
+        public UpdateProfilePageViewModel(string cnp)
+        {
+            var dbContext = new AppDbContext();
+            var profileRepository = new ProfileRepository(dbContext, cnp);
+            _profileService = new ProfileService(profileRepository, cnp);
+
+            LoadProfileCommand = new RelayCommand(async _ => await LoadProfileAsync());
+            UpdateProfileCommand = new RelayCommand(async _ => await UpdateProfileAsync());
+            GenerateUsernameCommand = new RelayCommand(async _ => await GenerateUsernameAsync());
+        }
+
+        public ICommand LoadProfileCommand { get; }
+        public ICommand UpdateProfileCommand { get; }
+        public ICommand GenerateUsernameCommand { get; }
+
+        public Profile CurrentProfile
+        {
+            get => _currentProfile;
+            set
+            {
+                _currentProfile = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set
+            {
+                _errorMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Username
+        {
+            get => _username;
+            set
+            {
+                _username = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Description
+        {
+            get => _description;
+            set
+            {
+                _description = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Image
+        {
+            get => _image;
+            set
+            {
+                _image = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsProfileHidden
+        {
+            get => _isProfileHidden;
+            set
+            {
+                _isProfileHidden = value;
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateProfilePageViewModel"/> class with the default profile service.
         /// </summary>
         public UpdateProfilePageViewModel()
-            : this(new ProfileService())
+            : this("default_user_cnp") // Using a default CNP for initialization
         {
-            // Inline: default constructor chaining to use ProfileService implementation
+            // Default constructor chaining to use ProfileService implementation
         }
 
         /// <summary>
@@ -32,7 +128,7 @@
         public string GetImage()
         {
             // Inline: delegate image retrieval to service
-            return this.profileService.GetImage();
+            return this._profileService.GetImage();
         }
 
         /// <summary>
@@ -42,7 +138,7 @@
         public string GetUsername()
         {
             // Inline: delegate username retrieval to service
-            return this.profileService.GetUsername();
+            return this._profileService.GetUsername();
         }
 
         /// <summary>
@@ -52,7 +148,7 @@
         public string GetDescription()
         {
             // Inline: delegate description retrieval to service
-            return this.profileService.GetDescription();
+            return this._profileService.GetDescription();
         }
 
         /// <summary>
@@ -62,7 +158,7 @@
         public bool IsHidden()
         {
             // Inline: delegate visibility check to service
-            return this.profileService.IsHidden();
+            return this._profileService.IsHidden();
         }
 
         /// <summary>
@@ -72,7 +168,7 @@
         public bool IsAdmin()
         {
             // Inline: delegate admin check to service
-            return this.profileService.IsAdmin();
+            return this._profileService.IsAdmin();
         }
 
         /// <summary>
@@ -82,7 +178,7 @@
         public List<Stock> GetUserStocks()
         {
             // Inline: retrieve user's stocks from service
-            return this.profileService.GetUserStocks();
+            return this._profileService.GetUserStocks();
         }
 
         /// <summary>
@@ -96,7 +192,7 @@
         {
             // TODO: Validate inputs (e.g., non-null, length constraints)
             // FIXME: Consider handling exceptions from service to provide user feedback
-            this.profileService.UpdateUser(newUsername, newImage, newDescription, newHidden); // Inline: perform bulk update
+            this._profileService.UpdateUser(newUsername, newImage, newDescription, newHidden); // Inline: perform bulk update
         }
 
         /// <summary>
@@ -106,7 +202,74 @@
         public void UpdateAdminMode(bool newIsAdmin)
         {
             // Inline: delegate admin mode toggle to service
-            this.profileService.UpdateIsAdmin(newIsAdmin);
+            this._profileService.UpdateIsAdmin(newIsAdmin);
+        }
+
+        private async Task LoadProfileAsync()
+        {
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = null;
+                CurrentProfile = await _profileService.GetCurrentProfileAsync();
+                Username = CurrentProfile.Username;
+                Description = CurrentProfile.Description;
+                Image = CurrentProfile.Image;
+                IsProfileHidden = CurrentProfile.IsHidden;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task UpdateProfileAsync()
+        {
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = null;
+                await _profileService.UpdateProfileAsync(
+                    _profileService.GetLoggedInUserCnp(),
+                    Username,
+                    Image,
+                    Description,
+                    IsProfileHidden
+                );
+                await LoadProfileAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task GenerateUsernameAsync()
+        {
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = null;
+
+                CurrentProfile.Username = await _profileService.GenerateUsernameAsync();
+                OnPropertyChanged(nameof(CurrentProfile));
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error generating username: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }

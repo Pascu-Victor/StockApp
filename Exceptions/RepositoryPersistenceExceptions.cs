@@ -25,8 +25,4 @@
     public class AlertRepositoryException(string message, Exception? innerException = null) : RepositoryPersistenceException(message, innerException)
     {
     }
-
-    public class ProfilePersistenceException(string message, Exception? innerException = null) : Exception(message, innerException)
-    {
-    }
 }
