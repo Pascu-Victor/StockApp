@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace StockApp.Services
+﻿namespace StockApp.Services
 {
+    using System.Threading.Tasks;
+
     public interface ICreateStockService
     {
         bool CheckIfUserIsGuest();

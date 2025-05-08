@@ -25,9 +25,9 @@
             return this.userRepository.GetUserByCnpAsync(cnp).Result;
         }
 
-        public List<User> GetUsers()
+        public Task<List<User>> GetUsers()
         {
-            return this.userRepository.GetAllUsersAsync().Result;
+            return this.userRepository.GetAllUsersAsync();
         }
 
         public async Task CreateUser(User user)
@@ -38,6 +38,27 @@
             }
 
             await this.userRepository.CreateUserAsync(user);
+        }
+
+        public string GetCurrentUserCNP()
+        {
+            return this.userRepository.CurrentUserCNP;
+        }
+
+        public bool IsGuest()
+        {
+            return this.userRepository.IsGuest;
+        }
+
+        public async Task<User> GetCurrentUserAsync()
+        {
+            var cnp = this.userRepository.CurrentUserCNP;
+            if (string.IsNullOrWhiteSpace(cnp))
+            {
+                throw new ArgumentException("CNP cannot be empty");
+            }
+
+            return await this.userRepository.GetUserByCnpAsync(cnp);
         }
     }
 }

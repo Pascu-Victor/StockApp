@@ -15,6 +15,7 @@ namespace StockApp
     using StockApp.Database;
     using StockApp.Pages;
     using StockApp.Repositories;
+    using StockApp.Repositories.Api;
     using StockApp.Services;
     using StockApp.ViewModels;
     using StockApp.Views;
@@ -71,8 +72,22 @@ namespace StockApp
                     services.AddDbContext<AppDbContext>(options =>
                         options.UseSqlServer(ConnectionString));
 
+                    // Repositories
+                    services.AddScoped<IAlertRepository, AlertProxyRepo>();
+
+                    services.AddSingleton<IBillSplitReportRepository, BillSplitReportRepository>();
+                    services.AddSingleton<IChatReportRepository, ChatReportRepoProxy>();
+                    services.AddSingleton<IHistoryRepository, HistoryRepository>();
+                    services.AddSingleton<IInvestmentsRepository, InvestmentsRepository>();
+                    services.AddSingleton<ILoanRepository, LoanRepository>();
+                    services.AddSingleton<ILoanRequestRepository, LoanRequestRepository>();
+                    services.AddSingleton<IUserRepository, UserRepository>();
+                    services.AddSingleton<IActivityRepo, ActivityProxyRepo>();
+                    services.AddSingleton<IGemStoreRepository, GemStoreProxyRepo>();
+
+
                     // HttpClient for API communication
-                    services.AddHttpClient("BankApi", client =>
+                    services.AddHttpClient<IChatReportRepository, ChatReportRepoProxy>(client =>
                     {
                         client.BaseAddress = new Uri(config["ApiBaseUrl"]);
                     });
@@ -96,7 +111,6 @@ namespace StockApp
                     services.AddSingleton<IUserRepository, UserRepository>();
 
                     // Other Services
-                    services.AddSingleton<IActivityService, ActivityService>();
                     services.AddSingleton<IBillSplitReportService, BillSplitReportService>();
                     services.AddSingleton<IChatReportService, ChatReportService>();
                     services.AddSingleton<IHistoryService, HistoryService>();
@@ -108,6 +122,8 @@ namespace StockApp
                     services.AddSingleton<ITipsService, TipsService>();
                     services.AddSingleton<IUserService, UserService>();
                     services.AddSingleton<IZodiacService, ZodiacService>();
+                    services.AddSingleton<IActivityService, ActivityService>();
+                    services.AddSingleton<IStoreService, StoreService>();
                     services.AddSingleton<MainWindow>();
 
                     // UI Components
@@ -151,6 +167,13 @@ namespace StockApp
                         return () => provider.GetRequiredService<UserInfoComponent>();
                     });
                     services.AddTransient<UsersView>();
+
+                    // ViewModels
+
+                    services.AddTransient<StoreViewModel>();
+
+                    // Register services for UserInfoComponent
+                    services.AddTransient<IHistoryService, HistoryService>();
 
                     services.AddTransient<NewsListPage>();
                     services.AddTransient<CreateStockPage>();

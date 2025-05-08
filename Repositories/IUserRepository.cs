@@ -1,6 +1,5 @@
 ﻿namespace StockApp.Repositories
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using StockApp.Models;
@@ -8,6 +7,8 @@
     public interface IUserRepository
     {
         string CurrentUserCNP { get; set; }
+
+        bool IsGuest { get; }
 
         Task CreateUserAsync(User user);
 

@@ -1,16 +1,17 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using StockApp.Database;
-using StockApp.Repositories;
-using StockApp.Services;
-
 namespace StockApp
 {
+    using System;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.OpenApi.Models;
+    using StockApp.Database;
+    using StockApp.Repositories.Api;
+    using StockApp.Services;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -26,6 +27,11 @@ namespace StockApp
             
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(App.ConnectionString));
+
+            services.AddHttpClient<ChatReportRepoProxy>(client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:5001/"); // <-- Use your BankApi URL
+            });
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>

@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using StockApp.Models;
 using StockApp.Services;
-using StockApp.ViewModels;
 
 namespace StockApp.ViewModels.Tests
 {
@@ -19,16 +17,13 @@ namespace StockApp.ViewModels.Tests
         {
             _svc = new Mock<IStoreService>(MockBehavior.Strict);
 
-            _svc.Setup(s => s.GetCnp()).Returns("cnp");
-            _svc.Setup(s => s.IsGuest("cnp")).Returns(false);
-            _svc.Setup(s => s.GetUserGemBalance("cnp")).Returns(500);
-
+            _svc.Setup(s => s.GetUserGemBalanceAsync("cnp")).ReturnsAsync(500);
             _svc.Setup(s => s.BuyGems("cnp", It.IsAny<GemDeal>(), It.IsAny<string>()))
                 .ReturnsAsync("Successfully purchased");
             _svc.Setup(s => s.SellGems("cnp", It.IsAny<int>(), It.IsAny<string>()))
                 .ReturnsAsync("Successfully sold");
 
-            _vm = new StoreViewModel(_svc.Object);
+            _vm = new StoreViewModel(_svc.Object, Mock.Of<IUserService>());
         }
 
         [TestMethod]
@@ -45,7 +40,7 @@ namespace StockApp.ViewModels.Tests
             var deal = new GemDeal("D", 100, 1.0);
             var msg = await _vm.BuyGemsAsync(deal, "acct");
             Assert.AreEqual("Successfully purchased", msg);
-            Assert.AreEqual(600, _vm.UserGems); 
+            Assert.AreEqual(600, _vm.UserGems);
         }
 
         [TestMethod]

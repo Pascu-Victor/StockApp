@@ -15,7 +15,7 @@
             <TextBlock FontSize="25" FontWeight="Bold" Foreground="White" 
                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10">
                 <Run Text="Gems: "/>
-                <Run Text="{x:Bind viewModel.UserGems, Mode=OneWay, FallbackValue=0}"/>
+                <Run Text="{x:Bind _viewModel.UserGems, Mode=OneWay, FallbackValue=0}"/>
             </TextBlock>
         </Grid>
 
@@ -44,7 +44,7 @@
                         <TextBlock Text="Expires At" Foreground="White" FontSize="18" FontWeight="Bold" Grid.Column="3"/>
                     </Grid>
                     <!-- Regular Deals -->
-                    <ListView x:Name="gemDealsListView" ItemsSource="{x:Bind viewModel.AvailableDeals, Mode=OneWay}" SelectionMode="Single">
+                    <ListView x:Name="gemDealsListView" ItemsSource="{x:Bind _viewModel.AvailableDeals, Mode=OneWay}" SelectionMode="Single">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="models:GemDeal">
                                 <Border Background="#276b26" Padding="10" CornerRadius="10">
@@ -58,9 +58,8 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{x:Bind Title}" Foreground="White" FontSize="18" Grid.Column="0"/>
                                         <TextBlock Text="{x:Bind GemAmount}" Foreground="White" FontSize="18" Grid.Column="1"/>
-                                        <!-- FIXME: formatted price is not binding correctly, it is in the service but this is expecting it to be in the model -->
-                                        <!--<TextBlock Text="{x:Bind FormattedPrice}" Foreground="White" FontSize="18" Grid.Column="2"/>
-                                        <TextBlock Text="{x:Bind ExpirationTimeFormatted}" Foreground="White" FontSize="18" Grid.Column="3"/>-->
+                                        <TextBlock Text="{x:Bind FormattedPrice}" Foreground="White" FontSize="18" Grid.Column="2"/>
+                                        <TextBlock Text="{x:Bind ExpirationTimeFormatted}" Foreground="White" FontSize="18" Grid.Column="3"/>
                                         <Button Content="BUY"
                                                 Click="OnBuyClicked" CommandParameter="{Binding}" Background="#5f815f" Foreground="White" Width="75" Grid.Column="4"/>
                                     </Grid>

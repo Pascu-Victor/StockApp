@@ -3,7 +3,6 @@ namespace StockApp.Views
     using System;
     using Microsoft.UI.Xaml.Controls;
     using Microsoft.UI.Xaml.Navigation;
-    using StockApp.Models;
     using StockApp.ViewModels;
 
     public sealed partial class AlertsView : Page
@@ -11,8 +10,9 @@ namespace StockApp.Views
         /// <summary>
         /// Initializes a new instance of the <see cref="AlertsView"/> class.
         /// </summary>
-        public AlertsView()
+        public AlertsView(AlertViewModel viewModel)
         {
+            this.ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             this.InitializeComponent();
             this.DataContext = this.ViewModel;
         }
@@ -20,7 +20,7 @@ namespace StockApp.Views
         /// <summary>
         /// Gets or Sets the ViewModel for managing alerts.
         /// </summary>
-        public AlertViewModel ViewModel { get; set; } = new();
+        public AlertViewModel ViewModel { get; set; }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {

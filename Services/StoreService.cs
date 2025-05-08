@@ -1,5 +1,6 @@
 ﻿namespace StockApp.Services
 {
+    using System;
     using System.Threading.Tasks;
     using StockApp.Exceptions;
     using StockApp.Models;
@@ -7,35 +8,24 @@
 
     public class StoreService : IStoreService
     {
-        private readonly GemStoreRepository repository = new();
+        private readonly IGemStoreRepository _repository;
+        private readonly IUserRepository _userRepository;
 
-        /// <summary>
-        /// Retrieves the CNP for the current user.
-        /// </summary>
-        /// <returns></returns>
-        public string GetCnp()
+        public StoreService(IGemStoreRepository repository, IUserRepository userRepository)
         {
-            return this.repository.GetCnp();
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        /// <summary>
-        /// Checks if the user is a guest.
-        /// </summary>
-        /// <param name="cnp"></param>
-        /// <returns></returns>
-        public bool IsGuest(string cnp)
-        {
-            return this.repository.IsGuest(cnp);
-        }
 
         /// <summary>
         /// Retrieves the current gem balance for the specified user.
         /// </summary>
         /// <param name="cnp"></param>
         /// <returns></returns>
-        public int GetUserGemBalance(string cnp)
+        public async Task<int> GetUserGemBalanceAsync(string cnp)
         {
-            return this.repository.GetUserGemBalance(cnp);
+            return await _repository.GetUserGemBalanceAsync(cnp);
         }
 
         /// <summary>
@@ -43,9 +33,9 @@
         /// </summary>
         /// <param name="cnp"></param>
         /// <param name="newBalance"></param>
-        public void UpdateUserGemBalance(string cnp, int newBalance)
+        public async Task UpdateUserGemBalanceAsync(string cnp, int newBalance)
         {
-            this.repository.UpdateUserGemBalance(cnp, newBalance);
+            await _repository.UpdateUserGemBalanceAsync(cnp, newBalance);
         }
 
         /// <summary>
@@ -59,7 +49,7 @@
         /// <exception cref="GemTransactionFailedException"></exception>
         public async Task<string> BuyGems(string userCNP, GemDeal deal, string selectedAccountId)
         {
-            if (this.IsGuest(userCNP))
+            if (_userRepository.IsGuest)
             {
                 throw new GuestUserOperationException("Guests cannot buy gems.");
             }
@@ -70,8 +60,8 @@
                 throw new GemTransactionFailedException("Transaction failed. Please check your bank account balance.");
             }
 
-            int currentBalance = this.GetUserGemBalance(userCNP);
-            this.UpdateUserGemBalance(userCNP, currentBalance + deal.GemAmount);
+            int currentBalance = await GetUserGemBalanceAsync(userCNP);
+            await UpdateUserGemBalanceAsync(userCNP, currentBalance + deal.GemAmount);
 
             return $"Successfully purchased {deal.GemAmount} gems for {deal.Price}€";
         }
@@ -88,12 +78,12 @@
         /// <exception cref="GemTransactionFailedException"></exception>
         public async Task<string> SellGems(string cnp, int gemAmount, string selectedAccountId)
         {
-            if (this.IsGuest(cnp))
+            if (_userRepository.IsGuest)
             {
                 throw new GuestUserOperationException("Guests cannot sell gems.");
             }
 
-            int currentBalance = this.GetUserGemBalance(cnp);
+            int currentBalance = await GetUserGemBalanceAsync(cnp);
             if (gemAmount > currentBalance)
             {
                 throw new InsufficientGemsException($"Not enough gems to sell. You have {currentBalance}, attempted to sell {gemAmount}.");
@@ -106,7 +96,7 @@
                 throw new GemTransactionFailedException("Transaction failed. Unable to deposit funds.");
             }
 
-            this.UpdateUserGemBalance(cnp, currentBalance - gemAmount);
+            await UpdateUserGemBalanceAsync(cnp, currentBalance - gemAmount);
             return $"Successfully sold {gemAmount} gems for {moneyEarned}€";
         }
 

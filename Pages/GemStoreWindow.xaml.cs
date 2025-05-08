@@ -8,21 +8,21 @@ namespace StockApp.Pages
 
     public sealed partial class GemStoreWindow : Page
     {
-        private readonly StoreViewModel viewModel;
+        private readonly StoreViewModel _viewModel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GemStoreWindow"/> class.
         /// </summary>
-        public GemStoreWindow()
+        public GemStoreWindow(StoreViewModel storeViewModel)
         {
+            _viewModel = storeViewModel ?? throw new ArgumentNullException(nameof(storeViewModel));
+            this.DataContext = _viewModel;
             this.InitializeComponent();
-            this.viewModel = new StoreViewModel();
-            this.DataContext = this.viewModel;
         }
 
         private async void OnBuyClicked(object sender, RoutedEventArgs e)
         {
-            if (this.viewModel.IsGuest())
+            if (_viewModel.IsGuest)
             {
                 this.ShowErrorDialog("Guests are not allowed to buy gems.");
                 return;
@@ -37,7 +37,7 @@ namespace StockApp.Pages
                 };
 
                 StackPanel dialogContent = new StackPanel();
-                dialogContent.Children.Add(new TextBlock { Text = $"You are about to buy {selectedDeal.GemAmount} Gems for {selectedDeal.Price}€.\n\nSelect a Bank Account:" });
+                dialogContent.Children.Add(new TextBlock { Text = $"You are about to buy {selectedDeal.GemAmount} Gems for {selectedDeal.Price}â‚¬.\n\nSelect a Bank Account:" });
                 dialogContent.Children.Add(bankAccountDropdown);
 
                 ContentDialog confirmDialog = new ContentDialog
@@ -58,7 +58,7 @@ namespace StockApp.Pages
                         return;
                     }
 
-                    string purchaseResult = await this.viewModel.BuyGemsAsync(selectedDeal, selectedAccount);
+                    string purchaseResult = await _viewModel.BuyGemsAsync(selectedDeal, selectedAccount);
                     this.ShowSuccessDialog(purchaseResult);
                 }
             }
@@ -94,7 +94,7 @@ namespace StockApp.Pages
 
         private async void OnSellClicked(object sender, RoutedEventArgs e)
         {
-            if (this.viewModel.IsGuest())
+            if (_viewModel.IsGuest)
             {
                 this.ShowErrorDialog("Guests are not allowed to sell gems.");
                 return;
@@ -106,7 +106,7 @@ namespace StockApp.Pages
                 return;
             }
 
-            if (gemsToSell > this.viewModel.UserGems)
+            if (gemsToSell > _viewModel.UserGems)
             {
                 this.ShowErrorDialog("Not enough Gems to sell.");
                 return;
@@ -119,7 +119,7 @@ namespace StockApp.Pages
             };
 
             StackPanel dialogContent = new StackPanel();
-            dialogContent.Children.Add(new TextBlock { Text = $"You are about to sell {gemsToSell} Gems for {gemsToSell / 100.0}€.\n\nSelect a Bank Account from below:\n" });
+            dialogContent.Children.Add(new TextBlock { Text = $"You are about to sell {gemsToSell} Gems for {gemsToSell / 100.0}â‚¬.\n\nSelect a Bank Account from below:\n" });
             dialogContent.Children.Add(bankAccountDropdown);
 
             ContentDialog sellDialog = new ContentDialog
@@ -140,10 +140,9 @@ namespace StockApp.Pages
                     return;
                 }
 
-                string sellResult = await this.viewModel.SellGemsAsync(gemsToSell, selectedAccount);
+                string sellResult = await _viewModel.SellGemsAsync(gemsToSell, selectedAccount);
                 this.ShowSuccessDialog(sellResult);
             }
         }
-
     }
 }

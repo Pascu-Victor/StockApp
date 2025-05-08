@@ -118,7 +118,7 @@
         private static void ResetDatabase()
         {
             const string masterConnection = @"
-        Data Source=VM;
+        Data Source=DESKTOP-2UI353C\SQLEXPRESS;
         Initial Catalog=StockApp_DB;
         Integrated Security=True;
         Trust Server Certificate=True";

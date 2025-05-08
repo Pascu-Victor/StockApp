@@ -1,16 +1,16 @@
 ﻿namespace BankApi.Repositories
 {
-    using BankApi.Database;
-    using BankApi.Models;
-    using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using BankApi.Data;
+    using BankApi.Models;
+    using Microsoft.EntityFrameworkCore;
 
     public class HomepageStocksRepository : IHomepageStocksRepository
     {
-        private readonly AppDbContext _context;
+        private readonly ApiDbContext _context;
 
-        public HomepageStocksRepository(AppDbContext context)
+        public HomepageStocksRepository(ApiDbContext context)
         {
             _context = context;
         }

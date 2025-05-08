@@ -1,19 +1,25 @@
 namespace StockApp.Views.Components
 {
+    using System;
     using Microsoft.UI.Xaml;
     using Microsoft.UI.Xaml.Controls;
     using Src.Data;
     using StockApp.Models;
     using StockApp.Repositories;
+    using StockApp.Services;
     using StockApp.Views.Pages;
 
     public sealed partial class UserInfoComponent : Page
     {
+        private readonly IActivityService activityService;
+        private readonly IHistoryService historyService;
         public User User;
 
-        public UserInfoComponent()
+        public UserInfoComponent(IActivityService activityService, IHistoryService historyService)
         {
             this.InitializeComponent();
+            this.activityService = activityService ?? throw new ArgumentNullException(nameof(activityService));
+            this.historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
         }
 
         public void SetUserData(User userData)
@@ -28,7 +34,7 @@ namespace StockApp.Views.Components
         {
             if (this.User != null)
             {
-                AnalysisWindow analysisWindow = new AnalysisWindow(this.User);
+                var analysisWindow = new AnalysisWindow(this.User, this.activityService, this.historyService);
                 analysisWindow.Activate();
             }
         }

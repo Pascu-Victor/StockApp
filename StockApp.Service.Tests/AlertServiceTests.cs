@@ -1,7 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StockApp.Models;
 using StockApp.Services;
-using System.Collections.Generic;
 
 namespace StockApp.Service.Tests
 {
@@ -17,9 +18,9 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        public void CreateAlert_AddsAlert()
+        public async Task CreateAlert_AddsAlert()
         {
-            var alert = _service.CreateAlert("AAPL", "Test Alert", 200, 100, true);
+            var alert = await _service.CreateAlertAsync("AAPL", "Test Alert", 200, 100, true);
 
             Assert.IsNotNull(alert);
             Assert.AreEqual("AAPL", alert.StockName);
@@ -30,41 +31,42 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        public void UpdateAlert_ChangesFields()
+        public async Task UpdateAlert_ChangesFields()
         {
-            var alert = _service.CreateAlert("AAPL", "Old Alert", 300, 150, true);
-            _service.UpdateAlert(alert.AlertId, "AAPL", "Updated Alert", 400, 200, false);
+            var alert = await _service.CreateAlertAsync("AAPL", "Old Alert", 300, 150, true);
+            await _service.UpdateAlertAsync(alert.AlertId, "AAPL", "Updated Alert", 400, 200, false);
 
-            var updated = _service.GetAlertById(alert.AlertId);
+            var updated = await _service.GetAlertByIdAsync(alert.AlertId);
 
+            Assert.IsNotNull(updated);
             Assert.AreEqual("Updated Alert", updated.Name);
             Assert.AreEqual(400, updated.UpperBound);
             Assert.IsFalse(updated.ToggleOnOff);
         }
 
         [TestMethod]
-        public void RemoveAlert_DeletesSuccessfully()
+        public async Task RemoveAlert_DeletesSuccessfully()
         {
-            var alert = _service.CreateAlert("TSLA", "Temp Alert", 800, 600, true);
-            _service.RemoveAlert(alert.AlertId);
+            var alert = await _service.CreateAlertAsync("TSLA", "Temp Alert", 800, 600, true);
+            await _service.RemoveAlertAsync(alert.AlertId);
 
-            var found = _service.GetAlertById(alert.AlertId);
+            var found = await _service.GetAlertByIdAsync(alert.AlertId);
             Assert.IsNull(found);
         }
     }
 
     internal class InMemoryAlertService : IAlertService
     {
-        private readonly List<Alert> _alerts = [];
+        private readonly List<Alert> _alerts = new();
         private int _nextId = 1;
 
-        public List<Alert> GetAllAlerts() => [.. _alerts];
+        public Task<List<Alert>> GetAllAlertsAsync() => Task.FromResult(new List<Alert>(_alerts));
 
-        public List<Alert> GetAllAlertsOn() => _alerts.FindAll(a => a.ToggleOnOff);
+        public Task<List<Alert>> GetAllAlertsOnAsync() => Task.FromResult(_alerts.FindAll(a => a.ToggleOnOff));
 
-        public Alert? GetAlertById(int alertId) => _alerts.Find(a => a.AlertId == alertId);
+        public Task<Alert?> GetAlertByIdAsync(int alertId) => Task.FromResult(_alerts.Find(a => a.AlertId == alertId));
 
-        public Alert CreateAlert(string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
+        public Task<Alert> CreateAlertAsync(string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
         {
             var alert = new Alert
             {
@@ -76,27 +78,30 @@ namespace StockApp.Service.Tests
                 ToggleOnOff = toggleOnOff
             };
             _alerts.Add(alert);
-            return alert;
+            return Task.FromResult(alert);
         }
 
-        public void UpdateAlert(int alertId, string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
+        public Task UpdateAlertAsync(int alertId, string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
         {
-            var alert = GetAlertById(alertId);
-            if (alert == null) return;
-
-            alert.StockName = stockName;
-            alert.Name = name;
-            alert.UpperBound = upperBound;
-            alert.LowerBound = lowerBound;
-            alert.ToggleOnOff = toggleOnOff;
+            var alert = _alerts.Find(a => a.AlertId == alertId);
+            if (alert != null)
+            {
+                alert.StockName = stockName;
+                alert.Name = name;
+                alert.UpperBound = upperBound;
+                alert.LowerBound = lowerBound;
+                alert.ToggleOnOff = toggleOnOff;
+            }
+            return Task.CompletedTask;
         }
 
-        public void UpdateAlert(Alert alert) =>
-            UpdateAlert(alert.AlertId, alert.StockName, alert.Name, alert.UpperBound, alert.LowerBound, alert.ToggleOnOff);
+        public Task UpdateAlertAsync(Alert alert) =>
+            UpdateAlertAsync(alert.AlertId, alert.StockName, alert.Name, alert.UpperBound, alert.LowerBound, alert.ToggleOnOff);
 
-        public void RemoveAlert(int alertId)
+        public Task RemoveAlertAsync(int alertId)
         {
             _alerts.RemoveAll(a => a.AlertId == alertId);
+            return Task.CompletedTask;
         }
     }
 }

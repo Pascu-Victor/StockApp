@@ -5,13 +5,9 @@
 
     public interface IStoreService
     {
-        string GetCnp();
+        Task<int> GetUserGemBalanceAsync(string cnp);
 
-        bool IsGuest(string cnp);
-
-        int GetUserGemBalance(string cnp);
-
-        void UpdateUserGemBalance(string cnp, int newBalance);
+        Task UpdateUserGemBalanceAsync(string cnp, int newBalance);
 
         Task<string> BuyGems(string cnp, GemDeal deal, string selectedAccountId);
 

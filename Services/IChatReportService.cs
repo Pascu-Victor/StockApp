@@ -6,14 +6,16 @@
 
     public interface IChatReportService
     {
-        void DoNotPunishUser(ChatReport chatReportToBeSolved);
+        Task DoNotPunishUser(ChatReport chatReportToBeSolved);
 
-        Task<bool> PunishUser(ChatReport chatReportToBeSolved);
+        Task PunishUser(ChatReport chatReportToBeSolved);
 
         Task<bool> IsMessageOffensive(string messageToBeChecked);
 
-        void UpdateHistoryForUser(string userCNP, int newScore);
+        Task UpdateHistoryForUser(string userCNP, int newScore);
 
-        List<ChatReport> GetChatReports();
+        Task<List<ChatReport>> GetChatReports();
+
+        Task DeleteChatReport(int id);
     }
 }

@@ -43,14 +43,6 @@
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlertViewModel"/> class using default implementations.
-        /// </summary>
-        public AlertViewModel()
-            : this(new AlertService(), new DialogService())
-        {
-        }
-
-        /// <summary>
         /// Event triggered when a property value changes.
         /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -198,7 +190,12 @@
                 decimal lowerBound = this.alertLowerBound ?? throw new ArgumentNullException(nameof(this.alertLowerBound));
 
                 // Create a new alert via the service and add it to the collection
-                Alert newAlert = this.alertService.CreateAlert(this.SelectedStockName, this.NewAlertName, upperBound, lowerBound, true);
+                Alert newAlert = await this.alertService.CreateAlertAsync(
+                    stockName: this.SelectedStockName,
+                    name: this.NewAlertName,
+                    upperBound: upperBound,
+                    lowerBound: lowerBound,
+                    toggleOnOff: true);
                 this.Alerts.Add(newAlert);
                 await this.dialogService.ShowMessageAsync("Success", "Alert created successfully!");
             }
@@ -227,7 +224,7 @@
                         throw new ArgumentException("Alert name cannot be empty.");
                     }
 
-                    this.alertService.UpdateAlert(
+                    await this.alertService.UpdateAlertAsync(
                         alert.AlertId,
                         alert.StockName,
                         alert.Name,
@@ -252,7 +249,7 @@
         {
             if (parameter is Alert alertToDelete)
             {
-                this.alertService.RemoveAlert(alertToDelete.AlertId);
+                await this.alertService.RemoveAlertAsync(alertToDelete.AlertId);
                 this.Alerts.Remove(alertToDelete);
                 await this.dialogService.ShowMessageAsync("Success", "Alert deleted successfully!");
             }
@@ -265,10 +262,10 @@
         /// <summary>
         /// Loads all alerts from the service into the <see cref="Alerts"/> collection.
         /// </summary>
-        private void LoadAlerts()
+        private async void LoadAlerts()
         {
             this.Alerts.Clear();
-            foreach (Alert alert in this.alertService.GetAllAlerts())
+            foreach (Alert alert in await this.alertService.GetAllAlertsAsync())
             {
                 this.Alerts.Add(alert);
             }

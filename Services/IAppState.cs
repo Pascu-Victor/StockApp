@@ -1,7 +1,7 @@
-using StockApp.Models;
-
 namespace StockApp.Services
 {
+    using StockApp.Models;
+
     /// <summary>
     /// Interface for application state management
     /// </summary>

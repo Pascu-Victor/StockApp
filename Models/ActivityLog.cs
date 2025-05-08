@@ -1,4 +1,4 @@
-﻿namespace Src.Model
+﻿namespace StockApp.Models
 {
     public class ActivityLog
     {

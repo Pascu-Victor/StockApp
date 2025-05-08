@@ -25,4 +25,15 @@
     public class InvalidSortTypeException(string sortType) : Exception($"The sort type '{sortType}' is not supported.")
     {
     }
+
+    public class HistoryServiceException : Exception
+    {
+        public HistoryServiceException(string message) : base(message)
+        {
+        }
+
+        public HistoryServiceException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }

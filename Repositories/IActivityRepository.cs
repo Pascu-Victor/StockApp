@@ -1,12 +1,19 @@
 ﻿namespace StockApp.Repositories
 {
     using System.Collections.Generic;
-    using Src.Model;
+    using System.Threading.Tasks;
+    using StockApp.Models;
 
     public interface IActivityRepository
     {
-        void AddActivity(string userCNP, string activityName, int amount, string details);
+        Task<List<ActivityLog>> GetActivityForUserAsync(string userCnp);
 
-        List<ActivityLog> GetActivityForUser(string userCNP);
+        Task<ActivityLog> AddActivityAsync(string userCnp, string activityName, int amount, string details);
+
+        Task<List<ActivityLog>> GetAllActivitiesAsync();
+
+        Task<ActivityLog> GetActivityByIdAsync(int id);
+
+        Task<bool> DeleteActivityAsync(int id);
     }
 }

@@ -2,131 +2,165 @@
 {
     using System;
     using System.Collections.Generic;
-    using Src.Model;
-    using StockApp.Repositories;
+    using System.Linq;
+    using StockApp.Exceptions;
+    using StockApp.Models;
 
     public class HistoryService : IHistoryService
     {
-        private readonly IHistoryRepository historyRepository;
+        private readonly HistoryApiService _apiService;
 
-        public HistoryService(IHistoryRepository historyRepository)
+        public HistoryService(HistoryApiService apiService)
         {
-            this.historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
+            _apiService = apiService ?? throw new ArgumentNullException(nameof(apiService));
         }
 
-        public List<CreditScoreHistory> GetHistoryByUserCNP(string userCNP)
+        public List<CreditScoreHistory> GetAllHistory()
         {
-            if (string.IsNullOrWhiteSpace(userCNP))
-            {
-                throw new ArgumentException("User CNP cannot be null");
-            }
-
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
-
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                return _apiService.GetAllHistory();
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new HistoryServiceException("Error retrieving all credit score history", ex);
             }
-
-            return history;
         }
 
-        public List<CreditScoreHistory> GetHistoryWeekly(string userCNP)
+        public CreditScoreHistory GetHistoryById(int id)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
-
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                return _apiService.GetHistoryById(id);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new HistoryServiceException($"Error retrieving history entry with ID {id}", ex);
             }
-
-            List<CreditScoreHistory> weeklyHistory = new List<CreditScoreHistory>();
-
-            foreach (CreditScoreHistory h in history)
-            {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddDays(-7)))
-                {
-                    weeklyHistory.Add(h);
-                }
-            }
-
-            return weeklyHistory;
         }
 
-        public List<CreditScoreHistory> GetHistoryMonthly(string userCNP)
+        public void AddHistory(CreditScoreHistory history)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
+            if (history == null)
+            {
+                throw new ArgumentNullException(nameof(history));
+            }
+
+            if (history.Score < 0 || history.Score > 1000)
+            {
+                throw new HistoryServiceException("Credit score must be between 0 and 1000");
+            }
 
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                _apiService.AddHistory(history);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new HistoryServiceException("Error adding credit score history entry", ex);
             }
-
-            List<CreditScoreHistory> monthlyHistory = new List<CreditScoreHistory>();
-
-            foreach (CreditScoreHistory h in history)
-            {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddMonths(-1)))
-                {
-                    monthlyHistory.Add(h);
-                }
-            }
-
-            return monthlyHistory;
         }
 
-        public List<CreditScoreHistory> GetHistoryYearly(string userCNP)
+        public void UpdateHistory(CreditScoreHistory history)
         {
-            List<CreditScoreHistory> history = new List<CreditScoreHistory>();
+            if (history == null)
+            {
+                throw new ArgumentNullException(nameof(history));
+            }
+
+            if (history.Score < 0 || history.Score > 1000)
+            {
+                throw new HistoryServiceException("Credit score must be between 0 and 1000");
+            }
 
             try
             {
-                history = this.historyRepository.GetHistoryForUser(userCNP);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException("Error retrieving history for user: ", ex);
+                _apiService.UpdateHistory(history);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error retrieving history for user: ", ex);
+                throw new HistoryServiceException($"Error updating history entry with ID {history.Id}", ex);
             }
+        }
 
-            List<CreditScoreHistory> yearlyHistory = new List<CreditScoreHistory>();
-
-            foreach (CreditScoreHistory h in history)
+        public void DeleteHistory(int id)
+        {
+            try
             {
-                if (h.Date >= DateOnly.FromDateTime(DateTime.Now.AddYears(-1)))
-                {
-                    yearlyHistory.Add(h);
-                }
+                _apiService.DeleteHistory(id);
+            }
+            catch (Exception ex)
+            {
+                throw new HistoryServiceException($"Error deleting history entry with ID {id}", ex);
+            }
+        }
+
+        public List<CreditScoreHistory> GetHistoryForUser(string userCnp)
+        {
+            if (string.IsNullOrWhiteSpace(userCnp))
+            {
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
             }
 
-            return yearlyHistory;
+            try
+            {
+                return _apiService.GetHistoryForUser(userCnp);
+            }
+            catch (Exception ex)
+            {
+                throw new HistoryServiceException("Error retrieving credit score history for user", ex);
+            }
+        }
+
+        public List<CreditScoreHistory> GetHistoryWeekly(string userCnp)
+        {
+            if (string.IsNullOrWhiteSpace(userCnp))
+            {
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+            }
+
+            try
+            {
+                return _apiService.GetHistoryWeekly(userCnp);
+            }
+            catch (Exception ex)
+            {
+                throw new HistoryServiceException("Error retrieving weekly credit score history", ex);
+            }
+        }
+
+        public List<CreditScoreHistory> GetHistoryMonthly(string userCnp)
+        {
+            if (string.IsNullOrWhiteSpace(userCnp))
+            {
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+            }
+
+            try
+            {
+                return _apiService.GetHistoryMonthly(userCnp);
+            }
+            catch (Exception ex)
+            {
+                throw new HistoryServiceException("Error retrieving monthly credit score history", ex);
+            }
+        }
+
+        public List<CreditScoreHistory> GetHistoryYearly(string userCnp)
+        {
+            if (string.IsNullOrWhiteSpace(userCnp))
+            {
+                throw new ArgumentException("User CNP cannot be empty", nameof(userCnp));
+            }
+
+            try
+            {
+                return _apiService.GetHistoryYearly(userCnp);
+            }
+            catch (Exception ex)
+            {
+                throw new HistoryServiceException("Error retrieving yearly credit score history", ex);
+            }
         }
     }
 }

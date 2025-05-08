@@ -1,8 +1,8 @@
-using StockApp.Models;
-using System;
-
 namespace StockApp.Services
 {
+    using System;
+    using StockApp.Models;
+
     /// <summary>
     /// Singleton implementation of application state
     /// </summary>
