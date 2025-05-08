@@ -20,13 +20,13 @@ namespace StockApp.Views.Pages
             this.LoadUsers();
         }
 
-        private void LoadUsers()
+        private async void LoadUsers()
         {
             this.UsersContainer.Items.Clear();
 
             try
             {
-                List<User> users = this.userService.GetUsers();
+                List<User> users = await this.userService.GetUsers();
                 foreach (var user in users)
                 {
                     var userComponent = this.userComponentFactory();

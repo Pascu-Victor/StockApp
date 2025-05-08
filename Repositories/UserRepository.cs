@@ -252,7 +252,6 @@
                 using var connection = DatabaseHelper.GetConnection();
                 var command = new SqlCommand("SELECT * FROM [USER]", connection);
 
-                await connection.OpenAsync();
                 using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {

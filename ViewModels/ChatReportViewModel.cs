@@ -12,24 +12,28 @@
 
         public ObservableCollection<ChatReport> ChatReports { get; set; }
 
-        public ChatReportsViewModel()
+        public ChatReportsViewModel(IChatReportService chatReportService)
         {
+            this.chatReportService = chatReportService;
             this.ChatReports = new ObservableCollection<ChatReport>();
         }
 
-        public async Task LoadChatReports()
+        public async Task LoadChatReportsAsync()
         {
             try
             {
-                var reports = this.chatReportService.GetChatReports();
+                this.ChatReports.Clear();
+
+                var reports = await this.chatReportService.GetChatReports();
+
                 foreach (var report in reports)
                 {
                     this.ChatReports.Add(report);
                 }
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error: {exception.Message}");
+                Console.WriteLine($"Error loading reports: {ex.Message}");
             }
         }
     }

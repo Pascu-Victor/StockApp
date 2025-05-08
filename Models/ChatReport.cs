@@ -6,7 +6,7 @@
     {
         public int Id { get; set; }
 
-        public string ReportedUserCnp { get; set; }
+        public string ReportedUserCnp { get; set; }  // foreign key
 
         public string ReportedMessage { get; set; }
 

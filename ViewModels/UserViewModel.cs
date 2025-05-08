@@ -30,7 +30,7 @@
         {
             try
             {
-                var users = this.userService.GetUsers();
+                var users = await this.userService.GetUsers();
                 foreach (var user in users)
                 {
                     this.Users.Add(user);

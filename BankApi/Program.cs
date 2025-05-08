@@ -1,6 +1,7 @@
 using BankApi.Data;
 using BankApi.Repositories;
 using Microsoft.EntityFrameworkCore;
+using StockApp.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

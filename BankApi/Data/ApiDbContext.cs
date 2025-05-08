@@ -12,6 +12,8 @@ namespace BankApi.Data
         public DbSet<BaseStock> BaseStocks { get; set; }
         public DbSet<BillSplitReport> BillSplitReports { get; set; }
 
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -57,4 +59,4 @@ namespace BankApi.Data
                 .IsRequired();
         }
     }
-} 
+}

@@ -6,6 +6,7 @@ namespace StockApp.Views.Pages
     using Src.Model;
     using StockApp.Services;
     using StockApp.Views.Components;
+    using System.Threading.Tasks;
 
     public sealed partial class ChatReportView : Page
     {
@@ -16,17 +17,19 @@ namespace StockApp.Views.Pages
         {
             this.componentFactory = componentFactory;
             this.chatReportService = chatReportService;
+
             this.InitializeComponent();
-            this.LoadChatReports();
+
+            _ = this.LoadChatReportsAsync();
         }
 
-        private void LoadChatReports()
+        private async Task LoadChatReportsAsync()
         {
             this.ChatReportsContainer.Items.Clear();
 
             try
             {
-                List<ChatReport> chatReports = this.chatReportService.GetChatReports();
+                List<ChatReport> chatReports = await this.chatReportService.GetChatReports();
                 foreach (var report in chatReports)
                 {
                     ChatReportComponent reportComponent = this.componentFactory();
@@ -43,9 +46,9 @@ namespace StockApp.Views.Pages
             }
         }
 
-        private void OnReportSolved(object sender, EventArgs e)
+        private async void OnReportSolved(object sender, EventArgs e)
         {
-            this.LoadChatReports();
+            await this.LoadChatReportsAsync();
         }
     }
 }

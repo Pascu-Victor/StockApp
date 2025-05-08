@@ -25,9 +25,9 @@
             return this.userRepository.GetUserByCnpAsync(cnp).Result;
         }
 
-        public List<User> GetUsers()
+        public Task<List<User>> GetUsers()
         {
-            return this.userRepository.GetAllUsersAsync().Result;
+            return this.userRepository.GetAllUsersAsync();
         }
 
         public async Task CreateUser(User user)
