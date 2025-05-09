@@ -33,6 +33,18 @@ namespace StockApp
                 client.BaseAddress = new Uri("https://localhost:5001/"); // <-- Use your BankApi URL
             });
 
+
+            
+            services.AddHttpClient<TipsProxyRepo>(client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7001/");
+            });
+
+            
+            services.AddScoped<ITipsService, TipsService>();
+
+        
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {

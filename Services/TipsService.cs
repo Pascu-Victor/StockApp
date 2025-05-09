@@ -1,49 +1,65 @@
-﻿namespace StockApp.Services
-{
-    using System;
-    using System.Collections.Generic;
-    using Src.Model;
-    using StockApp.Repositories;
-    using StockApp.Models;
+﻿
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Src.Model;
+using StockApp.Models;
+using StockApp.Repositories;
+using StockApp.Repositories.Api; // <-- for TipsProxyRepo
 
+namespace StockApp.Services
+{
     public class TipsService : ITipsService
     {
-        private TipsRepository tipsRepository;
+        private readonly TipsProxyRepo _tipsProxyRepo;
 
-        public TipsService(TipsRepository tipsRepository)
+        public TipsService(TipsProxyRepo tipsProxyRepo)
         {
-            this.tipsRepository = tipsRepository;
+            _tipsProxyRepo = tipsProxyRepo;
+
         }
 
-        public void GiveTipToUser(string userCNP)
+        public async Task GiveTipToUserAsync(string userCNP)
         {
             UserRepository userRepository = new UserRepository();
-
             try
             {
-                int userCreditScore = userRepository.GetUserByCnpAsync(userCNP).Result.CreditScore;
-                if (userCreditScore < 300)
+
+                int creditScore = userRepository.GetUserByCnpAsync(userCNP).Result.CreditScore;
+
+
+
+
+                if (creditScore < 300)
                 {
-                    this.tipsRepository.GiveUserTipForLowBracket(userCNP);
+                    await _tipsProxyRepo.GiveLowBracketTipAsync(userCNP);
                 }
-                else if (userCreditScore < 550)
+                else if (creditScore < 550)
                 {
-                    this.tipsRepository.GiveUserTipForMediumBracket(userCNP);
+                    await _tipsProxyRepo.GiveMediumBracketTipAsync(userCNP);
                 }
-                else if (userCreditScore > 549)
+                else
                 {
-                    this.tipsRepository.GiveUserTipForHighBracket(userCNP);
+                    await _tipsProxyRepo.GiveHighBracketTipAsync(userCNP);
                 }
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine($"{exception.Message},User is not found");
+                Console.WriteLine($"Error in GiveTipToUserAsync: {ex.Message}");
             }
         }
 
-        public List<Tip> GetTipsForGivenUser(string userCnp)
+        public async Task<List<Tip>> GetTipsForGivenUserAsync(string userCnp)
         {
-            return this.tipsRepository.GetTipsForGivenUser(userCnp);
+            try
+            {
+                return await _tipsProxyRepo.GetTipsForGivenUserAsync(userCnp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetTipsForGivenUserAsync: {ex.Message}");
+                return new List<Tip>();
+            }
         }
     }
-}
+}

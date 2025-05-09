@@ -1,13 +1,12 @@
-﻿namespace StockApp.Services
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using StockApp.Models;
 
+namespace StockApp.Services
+{
     public interface ITipsService
     {
-        void GiveTipToUser(string userCNP);
+        Task GiveTipToUserAsync(string userCNP);
+        Task<List<Tip>> GetTipsForGivenUserAsync(string userCnp);
     }
 }

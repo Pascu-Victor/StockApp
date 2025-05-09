@@ -3,9 +3,13 @@ using Src.Helpers;
 using Src.Model;
 using StockApp.Models;
 using StockApp.Repositories;
+using StockApp.Repositories.Api;
 using StockApp.Services;
+using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
+
 
 public class ChatReportService : IChatReportService
 {
@@ -44,8 +48,14 @@ public class ChatReportService : IChatReportService
         await userRepo.IncrementOffensesCountAsync(chatReportToBeSolved.ReportedUserCnp);
         await this.chatReportRepository.DeleteChatReportAsync(chatReportToBeSolved.Id);
 
-        var tipsService = new TipsService(new TipsRepository(dbConn));
-        tipsService.GiveTipToUser(chatReportToBeSolved.ReportedUserCnp);
+        var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7001/") };
+        var tipsProxyRepo = new TipsProxyRepo(httpClient);
+        
+
+        var tipsService = new TipsService(tipsProxyRepo);
+        await tipsService.GiveTipToUserAsync(chatReportToBeSolved.ReportedUserCnp);
+
+
 
         int tipCount = await this.chatReportRepository.GetNumberOfGivenTipsForUserAsync(chatReportToBeSolved.ReportedUserCnp);
         if (tipCount % 3 == 0)
