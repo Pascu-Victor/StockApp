@@ -1,5 +1,6 @@
 using BankApi.Data;
 using BankApi.Repositories;
+using BankApi.Seeders;
 using Microsoft.EntityFrameworkCore;
 using StockApp.Repositories;
 
@@ -44,21 +45,52 @@ builder.Services.AddCors(options =>
     });
 });
 
+Type[] seederTypes =
+[
+    typeof(UsersSeeder),
+    typeof(ChatReportsSeeder),
+    typeof(LoanRequestsSeeder),
+    typeof(LoansSeeder),
+    typeof(BillSplitReportsSeeder),
+    typeof(InvestmentsSeeder),
+    typeof(TransactionLogTransactionsSeeder),
+    typeof(ActivityLogsSeeder),
+    typeof(AlertsSeeder),
+    typeof(BaseStocksSeeder),
+    typeof(CreditScoreHistoriesSeeder),
+    typeof(GemStoresSeeder),
+    typeof(TipsSeeder),
+    typeof(TriggeredAlertsSeeder),
+    typeof(HomepageStocksSeeder),
+    typeof(UserStocksSeeder),
+    typeof(GivenTipsSeeder),
+];
+
+// Dependency injection for seeders.
+foreach (var seederType in seederTypes)
+{
+    builder.Services.AddSingleton(seederType, sp =>
+        Activator.CreateInstance(seederType, sp.GetRequiredService<IConfiguration>())!);
+}
+
 var app = builder.Build();
 
 // Apply migrations in development environment
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
-        dbContext.Database.Migrate(); // This will apply any pending migrations
-    }
-}
+    using var scope = app.Services.CreateScope();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
+    dbContext.Database.Migrate(); // This will apply any pending migrations
+
+    // Seed the database
+    foreach (var seederType in seederTypes)
+    {
+        var seeder = (TableSeeder)scope.ServiceProvider.GetRequiredService(seederType);
+        await seeder.SeedAsync();
+    }
+
+    // Configure the HTTP request pipeline
     app.UseDeveloperExceptionPage();
 }
 
