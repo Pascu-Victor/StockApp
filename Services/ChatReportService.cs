@@ -21,6 +21,16 @@ public class ChatReportService(IChatReportRepository chatReportRepository, IUser
 
     public async Task PunishUser(ChatReport chatReportToBeSolved)
     {
+        if (chatReportToBeSolved == null)
+        {
+            throw new ArgumentNullException(nameof(chatReportToBeSolved), "Chat report cannot be null");
+        }
+
+        if (string.IsNullOrEmpty(chatReportToBeSolved.ReportedUserCnp))
+        {
+            throw new ArgumentException("Reported user CNP cannot be null or empty", nameof(chatReportToBeSolved));
+        }
+
         User reportedUser = await userRepository.GetByCnpAsync(chatReportToBeSolved.ReportedUserCnp) ?? throw new Exception("User not found");
 
         int noOffenses = reportedUser.NumberOfOffenses;
@@ -31,25 +41,81 @@ public class ChatReportService(IChatReportRepository chatReportRepository, IUser
             ? FLAT_PENALTY * noOffenses
             : FLAT_PENALTY;
 
-        reportedUser.GemBalance -= amount;
-        await this.userRepository.UpdateAsync(reportedUser.Id, reportedUser);
-
-        int updatedScore = reportedUser.CreditScore - amount;
-        await this.chatReportRepository.UpdateScoreHistoryForUserAsync(chatReportToBeSolved.ReportedUserCnp, updatedScore);
-
-        reportedUser.NumberOfOffenses++;
-        await this.userRepository.UpdateAsync(reportedUser.Id, reportedUser);
-        await this.chatReportRepository.DeleteChatReportAsync(chatReportToBeSolved.Id);
-
-        tipsService.GiveTipToUser(chatReportToBeSolved.ReportedUserCnp);
-
-        int tipCount = await this.chatReportRepository.GetNumberOfGivenTipsForUserAsync(chatReportToBeSolved.ReportedUserCnp);
-        if (tipCount % 3 == 0)
+        // Use the PunishUserAsync method if available, otherwise fall back to regular update
+        bool success = false;
+        try
         {
-            messageService.GiveMessageToUser(chatReportToBeSolved.ReportedUserCnp);
+            // Try to use the specialized punishment method first
+            var repository = userRepository as dynamic;
+            success = await repository.PunishUserAsync(reportedUser.Id, amount);
+        }
+        catch (Exception)
+        {
+            // Fall back to standard update when specialized method isn't available
+            reportedUser.GemBalance -= amount;
+            reportedUser.NumberOfOffenses++;
+            success = await userRepository.UpdateAsync(reportedUser.Id, reportedUser);
         }
 
-        await this.chatReportRepository.UpdateActivityLogAsync(chatReportToBeSolved.ReportedUserCnp, amount);
+        if (!success)
+        {
+            throw new Exception("Failed to update user for punishment");
+        }
+
+        int updatedScore = reportedUser.CreditScore - amount;
+        try
+        {
+            await this.chatReportRepository.UpdateScoreHistoryForUserAsync(chatReportToBeSolved.ReportedUserCnp, updatedScore);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating score history: {ex.Message}");
+        }
+
+        try 
+        {
+            await this.chatReportRepository.DeleteChatReportAsync(chatReportToBeSolved.Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting chat report: {ex.Message}");
+            // Continue with other operations even if deletion fails
+        }
+
+        // Cache the CNP before proceeding with other operations
+        string reportedUserCnp = chatReportToBeSolved.ReportedUserCnp;
+        int penaltyAmount = amount;
+
+        try
+        {
+            await tipsService.GiveTipToUser(reportedUserCnp);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error giving tip to user: {ex.Message}");
+        }
+
+        try
+        {
+            int tipCount = await this.chatReportRepository.GetNumberOfGivenTipsForUserAsync(reportedUserCnp);
+            if (tipCount % 3 == 0)
+            {
+                await Task.Run(() => messageService.GiveMessageToUser(reportedUserCnp));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing tip count: {ex.Message}");
+        }
+
+        try
+        {
+            await this.chatReportRepository.UpdateActivityLogAsync(reportedUserCnp, penaltyAmount);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating activity log: {ex.Message}");
+        }
     }
 
     public async Task<bool> IsMessageOffensive(string messageToBeChecked)

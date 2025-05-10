@@ -71,20 +71,58 @@
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<int>($"api/ChatReport/tips-count/{userCnp}");
+                if (string.IsNullOrEmpty(userCnp))
+                {
+                    System.Diagnostics.Debug.WriteLine("GetNumberOfGivenTipsForUserAsync called with null or empty userCnp");
+                    return 0;
+                }
+
+                var response = await _httpClient.GetAsync($"api/ChatReport/tips-count/{userCnp}");
+                
+                if (response == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("NULL RESPONSE from tips-count API call");
+                    return 0;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error response from tips-count API: {response.StatusCode}");
+                    return 0;
+                }
+                
+                var count = await response.Content.ReadFromJsonAsync<int>();
+                return count;
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching tip count: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in GetNumberOfGivenTipsForUserAsync: {ex.Message}");
                 return 0;
             }
         }
 
         public async Task UpdateActivityLogAsync(string userCnp, int amount)
         {
-            var payload = new { userCnp, amount };
-            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/update-log", payload);
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                if (string.IsNullOrEmpty(userCnp))
+                {
+                    System.Diagnostics.Debug.WriteLine("UpdateActivityLogAsync called with null or empty userCnp");
+                    return;
+                }
+
+                var payload = new { UserCnp = userCnp, Amount = amount };
+                var response = await _httpClient.PostAsJsonAsync("api/ChatReport/activity-log", payload);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error updating activity log: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Exception in UpdateActivityLogAsync: {ex.Message}");
+            }
         }
 
         public async Task UpdateScoreHistoryForUserAsync(string userCnp, int newScore)

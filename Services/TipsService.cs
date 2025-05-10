@@ -11,9 +11,10 @@
         private ITipsRepository tipsRepository;
         private IUserRepository userRepository;
 
-        public TipsService(ITipsRepository tipsRepository)
+        public TipsService(ITipsRepository tipsRepository, IUserRepository userRepository)
         {
             this.tipsRepository = tipsRepository;
+            this.userRepository = userRepository;
         }
 
         public async Task GiveTipToUser(string userCNP)

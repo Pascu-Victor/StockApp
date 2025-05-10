@@ -47,6 +47,12 @@ namespace StockApp.Repositories.Api
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<bool> PunishUserAsync(int id, int gemPenalty)
+        {
+            var response = await this._httpClient.PutAsJsonAsync($"api/User/{id}/punish", new { GemPenalty = gemPenalty });
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var response = await this._httpClient.DeleteAsync($"api/User/{id}");

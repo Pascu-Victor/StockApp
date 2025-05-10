@@ -37,11 +37,11 @@ namespace BankApi.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                _chatReportRepository.DeleteChatReportAsync(id);
+                await _chatReportRepository.DeleteChatReportAsync(id);
                 return NoContent();
             }
             catch (Exception ex)
@@ -62,5 +62,35 @@ namespace BankApi.Controllers
             return CreatedAtAction(nameof(GetReportsAsync), new { id = report.Id }, report);
         }
 
+        [HttpPost("update-score")]
+        public async Task<IActionResult> UpdateScoreHistory([FromBody] ScoreUpdateRequest request)
+        {
+            if (string.IsNullOrEmpty(request.UserCnp))
+            {
+                return BadRequest("User CNP is required");
+            }
+
+            await _chatReportRepository.UpdateScoreHistoryForUserAsync(request.UserCnp, request.NewScore);
+            return Ok();
+        }
+
+        [HttpPost("do-not-punish")]
+        public async Task<IActionResult> DoNotPunish([FromBody] ChatReport report)
+        {
+            if (report == null || report.Id <= 0)
+            {
+                return BadRequest("Invalid report data");
+            }
+
+            await _chatReportRepository.DeleteChatReportAsync(report.Id);
+            return Ok();
+        }
+    }
+
+    // Define a class to handle the score update request
+    public class ScoreUpdateRequest
+    {
+        public string UserCnp { get; set; } = string.Empty;
+        public int NewScore { get; set; }
     }
 }

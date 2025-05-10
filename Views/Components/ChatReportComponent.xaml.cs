@@ -25,7 +25,7 @@ namespace StockApp.Views.Components
             this.chatReportService = chatReportService;
         }
 
-        private void PunishReportedUser(object sender, RoutedEventArgs e)
+        private async void PunishReportedUser(object sender, RoutedEventArgs e)
         {
             ChatReport chatReport = new ChatReport
             {
@@ -34,11 +34,11 @@ namespace StockApp.Views.Components
                 ReportedMessage = this.ReportedMessage
             };
 
-            this.chatReportService.PunishUser(chatReport);
+            await this.chatReportService.PunishUser(chatReport);
             this.ReportSolved?.Invoke(this, EventArgs.Empty);
         }
 
-        private void DoNotPunishReportedUser(object sender, RoutedEventArgs e)
+        private async void DoNotPunishReportedUser(object sender, RoutedEventArgs e)
         {
             ChatReport chatReport = new ChatReport
             {
@@ -46,7 +46,7 @@ namespace StockApp.Views.Components
                 ReportedUserCnp = this.ReportedUserCNP,
                 ReportedMessage = this.ReportedMessage
             };
-            this.chatReportService.DoNotPunishUser(chatReport);
+            await this.chatReportService.DoNotPunishUser(chatReport);
             this.ReportSolved?.Invoke(this, EventArgs.Empty);
         }
 

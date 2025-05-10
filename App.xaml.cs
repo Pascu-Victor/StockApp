@@ -188,7 +188,10 @@ namespace StockApp
                     services.AddSingleton<ILoanRequestService, LoanRequestService>();
                     services.AddSingleton<ILoanService, LoanService>();
                     services.AddSingleton<IMessagesService, MessagesService>();
-                    services.AddSingleton<ITipsService, TipsService>();
+                    services.AddSingleton<ITipsService>(provider => new TipsService(
+                        provider.GetRequiredService<ITipsRepository>(),
+                        provider.GetRequiredService<IUserRepository>()
+                    ));
                     services.AddSingleton<IUserService, UserService>();
                     services.AddSingleton<IZodiacService, ZodiacService>();
                     services.AddSingleton<IActivityService, ActivityService>();

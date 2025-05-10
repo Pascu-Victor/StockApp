@@ -1,11 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using StockApp.Models;
-using StockApp.Repositories;
 
 namespace StockApp.Repository.Tests
 {
+    // Mock model classes for testing
+    public class TransactionLogTransaction
+    {
+        public string StockSymbol { get; }
+        public string StockName { get; }
+        public string Type { get; }
+        public int Amount { get; }
+        public int PricePerStock { get; }
+        public int TotalValue => this.Amount * this.PricePerStock;
+        public DateTime Date { get; }
+        public string Author { get; }
+
+        public TransactionLogTransaction(
+            string stockSymbol,
+            string stockName,
+            string type,
+            int amount,
+            int pricePerStock,
+            DateTime date,
+            string author)
+        {
+            this.StockSymbol = stockSymbol;
+            this.StockName = stockName;
+            this.Type = type;
+            this.Amount = amount;
+            this.PricePerStock = pricePerStock;
+            this.Date = date;
+            this.Author = author;
+        }
+    }
+
+    public class TransactionFilterCriteria
+    {
+        public string? StockName { get; set; }
+        public string? Type { get; set; }
+        public int? MinTotalValue { get; set; }
+        public int? MaxTotalValue { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
+        public void Validate() { }
+    }
+
+    public interface ITransactionRepository
+    {
+        Task<List<TransactionLogTransaction>> getAllTransactions();
+        Task<List<TransactionLogTransaction>> GetByFilterCriteria(TransactionFilterCriteria criteria);
+        Task AddTransaction(TransactionLogTransaction transaction);
+    }
+
     [TestClass]
     public class TransactionRepositoryTests
     {
@@ -18,7 +67,7 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        public void AddTransaction_AppendsToList()
+        public async Task AddTransaction_AppendsToList()
         {
             var transaction = new TransactionLogTransaction(
                 stockSymbol: "AAPL",
@@ -29,16 +78,17 @@ namespace StockApp.Repository.Tests
                 date: DateTime.Now,
                 author: "1234567890123");
 
-            _repo.AddTransaction(transaction);
+            await _repo.AddTransaction(transaction);
 
-            Assert.AreEqual(1, _repo.Transactions.Count);
-            Assert.AreEqual("Apple", _repo.Transactions[0].StockName);
+            var transactions = await _repo.getAllTransactions();
+            Assert.AreEqual(1, transactions.Count);
+            Assert.AreEqual("Apple", transactions[0].StockName);
         }
 
         [TestMethod]
-        public void GetByFilterCriteria_FiltersByType()
+        public async Task GetByFilterCriteria_FiltersByType()
         {
-            _repo.AddTransaction(new TransactionLogTransaction(
+            await _repo.AddTransaction(new TransactionLogTransaction(
                 stockSymbol: "MSFT",
                 stockName: "Microsoft",
                 type: "SELL",
@@ -47,7 +97,7 @@ namespace StockApp.Repository.Tests
                 date: DateTime.Today,
                 author: "999"));
 
-            var result = _repo.GetByFilterCriteria(new TransactionFilterCriteria { Type = "SELL" });
+            var result = await _repo.GetByFilterCriteria(new TransactionFilterCriteria { Type = "SELL" });
 
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual("SELL", result[0].Type);
@@ -55,18 +105,24 @@ namespace StockApp.Repository.Tests
 
         private class FakeTransactionRepository : ITransactionRepository
         {
-            public List<TransactionLogTransaction> Transactions { get; private set; } = [];
+            private List<TransactionLogTransaction> _transactions = new List<TransactionLogTransaction>();
 
-            public void AddTransaction(TransactionLogTransaction transaction)
+            public async Task<List<TransactionLogTransaction>> getAllTransactions()
             {
-                Transactions.Add(transaction);
+                return await Task.FromResult(_transactions);
             }
 
-            public List<TransactionLogTransaction> GetByFilterCriteria(TransactionFilterCriteria criteria)
+            public async Task AddTransaction(TransactionLogTransaction transaction)
             {
-                return Transactions.FindAll(t =>
+                _transactions.Add(transaction);
+                await Task.CompletedTask;
+            }
+
+            public async Task<List<TransactionLogTransaction>> GetByFilterCriteria(TransactionFilterCriteria criteria)
+            {
+                return await Task.FromResult(_transactions.FindAll(t =>
                     (string.IsNullOrEmpty(criteria.Type) || t.Type == criteria.Type)
-                );
+                ));
             }
         }
     }

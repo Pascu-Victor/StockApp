@@ -16,30 +16,62 @@ namespace StockApp.Repositories.Api
             this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public async Task<List<LoanRequest>> GetLoanRequests()
+        public async Task<List<LoanRequest>> GetLoanRequestsAsync()
         {
-            var response = await _httpClient.GetAsync("api/LoanRequest");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<LoanRequest>>();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/LoanRequest");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<LoanRequest>>();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error calling GetLoanRequestsAsync: {ex.Message}");
+                throw;
+            }
         }
 
-        public async Task<List<LoanRequest>> GetUnsolvedLoanRequests()
+        public async Task<List<LoanRequest>> GetUnsolvedLoanRequestsAsync()
         {
-            var response = await _httpClient.GetAsync("api/LoanRequest/unsolved");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<LoanRequest>>();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/LoanRequest/unsolved");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<LoanRequest>>();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error calling GetUnsolvedLoanRequestsAsync: {ex.Message}");
+                throw;
+            }
         }
 
-        public async Task SolveLoanRequest(LoanRequest loanRequest)
+        public async Task SolveLoanRequestAsync(LoanRequest loanRequest)
         {
-            var response = await _httpClient.PatchAsync($"api/LoanRequest/{loanRequest.Id}/solve", null);
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                var response = await _httpClient.PatchAsync($"api/LoanRequest/{loanRequest.Id}/solve", null);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error calling SolveLoanRequestAsync: {ex.Message}");
+                throw;
+            }
         }
 
-        public async Task DeleteLoanRequest(LoanRequest loanRequest)
+        public async Task DeleteLoanRequestAsync(LoanRequest loanRequest)
         {
-            var response = await _httpClient.DeleteAsync($"api/LoanRequest/{loanRequest.Id}");
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"api/LoanRequest/{loanRequest.Id}");
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error calling DeleteLoanRequestAsync: {ex.Message}");
+                throw;
+            }
         }
     }
 }

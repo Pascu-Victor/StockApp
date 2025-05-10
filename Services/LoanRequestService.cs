@@ -61,22 +61,22 @@
 
         public async Task SolveLoanRequest(LoanRequest loanRequest)
         {
-            await loanRequestRepository.SolveLoanRequest(loanRequest);
+            await loanRequestRepository.SolveLoanRequestAsync(loanRequest);
         }
 
         public  async Task DeleteLoanRequest(LoanRequest loanRequest)
         {
-            await loanRequestRepository.DeleteLoanRequest(loanRequest);
+            await loanRequestRepository.DeleteLoanRequestAsync(loanRequest);
         }
 
         public async Task<List<LoanRequest>> GetLoanRequests()
         {
-            return await loanRequestRepository.GetLoanRequests();
+            return await loanRequestRepository.GetLoanRequestsAsync();
         }
 
         public async Task<List<LoanRequest>> GetUnsolvedLoanRequests()
         {
-            return await loanRequestRepository.GetUnsolvedLoanRequests();
+            return await loanRequestRepository.GetUnsolvedLoanRequestsAsync();
         }
     }
 }

@@ -6,12 +6,12 @@
 
     public interface ILoanRequestRepository
     {
-        Task<List<LoanRequest>> GetLoanRequests();
+        Task<List<LoanRequest>> GetLoanRequestsAsync();
 
-        Task<List<LoanRequest>> GetUnsolvedLoanRequests();
+        Task<List<LoanRequest>> GetUnsolvedLoanRequestsAsync();
 
-        Task SolveLoanRequest(LoanRequest loanRequest);
+        Task SolveLoanRequestAsync(LoanRequest loanRequest);
 
-        Task DeleteLoanRequest(LoanRequest loanRequest);
+        Task DeleteLoanRequestAsync(LoanRequest loanRequest);
     }
 }
