@@ -119,6 +119,7 @@ builder.Services.AddScoped<IMessagesService, MessagesProxyService>();
 builder.Services.AddScoped<IActivityService, ActivityProxyService>();
 builder.Services.AddScoped<IHistoryService, HistoryProxyService>();
 builder.Services.AddScoped<IAlertService, AlertProxyService>();
+builder.Services.AddScoped<IStockPageService, StockPageProxyService>();
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
 
 builder.Services.AddHttpClient<IUserService, UserProxyService>(client =>
@@ -187,6 +188,11 @@ builder.Services.AddHttpClient<IMessagesService, MessagesProxyService>(client =>
 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAlertService, AlertProxyService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
+builder.Services.AddHttpClient<IStockPageService, StockPageProxyService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();

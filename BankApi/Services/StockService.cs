@@ -85,14 +85,16 @@
 
         public async Task AddToFavoritesAsync(HomepageStock stock)
         {
-            stock.IsFavorite = true;
-            await homepageStocksRepository.UpdateAsync(stock.Id, stock);
+            // This method is deprecated - favorites are now managed through StockPageService
+            // Left empty for interface compatibility
+            await Task.CompletedTask;
         }
 
         public async Task RemoveFromFavoritesAsync(HomepageStock stock)
         {
-            stock.IsFavorite = false;
-            await homepageStocksRepository.UpdateAsync(stock.Id, stock);
+            // This method is deprecated - favorites are now managed through StockPageService
+            // Left empty for interface compatibility
+            await Task.CompletedTask;
         }
     }
 }
