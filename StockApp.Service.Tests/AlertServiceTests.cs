@@ -308,7 +308,6 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetAllAlertsAsync_RepositoryThrowsException_PropagatesException()
         {
             // Arrange
@@ -316,7 +315,7 @@ namespace StockApp.Service.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            await _service.GetAllAlertsAsync();
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetAllAlertsAsync());
         }
 
         [TestMethod]
@@ -340,7 +339,6 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetAllAlertsOnAsync_RepositoryThrowsException_PropagatesException()
         {
             // Arrange
@@ -348,7 +346,7 @@ namespace StockApp.Service.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            await _service.GetAllAlertsOnAsync();
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetAllAlertsOnAsync());
         }
 
         [TestMethod]
@@ -397,7 +395,6 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetTriggeredAlertsAsync_RepositoryThrowsException_PropagatesException()
         {
             // Arrange
@@ -405,7 +402,7 @@ namespace StockApp.Service.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            await _service.GetTriggeredAlertsAsync();
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetTriggeredAlertsAsync());
         }
     }
 }

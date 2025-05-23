@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Common.Models
 {
@@ -59,6 +60,7 @@ namespace Common.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; }
 
+        [JsonIgnore]
         public ICollection<UserStock> OwnedStocks { get; set; } = [];
     }
 }

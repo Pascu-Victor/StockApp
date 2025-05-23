@@ -6,11 +6,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class HistoryRepositoryTests
     {
         private ApiDbContext _context;
@@ -63,17 +65,15 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AddHistoryAsync_Null_Throws()
         {
-            await _repository.AddHistoryAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _repository.AddHistoryAsync(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task AddHistoryAsync_InvalidScore_Throws()
         {
-            await _repository.AddHistoryAsync(new CreditScoreHistory { Score = 2000 });
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.AddHistoryAsync(new CreditScoreHistory { Score = 2000 }));
         }
 
         [TestMethod]
@@ -86,24 +86,21 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task UpdateHistoryAsync_Null_Throws()
         {
-            await _repository.UpdateHistoryAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _repository.UpdateHistoryAsync(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task UpdateHistoryAsync_InvalidScore_Throws()
         {
-            await _repository.UpdateHistoryAsync(new CreditScoreHistory { Id = 1, Score = -1 });
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.UpdateHistoryAsync(new CreditScoreHistory { Id = 1, Score = -1 }));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
         public async Task UpdateHistoryAsync_IdNotFound_Throws()
         {
-            await _repository.UpdateHistoryAsync(new CreditScoreHistory { Id = 999, Score = 500 });
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _repository.UpdateHistoryAsync(new CreditScoreHistory { Id = 999, Score = 500 }));
         }
 
         [TestMethod]
@@ -115,10 +112,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
         public async Task DeleteHistoryAsync_IdNotFound_Throws()
         {
-            await _repository.DeleteHistoryAsync(999);
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _repository.DeleteHistoryAsync(999));
         }
 
         [TestMethod]
@@ -129,10 +125,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryForUserAsync_EmptyCnp_Throws()
         {
-            await _repository.GetHistoryForUserAsync(" ");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GetHistoryForUserAsync(" "));
         }
 
         [TestMethod]
@@ -143,10 +138,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryMonthlyAsync_EmptyCnp_Throws()
         {
-            await _repository.GetHistoryMonthlyAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GetHistoryMonthlyAsync(""));
         }
 
         [TestMethod]
@@ -157,10 +151,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryYearlyAsync_EmptyCnp_Throws()
         {
-            await _repository.GetHistoryYearlyAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GetHistoryYearlyAsync(null));
         }
     }
 }

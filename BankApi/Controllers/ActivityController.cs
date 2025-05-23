@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using BankApi.Repositories;
 using Common.Models;
 using Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BankApi.Controllers
 {
@@ -30,13 +27,25 @@ namespace BankApi.Controllers
             return user == null ? throw new Exception("User not found") : user.CNP;
         }
 
-        [HttpGet("user")]
-        public async Task<ActionResult<List<ActivityLog>>> GetActivityForUser()
+        [HttpGet("user/{cnp}")]
+        public async Task<ActionResult<List<ActivityLog>>> GetActivityForUser(string cnp)
         {
             try
             {
-                var userCnp = await GetCurrentUserCnp();
-                var activities = await _activityService.GetActivityForUser(userCnp);
+                if (string.IsNullOrEmpty(cnp))
+                {
+                    return BadRequest("CNP cannot be null or empty.");
+                }
+
+                if (!User.IsInRole("Admin"))
+                {
+                    var currentUserCnp = await GetCurrentUserCnp();
+                    if (cnp != currentUserCnp)
+                    {
+                        return Forbid("You do not have permission to access this user's activities.");
+                    }
+                }
+                var activities = await _activityService.GetActivityForUser(cnp);
                 return Ok(activities);
             }
             catch (UnauthorizedAccessException)

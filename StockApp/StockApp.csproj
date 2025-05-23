@@ -102,17 +102,22 @@
     <PRIResource Remove="Homepage\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Views\Components\CreateLoanDialog.xaml" />
     <None Remove="Views\Components\LoginComponent.xaml" />
     <None Remove="Views\Components\UserAuthStatusComponent.xaml" />
     <None Remove="Views\Pages\LoginPage.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BankApi\BankApi.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Components\CreateLoanDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\Components\LoginComponent.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -29,7 +29,7 @@ namespace StockApp.Services
         public async Task<List<ActivityLog>> GetActivityForUser(string userCNP)
         {
             // The controller expects the userCNP from the claims, not as a query parameter for this specific endpoint.
-            return await _httpClient.GetFromJsonAsync<List<ActivityLog>>($"api/Activity/user") ?? throw new InvalidOperationException("Failed to deserialize user activities response.");
+            return await _httpClient.GetFromJsonAsync<List<ActivityLog>>($"api/Activity/user/{userCNP}") ?? throw new InvalidOperationException("Failed to deserialize user activities response.");
         }
 
         public async Task<ActivityLog> GetActivityById(int id)

@@ -29,7 +29,7 @@ namespace Common.Models
         public Stock() { }
 
         [JsonIgnore]
-        required public List<NewsArticle> NewsArticles { get; set; }
+        public List<NewsArticle> NewsArticles { get; set; } = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Stock"/> class.

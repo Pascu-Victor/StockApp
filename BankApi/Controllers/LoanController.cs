@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using BankApi.Repositories;
 using Common.Models;
 using Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BankApi.Controllers
 {
@@ -86,6 +83,33 @@ namespace BankApi.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CreateLoan([FromBody] NewLoanDTO loanRequest)
+        {
+            try
+            {
+                var userCnp = await GetCurrentUserCnp();
+                loanRequest.UserCnp = userCnp;
+                await _loanService.AddLoanAsync(new()
+                {
+                    UserCnp = userCnp,
+                    Amount = loanRequest.Amount,
+                    ApplicationDate = DateTime.Now,
+                    RepaymentDate = loanRequest.RepaymentDate,
+                    Status = "Pending",
+                });
+                return CreatedAtAction(nameof(GetAllLoans), new { id = loanRequest.Id }, loanRequest);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpPost("{loanId}/increment-payment")]
         public async Task<IActionResult> IncrementMonthlyPaymentsCompleted(int loanId, [FromBody] PaymentDto payment)
         {
@@ -146,6 +170,15 @@ namespace BankApi.Controllers
         }
     }
 
+    public class NewLoanDTO
+    {
+        public int Id { get; set; }
+        public string UserCnp { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime ApplicationDate { get; set; }
+        public DateTime RepaymentDate { get; set; }
+        public string Status { get; set; }
+    }
     public class PaymentDto
     {
         public decimal Penalty { get; set; }

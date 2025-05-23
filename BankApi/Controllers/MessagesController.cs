@@ -28,11 +28,11 @@ namespace BankApi.Controllers
 
         [HttpPost("user/{userCnp}/give")]
         [Authorize(Roles = "Admin")] // Or any other appropriate authorization
-        public async Task<IActionResult> GiveMessageToUser(string userCnp)
+        public async Task<IActionResult> GiveMessageToUser(string userCnp, [FromBody] MessageRequest request)
         {
             try
             {
-                await _messagesService.GiveMessageToUserAsync(userCnp);
+                await _messagesService.GiveMessageToUserAsync(userCnp, request.Type, request.MessageText);
                 return Ok($"Attempted to give a message to user {userCnp}.");
             }
             catch (Exception ex)
@@ -73,6 +73,12 @@ namespace BankApi.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        public class MessageRequest
+        {
+            public string Type { get; set; } = string.Empty;
+            public string MessageText { get; set; } = string.Empty;
         }
     }
 }

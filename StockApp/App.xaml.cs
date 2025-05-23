@@ -165,6 +165,7 @@
                     services.AddTransient<ChatReportComponent>();
                     services.AddTransient<LoanRequestComponent>();
                     services.AddTransient<LoanComponent>();
+                    services.AddTransient<CreateLoanDialog>();
                     services.AddTransient<BillSplitReportComponent>();
                     services.AddTransient<LoansView>();
                     services.AddTransient<LoanRequestView>();
@@ -173,6 +174,7 @@
                     services.AddTransient<UserProfileComponent>();
                     services.AddTransient<AlertsView>();
                     services.AddTransient<LoginComponent>();
+                    services.AddTransient<CreateLoanDialog>();
 
                     // ViewModels
                     services.AddTransient<StoreViewModel>();
@@ -193,6 +195,8 @@
                     services.AddTransient<AlertViewModel>();
                     services.AddTransient<UpdateProfilePageViewModel>();
                     services.AddTransient<AuthenticationViewModel>();
+                    services.AddTransient<LoansViewModel>();
+                    services.AddTransient<CreateLoanDialogViewModel>();
 
                     // Pages
                     services.AddTransient<CreateStockPage>();

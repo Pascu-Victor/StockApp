@@ -34,6 +34,8 @@ namespace Common.Services
         /// <returns>The stock entity if found; otherwise, null.</returns>
         Task<Stock?> GetStockByIdAsync(int id);
 
+        Task<Stock?> GetStockByNameAsync(string name);
+
         /// <summary>
         /// Updates an existing stock entity.
         /// </summary>

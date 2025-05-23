@@ -9,12 +9,22 @@
     public class StockService(IStockRepository stockRepository, IHomepageStockRepository homepageStocksRepository) : IStockService
     {
         private readonly IStockRepository stockRepository = stockRepository;
-        private readonly IHomepageStockRepository homepageStocksRepo = homepageStocksRepository;
+        private readonly IHomepageStockRepository homepageStocksRepository = homepageStocksRepository;
 
         /// <inheritdoc/>
         public async Task<Stock> CreateStockAsync(Stock stock)
         {
-            return await stockRepository.CreateAsync(stock);
+            var createdStock = await stockRepository.CreateAsync(stock);
+            var homepageStock = new HomepageStock
+            {
+                Id = createdStock.Id, // Important for one-to-one mapping
+                Symbol = createdStock.Symbol,
+                StockDetails = createdStock,
+                Change = 0m // Default change
+            };
+
+            await this.homepageStocksRepository.CreateAsync(homepageStock);
+            return createdStock;
         }
 
         /// <inheritdoc/>
@@ -35,6 +45,12 @@
             return await stockRepository.GetByIdAsync(id);
         }
 
+        public async Task<Stock> GetStockByNameAsync(string name)
+        {
+            var allStocks = await this.GetAllStocksAsync();
+            return allStocks.FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
         /// <inheritdoc/>
         public async Task<Stock> UpdateStockAsync(int id, Stock updatedStock)
         {
@@ -48,7 +64,7 @@
 
         public async Task<List<HomepageStock>> GetFilteredAndSortedStocksAsync(string query, string sortOption, bool favoritesOnly, string userCNP)
         {
-            var allStocks = await homepageStocksRepo.GetAllAsync(userCNP);
+            var allStocks = await homepageStocksRepository.GetAllAsync(userCNP);
             var filteredStocks = allStocks.Where(stock =>
                 stock.StockDetails.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
                 stock.StockDetails.Symbol.Contains(query, StringComparison.CurrentCultureIgnoreCase));
@@ -69,14 +85,16 @@
 
         public async Task AddToFavoritesAsync(HomepageStock stock)
         {
-            stock.IsFavorite = true;
-            await homepageStocksRepo.UpdateAsync(stock.Id, stock);
+            // This method is deprecated - favorites are now managed through StockPageService
+            // Left empty for interface compatibility
+            await Task.CompletedTask;
         }
 
         public async Task RemoveFromFavoritesAsync(HomepageStock stock)
         {
-            stock.IsFavorite = false;
-            await homepageStocksRepo.UpdateAsync(stock.Id, stock);
+            // This method is deprecated - favorites are now managed through StockPageService
+            // Left empty for interface compatibility
+            await Task.CompletedTask;
         }
     }
 }

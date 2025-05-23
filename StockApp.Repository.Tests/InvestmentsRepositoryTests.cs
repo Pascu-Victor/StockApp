@@ -4,13 +4,14 @@ using Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
+using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class InvestmentsRepositoryTests
     {
         private ApiDbContext _context;
@@ -75,10 +76,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AddInvestment_Null_ThrowsException()
         {
-            await _repository.AddInvestment(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _repository.AddInvestment(null));
         }
 
         [TestMethod]
@@ -91,17 +91,15 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Investment return has already been processed.")]
         public async Task UpdateInvestment_AlreadyReturned_ThrowsException()
         {
-            await _repository.UpdateInvestment(2, "456", 2000);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _repository.UpdateInvestment(2, "456", 2000));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Investment not found or investor CNP does not match.")]
         public async Task UpdateInvestment_InvalidIdOrCNP_ThrowsException()
         {
-            await _repository.UpdateInvestment(999, "999", 1000);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _repository.UpdateInvestment(999, "999", 1000));
         }
     }
 }

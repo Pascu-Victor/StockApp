@@ -12,15 +12,10 @@ namespace StockApp.Services
     {
         private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
-        public async Task GiveMessageToUserAsync(string userCNP)
+        public async Task GiveMessageToUserAsync(string userCnp, string type, string messageText)
         {
-            if (string.IsNullOrEmpty(userCNP))
-            {
-                throw new ArgumentException("User CNP cannot be empty", nameof(userCNP));
-            }
-
-            var response = await _httpClient.PostAsync($"api/Messages/user/{userCNP}/give", null);
-            response.EnsureSuccessStatusCode();
+            var request = new { Type = type, MessageText = messageText };
+            await _httpClient.PostAsJsonAsync($"api/Messages/User/{userCnp}/give", request);
         }
 
         public async Task<List<Message>> GetMessagesForUserAsync(string userCnp)

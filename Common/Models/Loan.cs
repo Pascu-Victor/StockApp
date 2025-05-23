@@ -67,6 +67,15 @@
             this.RepaidAmount = repaidAmount;
             this.Penalty = penalty;
         }
+
+        [NotMapped]
+        public bool CanPay
+        {
+            get
+            {
+                return this.Status == "Approved" && this.RepaidAmount < this.LoanAmount;
+            }
+        }
     }
 }
 

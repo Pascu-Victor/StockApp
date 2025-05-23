@@ -34,11 +34,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetAllHistoryAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetAllHistoryAsync()).ThrowsAsync(new Exception());
-            await _service.GetAllHistoryAsync();
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetAllHistoryAsync());
         }
 
         [TestMethod]
@@ -52,11 +51,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetHistoryByIdAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetHistoryByIdAsync(1)).ThrowsAsync(new Exception());
-            await _service.GetHistoryByIdAsync(1);
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetHistoryByIdAsync(1));
         }
 
         [TestMethod]
@@ -69,19 +67,17 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AddHistoryAsync_NullHistory_ThrowsArgumentNullException()
         {
-            await _service.AddHistoryAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _service.AddHistoryAsync(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task AddHistoryAsync_RepositoryThrows_ThrowsException()
         {
             var history = new CreditScoreHistory { Id = 1, Score = 500 };
             _mockRepo.Setup(r => r.AddHistoryAsync(history)).ThrowsAsync(new Exception());
-            await _service.AddHistoryAsync(history);
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.AddHistoryAsync(history));
         }
 
         [TestMethod]
@@ -94,19 +90,17 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task UpdateHistoryAsync_NullHistory_ThrowsArgumentNullException()
         {
-            await _service.UpdateHistoryAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _service.UpdateHistoryAsync(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task UpdateHistoryAsync_RepositoryThrows_ThrowsException()
         {
             var history = new CreditScoreHistory { Id = 1, Score = 500 };
             _mockRepo.Setup(r => r.UpdateHistoryAsync(history)).ThrowsAsync(new Exception());
-            await _service.UpdateHistoryAsync(history);
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.UpdateHistoryAsync(history));
         }
 
         [TestMethod]
@@ -118,11 +112,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task DeleteHistoryAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.DeleteHistoryAsync(1)).ThrowsAsync(new Exception());
-            await _service.DeleteHistoryAsync(1);
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.DeleteHistoryAsync(1));
         }
 
         [TestMethod]
@@ -135,18 +128,16 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryForUserAsync_EmptyCnp_ThrowsArgumentException()
         {
-            await _service.GetHistoryForUserAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetHistoryForUserAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetHistoryForUserAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetHistoryForUserAsync("123")).ThrowsAsync(new Exception());
-            await _service.GetHistoryForUserAsync("123");
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetHistoryForUserAsync("123"));
         }
 
         [TestMethod]
@@ -159,18 +150,16 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryWeeklyAsync_EmptyCnp_ThrowsArgumentException()
         {
-            await _service.GetHistoryWeeklyAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetHistoryWeeklyAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetHistoryWeeklyAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetHistoryWeeklyAsync("123")).ThrowsAsync(new Exception());
-            await _service.GetHistoryWeeklyAsync("123");
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetHistoryWeeklyAsync("123"));
         }
 
         [TestMethod]
@@ -183,18 +172,16 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryMonthlyAsync_EmptyCnp_ThrowsArgumentException()
         {
-            await _service.GetHistoryMonthlyAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetHistoryMonthlyAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetHistoryMonthlyAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetHistoryMonthlyAsync("123")).ThrowsAsync(new Exception());
-            await _service.GetHistoryMonthlyAsync("123");
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetHistoryMonthlyAsync("123"));
         }
 
         [TestMethod]
@@ -207,18 +194,16 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetHistoryYearlyAsync_EmptyCnp_ThrowsArgumentException()
         {
-            await _service.GetHistoryYearlyAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetHistoryYearlyAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Common.Exceptions.HistoryServiceException))]
         public async Task GetHistoryYearlyAsync_RepositoryThrows_ThrowsException()
         {
             _mockRepo.Setup(r => r.GetHistoryYearlyAsync("123")).ThrowsAsync(new Exception());
-            await _service.GetHistoryYearlyAsync("123");
+            await Assert.ThrowsExactlyAsync<Common.Exceptions.HistoryServiceException>(async () => await _service.GetHistoryYearlyAsync("123"));
         }
     }
 }

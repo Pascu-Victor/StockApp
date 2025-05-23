@@ -14,12 +14,13 @@
         private readonly ILoanService loansService;
 
         public event EventHandler? LoansUpdated;
+        public event EventHandler? ShowCreateLoanDialog;
 
         public ObservableCollection<Loan> Loans { get; set; } = [];
 
         public ICommand LoadLoansCommand { get; private set; }
-
         public ICommand OnLoansUpdatedCommand { get; private set; }
+        public ICommand ShowCreateLoanDialogCommand { get; private set; }
 
         public bool IsLoading { get; private set; } = false;
 
@@ -28,6 +29,12 @@
             this.loansService = loansService;
             this.LoadLoansCommand = new RelayCommand(async sender => await this.LoadLoans(), sender => !this.IsLoading);
             this.OnLoansUpdatedCommand = new RelayCommand(async sender => await this.LoadLoans(), sender => !this.IsLoading);
+            this.ShowCreateLoanDialogCommand = new RelayCommand(sender => this.OnShowCreateLoanDialog());
+        }
+
+        private void OnShowCreateLoanDialog()
+        {
+            this.ShowCreateLoanDialog?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task LoadLoans()

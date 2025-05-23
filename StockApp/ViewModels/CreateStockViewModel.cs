@@ -20,11 +20,15 @@ namespace StockApp.ViewModels
         private readonly IAuthenticationService authenticationService;
         private string stockName = null!;
         private string stockSymbol = null!;
+        private int price = 0;
+        private int quantity = 0;
         private string authorCnp = null!;
         private string message = null!;
         private readonly bool suppressValidation;
         private bool isAdmin;
         private bool isInputValid;
+        private string priceText = string.Empty;
+        private string quantityText = string.Empty;
 
         /// <summary>
         /// Occurs when a property value changes.
@@ -36,7 +40,8 @@ namespace StockApp.ViewModels
         /// </summary>
         public ICommand CreateStockCommand { get; }
 
-        public CreateStockViewModel(IStockService stockService, IUserService userService, IAuthenticationService authenticationService)
+        public CreateStockViewModel(IStockService stockService, IUserService userService,
+            IAuthenticationService authenticationService)
         {
             this.userService = userService ?? throw new ArgumentNullException(nameof(userService));
             this.stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
@@ -45,6 +50,8 @@ namespace StockApp.ViewModels
             this.suppressValidation = true;
             this.StockName = string.Empty;
             this.StockSymbol = string.Empty;
+            this.price = 0;
+            this.quantity = 0;
             this.AuthorCnp = string.Empty;
             this.Message = string.Empty;
             this.suppressValidation = false;
@@ -98,6 +105,66 @@ namespace StockApp.ViewModels
                     this.ValidateInputs();
                     this.OnPropertyChanged();
                 }
+            }
+        }
+
+        public int Price
+        {
+            get => this.price;
+            set
+            {
+                if(this.price != value)
+                {
+                    this.price = value;
+                    this.ValidateInputs();
+                    this.OnPropertyChanged();
+                }
+            }
+        }
+
+        public int Quantity
+        {
+            get => this.quantity;
+            set
+            {
+                if (this.quantity != value)
+                {
+                    this.quantity = value;
+                    this.ValidateInputs();
+                    this.OnPropertyChanged();
+                }
+            }
+        }
+
+        public string PriceText
+        {
+            get => this.priceText;
+            set
+            {
+                this.priceText = value;
+                this.OnPropertyChanged();
+
+                if (int.TryParse(value, out int parsed))
+                {
+                    this.Price = parsed;
+                }
+                this.ValidateInputs();
+            }
+        }
+
+        public string QuantityText
+        {
+            get => this.quantityText;
+            set
+            {
+                this.quantityText = value;
+                this.OnPropertyChanged();
+
+                if (int.TryParse(value, out int parsed))
+                {
+                    this.Quantity = parsed;
+                }
+                this.ValidateInputs();
             }
         }
 
@@ -195,6 +262,34 @@ namespace StockApp.ViewModels
                 return;
             }
 
+            // Validate stock price
+            if (!int.TryParse(this.priceText, out int parsedPrice))
+            {
+                this.Message = "Price must be a valid number!";
+                this.IsInputValid = false;
+                return;
+            }
+            if (parsedPrice < 0)
+            {
+                this.Message = "Price cannot be negative!";
+                this.IsInputValid = false;
+                return;
+            }
+
+            // Validate Stock quantity
+            if (!int.TryParse(this.quantityText, out int parsedQuantity))
+            {
+                this.Message = "Quantity must be a valid number!";
+                this.IsInputValid = false;
+                return;
+            }
+            if (parsedQuantity < 0)
+            {
+                this.Message = "Quantity cannot be negative!";
+                this.IsInputValid = false;
+                return;
+            }
+
             // Validate CNP presence and format
             if (string.IsNullOrWhiteSpace(this.AuthorCnp))
             {
@@ -224,15 +319,24 @@ namespace StockApp.ViewModels
                 return;
             }
 
+            var existingStock = await this.stockService.GetStockByNameAsync(this.StockName);
+            if (existingStock != null)
+            {
+                this.Message = $"A stock named '{this.StockName}' already exists!";
+                return;
+            }
+
             await this.stockService.CreateStockAsync(new Stock()
             {
                 Name = this.StockName,
                 Symbol = this.StockSymbol,
                 AuthorCNP = this.AuthorCnp,
                 NewsArticles = [],
-                Price = 0,
-                Quantity = 0,
+                Price = this.Price,
+                Quantity = this.Quantity,
             });
+
+            this.Message = $"Stock '{this.StockName}' was successfully created.";
         }
 
         protected bool CheckIfUserIsAdmin()

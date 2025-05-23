@@ -38,6 +38,20 @@
                      IsEnabled="{Binding IsAdmin}" />
             <!-- Corrected IsAdmin binding -->
 
+            <TextBox Text="{Binding PriceText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="Price" Height="45" FontSize="16"
+                     Background="#B0B0B0" Foreground="Black"
+                     TextAlignment="Center" VerticalAlignment="Center"
+                     CornerRadius="5"
+                     IsEnabled="{Binding IsAdmin}" />
+
+            <TextBox Text="{Binding QuantityText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="Quantity" Height="45" FontSize="16"
+                     Background="#B0B0B0" Foreground="Black"
+                     TextAlignment="Center" VerticalAlignment="Center"
+                     CornerRadius="5"
+                     IsEnabled="{Binding IsAdmin}" />
+
             <!-- Author CNP -->
             <TextBox Text="{Binding AuthorCnp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                      PlaceholderText="Author CNP" Height="45" FontSize="16"

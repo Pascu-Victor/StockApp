@@ -4,13 +4,13 @@ using Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class LoanRepositoryTests
     {
         private ApiDbContext _context;
@@ -66,10 +66,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AddLoanAsync_Null_ThrowsException()
         {
-            await _repository.AddLoanAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _repository.AddLoanAsync(null));
         }
 
         [TestMethod]
@@ -85,10 +84,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task UpdateLoanAsync_Null_ThrowsException()
         {
-            await _repository.UpdateLoanAsync(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _repository.UpdateLoanAsync(null));
         }
 
         [TestMethod]
@@ -101,17 +99,15 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task DeleteLoanAsync_InvalidId_Throws()
         {
-            await _repository.DeleteLoanAsync(0);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.DeleteLoanAsync(0));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task DeleteLoanAsync_NotFound_Throws()
         {
-            await _repository.DeleteLoanAsync(999);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _repository.DeleteLoanAsync(999));
         }
 
         [TestMethod]
@@ -123,17 +119,15 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetLoanByIdAsync_InvalidId_Throws()
         {
-            await _repository.GetLoanByIdAsync(0);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GetLoanByIdAsync(0));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetLoanByIdAsync_NotFound_Throws()
         {
-            await _repository.GetLoanByIdAsync(999);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _repository.GetLoanByIdAsync(999));
         }
 
         [TestMethod]
@@ -175,10 +169,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task UpdateCreditScoreHistoryForUserAsync_EmptyCnp_Throws()
         {
-            await _repository.UpdateCreditScoreHistoryForUserAsync("", 700);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.UpdateCreditScoreHistoryForUserAsync("", 700));
         }
     }
 }

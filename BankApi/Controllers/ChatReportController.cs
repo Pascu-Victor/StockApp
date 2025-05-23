@@ -10,10 +10,18 @@ namespace BankApi.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class ChatReportController(IChatReportService chatReportService, IUserRepository userRepository) : ControllerBase
+    public class ChatReportController : ControllerBase
     {
-        private readonly IChatReportService _chatReportService = chatReportService ?? throw new ArgumentNullException(nameof(chatReportService));
-        private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        private readonly IChatReportService _chatReportService;
+        private readonly IUserRepository _userRepository;
+        private readonly IMessagesService _messagesService;
+
+        public ChatReportController(IChatReportService chatReportService, IUserRepository userRepository, IMessagesService messagesService)
+        {
+            _chatReportService = chatReportService ?? throw new ArgumentNullException(nameof(chatReportService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _messagesService = messagesService ?? throw new ArgumentNullException(nameof(messagesService));
+        }
 
         private async Task<string> GetCurrentUserCnp()
         {
@@ -183,6 +191,76 @@ namespace BankApi.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost("send-message")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendMessageToUser([FromBody] SendMessageDto messageDto)
+        {
+            try
+            {
+                // Create a new message for the reported user
+                var message = new Message(
+                    id: 0, // ID will be assigned by the database
+                    type: messageDto.MessageType,
+                    message: messageDto.MessageContent
+                );
+
+                // Add custom logic to send a message to the user
+                await Task.Run(() => _messagesService.GiveMessageToUserAsync(messageDto.UserCnp, "System", messageDto.MessageContent));
+
+                return Ok(new { Message = "Message sent successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("punish-with-message/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PunishUserWithMessage(int id, [FromBody] PunishmentMessageDto punishmentDto)
+        {
+            try
+            {
+                // Get the chat report
+                var report = await _chatReportService.GetChatReportByIdAsync(id);
+                if (report == null)
+                {
+                    return NotFound($"Chat report with ID {id} not found");
+                }
+
+                // Create a punishment report with the chat report data
+                ChatReport chatReport = new()
+                {
+                    Id = report.Id,
+                    ReportedUserCnp = report.ReportedUserCnp,
+                    ReportedMessage = report.ReportedMessage,
+                    SubmitterCnp = report.SubmitterCnp
+                };
+
+                // Send a message to the user about the punishment
+                if (!string.IsNullOrEmpty(punishmentDto.MessageContent))
+                {
+                    await Task.Run(() => _messagesService.GiveMessageToUserAsync(report.ReportedUserCnp, "Punishment", punishmentDto.MessageContent));
+                }
+
+                // Apply the punishment
+                if (punishmentDto.ShouldPunish)
+                {
+                    await _chatReportService.PunishUser(chatReport);
+                }
+                else
+                {
+                    await _chatReportService.DoNotPunishUser(chatReport);
+                }
+
+                return Ok(new { Message = punishmentDto.ShouldPunish ? "User punished and message sent" : "Report closed without punishment" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 
     public class ActivityLogUpdateDto
@@ -193,5 +271,18 @@ namespace BankApi.Controllers
     public class ScoreHistoryUpdateDto
     {
         public int NewScore { get; set; }
+    }
+
+    public class SendMessageDto
+    {
+        public string UserCnp { get; set; } = string.Empty;
+        public string MessageType { get; set; } = "System";
+        public string MessageContent { get; set; } = string.Empty;
+    }
+
+    public class PunishmentMessageDto
+    {
+        public bool ShouldPunish { get; set; } = true;
+        public string MessageContent { get; set; } = string.Empty;
     }
 }

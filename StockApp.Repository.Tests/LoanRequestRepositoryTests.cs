@@ -9,11 +9,13 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class LoanRequestRepositoryTests
     {
         private ApiDbContext _context;
@@ -45,8 +47,8 @@ namespace StockApp.Repository.Tests
             // Arrange
             var requests = new List<LoanRequest>
             {
-                new LoanRequest { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
-                new LoanRequest { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
+                new() { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
+                new() { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
             };
             await _context.LoanRequests.AddRangeAsync(requests);
             await _context.SaveChangesAsync();
@@ -66,9 +68,9 @@ namespace StockApp.Repository.Tests
             // Arrange
             var requests = new List<LoanRequest>
             {
-                new LoanRequest { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
-                new LoanRequest { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow },
-                new LoanRequest { Id = 3, UserCnp = "789", Amount = 3000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
+                new() { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
+                new() { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow },
+                new() { Id = 3, UserCnp = "789", Amount = 3000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
             };
             await _context.LoanRequests.AddRangeAsync(requests);
             await _context.SaveChangesAsync();
@@ -105,19 +107,17 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task SolveLoanRequestAsync_WithInvalidId_ShouldThrowException()
         {
             // Act
-            await _repository.SolveLoanRequestAsync(0);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.SolveLoanRequestAsync(0));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
         public async Task SolveLoanRequestAsync_WithNonExistentId_ShouldThrowException()
         {
             // Act
-            await _repository.SolveLoanRequestAsync(999);
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _repository.SolveLoanRequestAsync(999));
         }
 
         [TestMethod]
@@ -143,19 +143,17 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task DeleteLoanRequestAsync_WithInvalidId_ShouldThrowException()
         {
             // Act
-            await _repository.DeleteLoanRequestAsync(0);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.DeleteLoanRequestAsync(0));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
         public async Task DeleteLoanRequestAsync_WithNonExistentId_ShouldThrowException()
         {
             // Act
-            await _repository.DeleteLoanRequestAsync(999);
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _repository.DeleteLoanRequestAsync(999));
         }
     }
-} 
+}

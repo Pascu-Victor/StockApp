@@ -19,5 +19,12 @@
         Task UpdateActivityLogAsync(int amount, string? userCnp = null);
 
         Task UpdateScoreHistoryForUserAsync(int newScore, string? userCnp = null);
+
+        // New methods for punishing users
+        Task PunishUser(ChatReport chatReportToBeSolved);
+
+        Task DoNotPunishUser(ChatReport chatReportToBeSolved);
+
+        Task<bool> IsMessageOffensive(string messageToBeChecked);
     }
 }

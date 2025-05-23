@@ -48,26 +48,23 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task PunishUser_NullReport_ThrowsArgumentNullException()
         {
-            await _service.PunishUser(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _service.PunishUser(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task PunishUser_EmptyReportedUserCnp_ThrowsArgumentException()
         {
-            await _service.PunishUser(new ChatReport { ReportedUserCnp = "", ReportedMessage = "test message" });
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.PunishUser(new ChatReport { ReportedUserCnp = "", ReportedMessage = "test message" }));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task PunishUser_UserNotFound_ThrowsException()
         {
             var report = new ChatReport { ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockUserRepo.Setup(r => r.GetByCnpAsync("123")).ReturnsAsync((User)null);
-            await _service.PunishUser(report);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.PunishUser(report));
         }
 
         [TestMethod]
@@ -105,10 +102,9 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task IsMessageOffensive_Null_ThrowsException()
         {
-            await _service.IsMessageOffensive(null);
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _service.IsMessageOffensive(null));
         }
 
         [TestMethod]
@@ -129,11 +125,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetAllChatReportsAsync_RepositoryThrows_ThrowsException()
         {
             _mockChatReportRepo.Setup(r => r.GetAllChatReportsAsync()).ThrowsAsync(new Exception());
-            await _service.GetAllChatReportsAsync();
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetAllChatReportsAsync());
         }
 
         [TestMethod]
@@ -146,12 +141,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task DeleteChatReportAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.DeleteChatReportAsync(report.Id)).ThrowsAsync(new Exception());
-            await _service.DeleteChatReportAsync(report.Id);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.DeleteChatReportAsync(report.Id));
         }
 
         [TestMethod]
@@ -164,12 +158,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task UpdateScoreHistoryForUserAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.UpdateScoreHistoryForUserAsync("123", It.IsAny<int>())).ThrowsAsync(new Exception());
-            await _service.UpdateScoreHistoryForUserAsync(100, "123");
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.UpdateScoreHistoryForUserAsync(100, "123"));
         }
 
         [TestMethod]
@@ -182,12 +175,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task AddChatReportAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.AddChatReportAsync(report)).ThrowsAsync(new Exception());
-            await _service.AddChatReportAsync(report);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.AddChatReportAsync(report));
         }
 
         [TestMethod]
@@ -210,12 +202,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetChatReportByIdAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.GetChatReportByIdAsync(1)).ThrowsAsync(new Exception());
-            await _service.GetChatReportByIdAsync(1);
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetChatReportByIdAsync(1));
         }
 
         [TestMethod]
@@ -228,12 +219,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetNumberOfGivenTipsForUserAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.GetNumberOfGivenTipsForUserAsync("123")).ThrowsAsync(new Exception());
-            await _service.GetNumberOfGivenTipsForUserAsync("123");
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetNumberOfGivenTipsForUserAsync("123"));
         }
 
         [TestMethod]
@@ -246,12 +236,11 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task UpdateActivityLogAsync_RepositoryThrows_ThrowsException()
         {
             var report = new ChatReport { Id = 1, ReportedUserCnp = "123", ReportedMessage = "test message" };
             _mockChatReportRepo.Setup(r => r.UpdateActivityLogAsync("123", It.IsAny<int>())).ThrowsAsync(new Exception());
-            await _service.UpdateActivityLogAsync(10, "123");
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.UpdateActivityLogAsync(10, "123"));
         }
     }
 }

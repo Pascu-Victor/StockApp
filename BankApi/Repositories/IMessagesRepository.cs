@@ -7,5 +7,6 @@ namespace BankApi.Repositories
         Task<List<Message>> GetMessagesForUserAsync(string userCnp);
         Task GiveUserRandomMessageAsync(string userCnp);
         Task GiveUserRandomRoastMessageAsync(string userCnp);
+        Task AddMessageForUserAsync(string userCnp, Message message);
     }
 }

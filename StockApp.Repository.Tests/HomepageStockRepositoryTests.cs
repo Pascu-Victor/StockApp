@@ -8,11 +8,13 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class HomepageStockRepositoryTests
     {
         private ApiDbContext _context;
@@ -34,6 +36,8 @@ namespace StockApp.Repository.Tests
             {
                 Id = 1,
                 Name = "Apple Inc.",
+                Price = 21,
+                Quantity = 5,
                 Favorites = new List<FavoriteStock> { new FavoriteStock { Id = 1, UserCNP = "123" } }
             };
 
@@ -41,6 +45,8 @@ namespace StockApp.Repository.Tests
             {
                 Id = 2,
                 Name = "Tesla Inc.",
+                Price = 21,
+                Quantity = 5,
                 Favorites = new List<FavoriteStock>()
             };
 
@@ -90,10 +96,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
         public async Task GetByIdAsync_NotFound_Throws()
         {
-            await _repository.GetByIdAsync(999, "123");
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _repository.GetByIdAsync(999, "123"));
         }
 
         [TestMethod]
@@ -120,6 +125,12 @@ namespace StockApp.Repository.Tests
                 Symbol = "MSFT",
                 Change = 1.11m,
                 StockDetails = new Stock()
+                {
+                    Price = 200,
+                    Quantity = 5,
+                    Name = "Microsoft Corp.",
+                    AuthorCNP = "123",
+                }
             };
 
             var result = await _repository.CreateAsync(newStock);
@@ -158,6 +169,12 @@ namespace StockApp.Repository.Tests
                 Symbol = "DOESNOTEXIST",
                 Change = 1.0m,
                 StockDetails = new Stock()
+                {
+                    Price = 100,
+                    Quantity = 10,
+                    Name = "Fake Stock",
+                    AuthorCNP = "123",
+                }
             };
 
             var result = await _repository.UpdateAsync(999, fakeStock);

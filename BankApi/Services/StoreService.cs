@@ -7,17 +7,20 @@
     using System;
     using System.Threading.Tasks;
 
-    public class StoreService(IGemStoreRepository repository, IUserRepository userRepository) : IStoreService
+    public class StoreService : IStoreService
     {
-        private readonly IGemStoreRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        private readonly IGemStoreRepository _repository;
+        private readonly IUserRepository _userRepository;
 
+        public StoreService(IGemStoreRepository repository, IUserRepository userRepository)
+        {
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        }
 
         /// <summary>
         /// Retrieves the current gem balance for the specified user.
         /// </summary>
-        /// <param name="userCNP"></param>
-        /// <returns></returns>
         public async Task<int> GetUserGemBalanceAsync(string userCNP)
         {
             return await _repository.GetUserGemBalanceAsync(userCNP);
@@ -26,22 +29,14 @@
         /// <summary>
         /// Updates the gem balance for a given user.
         /// </summary>
-        /// <param name="userCNP"></param>
-        /// <param name="newBalance"></param>
         public async Task UpdateUserGemBalanceAsync(int newBalance, string userCNP)
         {
             await _repository.UpdateUserGemBalanceAsync(userCNP, newBalance);
         }
 
         /// <summary>
-        /// Processes a bank transaction for buying or selling gems.
+        /// Processes a bank transaction for buying gems.
         /// </summary>
-        /// <param name="userCNP"></param>
-        /// <param name="deal"></param>
-        /// <param name="selectedAccountId"></param>
-        /// <returns></returns>
-        /// <exception cref="GuestUserOperationException"></exception>
-        /// <exception cref="GemTransactionFailedException"></exception>
         public async Task<string> BuyGems(GemDeal deal, string selectedAccountId, string userCNP)
         {
             bool transactionSuccess = await ProcessBankTransaction(selectedAccountId, -deal.Price);
@@ -59,13 +54,6 @@
         /// <summary>
         /// Processes a bank transaction for selling gems.
         /// </summary>
-        /// <param name="userCNP"> The CNP of the user.</param>
-        /// <param name="gemAmount"> The amount of gems to sell.</param>
-        /// <param name="selectedAccountId"> The selected account ID for the transaction.</param>
-        /// <returns></returns>
-        /// <exception cref="GuestUserOperationException"></exception>
-        /// <exception cref="InsufficientGemsException"></exception>
-        /// <exception cref="GemTransactionFailedException"></exception>
         public async Task<string> SellGems(int gemAmount, string selectedAccountId, string userCNP)
         {
             int currentBalance = await GetUserGemBalanceAsync(userCNP);
@@ -85,9 +73,12 @@
             return $"Successfully sold {gemAmount} gems for {moneyEarned}€";
         }
 
-        private static async Task<bool> ProcessBankTransaction(string accountId, double amount)
+        /// <summary>
+        /// Protected virtual method so unit tests can override transaction behavior.
+        /// </summary>
+        protected virtual Task<bool> ProcessBankTransaction(string accountId, double amount)
         {
-            return true;
+            return Task.FromResult(true);
         }
     }
 }

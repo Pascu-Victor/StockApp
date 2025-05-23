@@ -47,11 +47,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetActivityForUser_EmptyCnp_ThrowsException()
         {
             // Act
-            await _service.GetActivityForUser("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetActivityForUser(""));
         }
 
         [TestMethod]
@@ -85,19 +84,17 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task AddActivity_InvalidAmount_ThrowsException()
         {
             // Act
-            await _service.AddActivity("1234567890123", "Test", 0, "Details");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.AddActivity("1234567890123", "Test", 0, "Details"));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task AddActivity_EmptyActivityName_ThrowsException()
         {
             // Act
-            await _service.AddActivity("1234567890123", "", 100, "Details");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.AddActivity("1234567890123", "", 100, "Details"));
         }
 
         [TestMethod]
@@ -140,11 +137,10 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetActivityById_InvalidId_ThrowsException()
         {
             // Act
-            await _service.GetActivityById(0);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetActivityById(0));
         }
 
         [TestMethod]
@@ -164,27 +160,24 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task DeleteActivity_InvalidId_ThrowsException()
         {
             // Act
-            await _service.DeleteActivity(-1);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.DeleteActivity(-1));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetActivityForUser_NullCnp_ThrowsException()
         {
             // Act
-            await _service.GetActivityForUser(null);
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.GetActivityForUser(null));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task AddActivity_NullActivityName_ThrowsException()
         {
             // Act
-            await _service.AddActivity("1234567890123", null, 100, "Details");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.AddActivity("1234567890123", null, 100, "Details"));
         }
 
         [TestMethod]
@@ -204,7 +197,6 @@ namespace StockApp.Service.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
         public async Task GetAllActivities_RepositoryThrowsException_PropagatesException()
         {
             // Arrange
@@ -212,7 +204,7 @@ namespace StockApp.Service.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            await _service.GetAllActivities();
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetAllActivities());
         }
 
         [TestMethod]

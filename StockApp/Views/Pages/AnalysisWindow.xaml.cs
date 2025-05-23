@@ -65,7 +65,7 @@ namespace StockApp.Views.Pages
                     Title = "Error",
                     Content = $"Error loading activities: {exception.Message}",
                     CloseButtonText = "OK",
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = App.MainAppWindow!.MainAppFrame.XamlRoot
                 };
                 await dialog.ShowAsync();
             }

@@ -4,13 +4,14 @@ using Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Repository.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class MessagesRepositoryTests
     {
         private ApiDbContext _context;
@@ -55,10 +56,9 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GetMessagesForUserAsync_EmptyCnp_Throws()
         {
-            await _repository.GetMessagesForUserAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GetMessagesForUserAsync(""));
         }
 
         [TestMethod]
@@ -71,27 +71,24 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GiveUserRandomMessageAsync_EmptyCnp_Throws()
         {
-            await _repository.GiveUserRandomMessageAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GiveUserRandomMessageAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public async Task GiveUserRandomMessageAsync_NoUser_Throws()
         {
-            await _repository.GiveUserRandomMessageAsync("000");
+            await Assert.ThrowsAsync<Exception>(async () => await _repository.GiveUserRandomMessageAsync("000"));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public async Task GiveUserRandomMessageAsync_NoPunishmentTip_Throws()
         {
             _context.Tips.RemoveRange(_context.Tips.Where(t => t.Type == "Punishment"));
             await _context.SaveChangesAsync();
 
-            await _repository.GiveUserRandomMessageAsync("123");
+            await Assert.ThrowsAsync<Exception>(async () => await _repository.GiveUserRandomMessageAsync("123"));
         }
 
         [TestMethod]
@@ -109,20 +106,18 @@ namespace StockApp.Repository.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task GiveUserRandomRoastMessageAsync_EmptyCnp_Throws()
         {
-            await _repository.GiveUserRandomRoastMessageAsync("");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _repository.GiveUserRandomRoastMessageAsync(""));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public async Task GiveUserRandomRoastMessageAsync_NoRoastTip_Throws()
         {
             _context.Tips.RemoveRange(_context.Tips.Where(t => t.Type == "Roast"));
             await _context.SaveChangesAsync();
 
-            await _repository.GiveUserRandomRoastMessageAsync("123");
+            await Assert.ThrowsAsync<Exception>(async () => await _repository.GiveUserRandomRoastMessageAsync("123"));
         }
     }
 }

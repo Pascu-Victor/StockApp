@@ -1,0 +1,91 @@
+@model StockAppWeb.Views.Profile.UpdateModel
+@{
+    ViewData["Title"] = "Update Profile";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-pink">
+                <div class="card-header bg-pink text-white">
+                    <h2 class="mb-0">Update Profile</h2>
+                </div>
+                
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                    {
+                        <div class="alert alert-success mb-3">@Model.SuccessMessage</div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger mb-3">@Model.ErrorMessage</div>
+                    }
+                    
+                    @if (!Model.IsAuthenticated)
+                    {
+                        <div class="alert alert-warning">
+                            <p>You are not logged in. Please <a asp-controller="Auth" asp-action="Login">log in</a> to update your profile.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="Update">
+                            <div class="mb-3">
+                                <label asp-for="Input.ImageUrl" class="form-label">Profile Image URL</label>
+                                <input asp-for="Input.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                                <span asp-validation-for="Input.ImageUrl" class="text-danger"></span>
+                                <small class="form-text text-muted">Enter a URL to an image for your profile.</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Input.Username" class="form-label">Username</label>
+                                <input asp-for="Input.Username" class="form-control" />
+                                <span asp-validation-for="Input.Username" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Input.Description" class="form-label">Description</label>
+                                <textarea asp-for="Input.Description" class="form-control" rows="4"></textarea>
+                                <span asp-validation-for="Input.Description" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input asp-for="Input.ClearDescription" class="form-check-input" />
+                                <label asp-for="Input.ClearDescription" class="form-check-label">Clear Description</label>
+                                <small class="form-text text-muted d-block">Check this box to remove your description.</small>
+                            </div>
+                            
+                            <div class="mb-4 form-check">
+                                <input asp-for="Input.IsHidden" class="form-check-input" />
+                                <label asp-for="Input.IsHidden" class="form-check-label">Hide Profile</label>
+                                <small class="form-text text-muted d-block">Check this box to hide your profile from other users.</small>
+                            </div>
+                            
+                            <div class="d-flex">
+                                <button type="submit" class="btn bg-pink text-white me-2">Update Profile</button>
+                                <a asp-controller="Profile" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@section Styles {
+    <style>
+        .border-pink {
+            border-color: #FF69B4 !important;
+        }
+        
+        .bg-pink {
+            background-color: #FF69B4 !important;
+        }
+    </style>
+} 

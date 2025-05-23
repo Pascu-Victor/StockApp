@@ -2,6 +2,7 @@ using Common.Models;
 using Common.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -36,6 +37,11 @@ namespace StockApp.Services
         public async Task<Stock?> GetStockByIdAsync(int id)
         {
             return await _httpClient.GetFromJsonAsync<Stock?>($"api/Stock/{id}");
+        }
+        public async Task<Stock?> GetStockByNameAsync(string name)
+        {
+            var allStocks = await this.GetAllStocksAsync();
+            return allStocks.FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task<Stock?> UpdateStockAsync(int id, Stock updatedStock)

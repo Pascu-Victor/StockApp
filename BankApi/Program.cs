@@ -25,8 +25,6 @@ builder.Services.AddDbContext<ApiDbContext>(options =>
         sqlOptions.EnableRetryOnFailure();
     }));
 
-builder.Services.AddAuthenticationCore();
-
 // Add ASP.NET Core Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     {
@@ -66,6 +64,19 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = !string.IsNullOrEmpty(jwtKey)
             ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
             : null
+    };
+
+    // Add this block to read JWT from cookie
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.TryGetValue("jwt_token", out var token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -122,11 +133,13 @@ builder.Services.AddHttpClient<IProfanityChecker, ProfanityChecker>();
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policyBuilder =>
+    options.AddPolicy("AllowSpecificOrigins", policyBuilder =>
     {
-        policyBuilder.AllowAnyOrigin()
+        policyBuilder
+               .WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()!)
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 
@@ -194,7 +207,7 @@ app.UseAuthorization(); // Add Authorization middleware
 
 app.UseSession(); // Add Session middleware
 
-app.UseCors("AllowAll");
+app.UseCors("AllowSpecificOrigins");
 
 app.MapControllers();
 
@@ -207,7 +220,6 @@ app.Use(async (context, next) =>
 
     // Extract the role values
     IEnumerable<string> roles = roleClaims.Select(c => c.Value);
-
     // Now you can iterate through the roles
     foreach (var role in roles)
     {

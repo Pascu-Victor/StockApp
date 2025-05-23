@@ -268,7 +268,7 @@ namespace StockApp.Service.Tests
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await _service.GetBillSplitReportsAsync());
+            await Assert.ThrowsExactlyAsync<Exception>(async () => await _service.GetBillSplitReportsAsync());
         }
 
         [TestMethod]

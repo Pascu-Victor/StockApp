@@ -32,6 +32,24 @@
             }
         }
 
+        public async Task GiveMessageToUserAsync(string userCNP, string type, string messageText)
+        {
+            User user = await userRepository.GetByCnpAsync(userCNP) ?? throw new Exception("User not found");
+            try
+            {
+                var message = new Message
+                {
+                    Type = type,
+                    MessageContent = messageText
+                };
+                await messagesRepository.AddMessageForUserAsync(userCNP, message);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"{e.Message},User is not found");
+            }
+        }
+
         public async Task<List<Message>> GetMessagesForUserAsync(string userCnp)
         {
             return await messagesRepository.GetMessagesForUserAsync(userCnp);
