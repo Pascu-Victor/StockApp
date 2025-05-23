@@ -64,9 +64,9 @@ else
                             @stock.Change
                         </td>
                         <td>
-                            <div class="btn-group" role="group">
-                                <a asp-controller="StockPage" asp-action="Index" asp-route-stockName="@stock.StockDetails.Name" 
-                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                            <div role="group">
+                                <a asp-controller="StockPage" style="margin-right: 10px;" asp-action="Index" asp-route-stockName="@stock.StockDetails.Name"
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
                                     <i class="fas fa-chart-line"></i> Details
                                 </a>
                                 <form method="post" asp-action="ToggleFavorite" style="display: inline;">
@@ -116,9 +116,9 @@ else
                         @stock.Change
                     </td>
                     <td>
-                        <div class="btn-group" role="group">
-                            <a asp-controller="StockPage" asp-action="Index" asp-route-stockName="@stock.StockDetails.Name" 
-                               class="btn btn-sm btn-outline-primary" title="View Details">
+                        <div role="group">
+                            <a asp-controller="StockPage" style="margin-right: 10px;" asp-action="Index" asp-route-stockName="@stock.StockDetails.Name"
+                                   class="btn btn-sm btn-outline-primary" title="View Details">
                                 <i class="fas fa-chart-line"></i> Details
                             </a>
                             <form method="post" asp-action="ToggleFavorite" style="display: inline;">
