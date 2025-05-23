@@ -61,7 +61,7 @@
         /// </summary>
         public DateTime ExpirationTime =>
             IsSpecial && DurationMinutes.HasValue
-                ? DateTime.UtcNow.AddMinutes(DurationMinutes.Value)
+                ? DateTime.Now.AddMinutes(DurationMinutes.Value)
                 : DateTime.MaxValue;
 
         /// <summary>
