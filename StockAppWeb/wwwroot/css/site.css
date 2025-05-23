@@ -29,3 +29,247 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* News List Page Styles */
+.article-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.article-card.read {
+    opacity: 0.8;
+}
+
+.article-card.read .card-title {
+    font-weight: normal !important;
+}
+
+.related-stocks .badge {
+    font-size: 0.8rem;
+    font-weight: normal;
+}
+
+/* Modal Styles */
+.modal-lg {
+    max-width: 800px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Search and Filter Styles */
+#searchInput {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#categoryFilter {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .article-card .d-flex {
+        flex-direction: column;
+    }
+    
+    .article-card .badge {
+        margin-top: 0.5rem;
+    }
+    
+    .related-stocks {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Article Styles */
+.article-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.article-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.2;
+}
+
+.article-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.article-body {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.article-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.article-body p {
+    margin-bottom: 1.5rem;
+}
+
+.article-body h1, 
+.article-body h2, 
+.article-body h3, 
+.article-body h4, 
+.article-body h5, 
+.article-body h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.article-body a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.article-body a:hover {
+    text-decoration: underline;
+}
+
+.article-body blockquote {
+    border-left: 4px solid #0d6efd;
+    padding-left: 1rem;
+    margin-left: 0;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.article-body pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.article-body code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+}
+
+.article-body table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.article-body th,
+.article-body td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+
+.article-body th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.article-stocks {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.stock-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.stock-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.stock-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stock-link:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Article List Styles */
+.article-card {
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.article-card.read {
+    opacity: 0.8;
+}
+
+.article-card.read .article-title {
+    color: #6c757d;
+}
+
+.article-card .card-body {
+    padding: 1.5rem;
+}
+
+.article-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+}
+
+.article-card .card-text {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.article-card .card-footer {
+    background-color: transparent;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+/* Loading States */
+.modal-loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-error {
+    margin: 1rem 0;
+}
+
+/* Toast Styles */
+.toast {
+    z-index: 1050;
+}

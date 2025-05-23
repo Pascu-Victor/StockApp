@@ -1,0 +1,93 @@
+@model StockAppWeb.Models.ArticleViewModel
+
+<div class="article-content">
+    <h2 class="article-title mb-4">@Model.Title</h2>
+    
+    <div class="article-meta mb-4">
+        <span class="badge bg-primary me-2">@Model.Category</span>
+        <small class="text-muted">
+            <i class="bi bi-clock"></i> @Model.PublishedDate.ToString("MMM dd, yyyy HH:mm")
+        </small>
+        @if (Model.IsRead)
+        {
+            <span class="badge bg-success ms-2">
+                <i class="bi bi-check-circle"></i> Read
+            </span>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Summary))
+    {
+        <div class="article-summary mb-4">
+            <p class="lead">@Model.Summary</p>
+        </div>
+    }
+
+    <div class="article-body mb-4">
+        @Html.Raw(Model.Content)
+    </div>
+
+    @if (Model.StockSymbols.Any())
+    {
+        <div class="article-stocks">
+            <h5 class="mb-3">Related Stocks</h5>
+            <div class="stock-links">
+                @foreach (var symbol in Model.StockSymbols)
+                {
+                    <a href="@Url.Action("Details", "Stock", new { symbol })" 
+                       class="btn btn-outline-primary btn-sm me-2 mb-2 stock-link"
+                       data-symbol="@symbol"
+                       onclick="handleStockLink(event, '@symbol')">
+                        <i class="bi bi-graph-up"></i> @symbol
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function handleStockLink(event, symbol) {
+            event.preventDefault();
+            const link = event.currentTarget;
+            const originalText = link.innerHTML;
+            
+            link.disabled = true;
+            link.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            
+            fetch(`@Url.Action("Details", "Stock")/${symbol}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load stock details');
+                    }
+                    window.location.href = link.href;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    link.innerHTML = originalText;
+                    link.disabled = false;
+                    
+                    // Show error toast
+                    const toast = new bootstrap.Toast(document.createElement('div'));
+                    toast.element.className = 'toast align-items-center text-white bg-danger border-0 position-fixed bottom-0 end-0 m-3';
+                    toast.element.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Failed to load stock details. Please try again.
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    `;
+                    document.body.appendChild(toast.element);
+                    toast.show();
+                    
+                    // Remove toast element after it's hidden
+                    toast.element.addEventListener('hidden.bs.toast', () => {
+                        document.body.removeChild(toast.element);
+                    });
+                });
+        }
+    </script>
+} 

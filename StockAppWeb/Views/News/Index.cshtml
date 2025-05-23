@@ -1,0 +1,268 @@
+@model StockAppWeb.Models.NewsListViewModel
+@{
+    ViewData["Title"] = "Stock News";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid px-4 py-3">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6 fw-semibold">Stock News</h1>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search articles..." 
+                       value="@Model.SearchQuery" aria-label="Search articles">
+                <select id="categoryFilter" class="form-select" style="max-width: 200px;">
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category" selected="@(category == Model.SelectedCategory)">@category</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            @if (Model.IsAdmin)
+            {
+                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createArticleModal">
+                    <i class="bi bi-plus-lg"></i> Create Article
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adminPanelModal">
+                    <i class="bi bi-gear"></i> Admin Panel
+                </button>
+            }
+            else if (!Model.IsLoggedIn)
+            {
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center py-5 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading articles...</p>
+    </div>
+
+    <!-- Error Alert -->
+    <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span id="errorMessage"></span>
+        <button type="button" class="btn-close float-end" onclick="hideError()" aria-label="Close"></button>
+    </div>
+
+    <!-- Articles List -->
+    <div class="row">
+        <div class="col">
+            <div id="articlesContainer">
+                @if (Model.IsEmptyState)
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-newspaper display-1 text-muted"></i>
+                        <h3 class="mt-3">No articles found</h3>
+                        <p class="text-muted">Try adjusting your search or filters</p>
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="refreshArticles()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <partial name="_ArticleList" model="Model.Articles" />
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Article Detail Modal -->
+<div class="modal fade" id="articleModal" tabindex="-1" aria-labelledby="articleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="articleModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="articleModalBody">
+                <div class="text-center py-3 modal-loading d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="modal-error alert alert-danger d-none" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                @if (Model.IsLoggedIn)
+                {
+                    <button type="button" class="btn btn-primary" id="markAsReadBtn">Mark as Read</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentArticleId = null;
+        const articleModal = new bootstrap.Modal(document.getElementById('articleModal'));
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        let searchTimeout = null;
+
+        function showLoading() {
+            loadingSpinner.classList.remove('d-none');
+            document.getElementById('articlesContainer').classList.add('d-none');
+        }
+
+        function hideLoading() {
+            loadingSpinner.classList.add('d-none');
+            document.getElementById('articlesContainer').classList.remove('d-none');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorAlert.classList.remove('d-none');
+        }
+
+        function hideError() {
+            errorAlert.classList.add('d-none');
+        }
+
+        // Debounced search
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(filterArticles, 300);
+        });
+
+        categoryFilter.addEventListener('change', filterArticles);
+
+        function filterArticles() {
+            const searchQuery = searchInput.value;
+            const category = categoryFilter.value;
+
+            showLoading();
+            hideError();
+
+            fetch('@Url.Action("Filter")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `category=${encodeURIComponent(category)}&searchQuery=${encodeURIComponent(searchQuery)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch articles');
+                }
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('articlesContainer').innerHTML = html;
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Failed to load articles. Please try again.');
+                hideLoading();
+            });
+        }
+
+        function showArticle(articleId) {
+            currentArticleId = articleId;
+            const modalBody = document.getElementById('articleModalBody');
+            const modalLoading = modalBody.querySelector('.modal-loading');
+            const modalError = modalBody.querySelector('.modal-error');
+            
+            modalLoading.classList.remove('d-none');
+            modalError.classList.add('d-none');
+            articleModal.show();
+
+            fetch(`@Url.Action("Article")/${articleId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch article');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const article = doc.querySelector('.article-content');
+                    
+                    if (!article) {
+                        throw new Error('Invalid article format');
+                    }
+                    
+                    document.getElementById('articleModalLabel').textContent = article.querySelector('.article-title').textContent;
+                    modalBody.innerHTML = article.innerHTML;
+                    
+                    const markAsReadBtn = document.getElementById('markAsReadBtn');
+                    if (markAsReadBtn) {
+                        markAsReadBtn.onclick = markArticleAsRead;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalError.textContent = 'Failed to load article. Please try again.';
+                    modalError.classList.remove('d-none');
+                })
+                .finally(() => {
+                    modalLoading.classList.add('d-none');
+                });
+        }
+
+        function markArticleAsRead() {
+            if (!currentArticleId) return;
+
+            const markAsReadBtn = document.getElementById('markAsReadBtn');
+            const originalText = markAsReadBtn.innerHTML;
+            markAsReadBtn.disabled = true;
+            markAsReadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Marking...';
+
+            fetch('@Url.Action("MarkAsRead")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `articleId=${encodeURIComponent(currentArticleId)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to mark article as read');
+                }
+                const articleElement = document.querySelector(`[data-article-id="${currentArticleId}"]`);
+                if (articleElement) {
+                    articleElement.classList.add('read');
+                }
+                articleModal.hide();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Failed to mark article as read. Please try again.');
+            })
+            .finally(() => {
+                markAsReadBtn.disabled = false;
+                markAsReadBtn.innerHTML = originalText;
+            });
+        }
+
+        function refreshArticles() {
+            filterArticles();
+        }
+    </script>
+} 
