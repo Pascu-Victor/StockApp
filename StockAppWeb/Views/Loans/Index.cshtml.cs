@@ -13,7 +13,7 @@ namespace StockAppWeb.Views.Loans
             _loanService = loanService;
         }
 
-        public List<Loan> Loans { get; private set; } = new();
+        public List<Loan> Loans { get; private set; } = [];
         public string? ErrorMessage { get; private set; }
 
         public async Task OnGetAsync()

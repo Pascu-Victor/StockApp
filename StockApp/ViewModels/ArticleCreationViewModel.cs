@@ -286,7 +286,6 @@
                 // Build the UserArticle to submit
                 NewsArticle article = new()
                 {
-                    ArticleId = Guid.NewGuid().ToString(),
                     Title = this.Title,
                     Summary = this.Summary ?? string.Empty,
                     Content = this.Content,
@@ -294,7 +293,7 @@
                     Topic = this.SelectedTopic,
                     RelatedStocks = relatedStocks,
                     Status = Status.Pending,
-                    IsRead = false,
+                    Source = "User Generated",
                     Category = this.SelectedTopic,
                 };
                 // Submit the article

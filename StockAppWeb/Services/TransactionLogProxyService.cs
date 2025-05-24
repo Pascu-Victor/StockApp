@@ -18,7 +18,7 @@ namespace StockAppWeb.Services
             var response = await _httpClient.PostAsJsonAsync("api/transactionlog/filter", criteria);
             response.EnsureSuccessStatusCode();
             var transactions = await response.Content.ReadFromJsonAsync<IEnumerable<TransactionLogTransaction>>() ?? Array.Empty<TransactionLogTransaction>();
-            return transactions.ToList();
+            return [.. transactions];
         }
 
         public List<TransactionLogTransaction> SortTransactions(List<TransactionLogTransaction> transactions, string sortType = "Date", bool ascending = true)
@@ -26,23 +26,23 @@ namespace StockAppWeb.Services
             return sortType.ToLower() switch
             {
                 "stockname" => ascending
-                    ? transactions.OrderBy(t => t.StockName).ToList()
-                    : transactions.OrderByDescending(t => t.StockName).ToList(),
+                    ? [.. transactions.OrderBy(t => t.StockName)]
+                    : [.. transactions.OrderByDescending(t => t.StockName)],
                 "type" => ascending
-                    ? transactions.OrderBy(t => t.Type).ToList()
-                    : transactions.OrderByDescending(t => t.Type).ToList(),
+                    ? [.. transactions.OrderBy(t => t.Type)]
+                    : [.. transactions.OrderByDescending(t => t.Type)],
                 "amount" => ascending
-                    ? transactions.OrderBy(t => t.Amount).ToList()
-                    : transactions.OrderByDescending(t => t.Amount).ToList(),
+                    ? [.. transactions.OrderBy(t => t.Amount)]
+                    : [.. transactions.OrderByDescending(t => t.Amount)],
                 "totalvalue" => ascending
-                    ? transactions.OrderBy(t => t.TotalValue).ToList()
-                    : transactions.OrderByDescending(t => t.TotalValue).ToList(),
+                    ? [.. transactions.OrderBy(t => t.TotalValue)]
+                    : [.. transactions.OrderByDescending(t => t.TotalValue)],
                 "date" => ascending
-                    ? transactions.OrderBy(t => t.Date).ToList()
-                    : transactions.OrderByDescending(t => t.Date).ToList(),
+                    ? [.. transactions.OrderBy(t => t.Date)]
+                    : [.. transactions.OrderByDescending(t => t.Date)],
                 "author" => ascending
-                    ? transactions.OrderBy(t => t.Author).ToList()
-                    : transactions.OrderByDescending(t => t.Author).ToList(),
+                    ? [.. transactions.OrderBy(t => t.Author)]
+                    : [.. transactions.OrderByDescending(t => t.Author)],
                 _ => transactions
             };
         }

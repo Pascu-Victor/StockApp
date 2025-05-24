@@ -25,7 +25,7 @@ namespace StockAppWeb.Views.Profile
         public string Description { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
         public bool IsHidden { get; set; }
-        public List<Stock> UserStocks { get; set; } = new();
+        public List<Stock> UserStocks { get; set; } = [];
         public Stock? SelectedStock { get; set; }
         public string? ErrorMessage { get; set; }
         public bool IsAuthenticated => _authenticationService.IsUserLoggedIn();

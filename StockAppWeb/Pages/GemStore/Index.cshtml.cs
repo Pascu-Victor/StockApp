@@ -114,8 +114,8 @@ namespace StockAppWeb.Pages.GemStore
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private List<GemDeal> _availableDeals = new();
-        private List<string> _userBankAccounts = new();
+        private List<GemDeal> _availableDeals = [];
+        private List<string> _userBankAccounts = [];
         private int _userGems;
         private string? _selectedBankAccount;
         private string? _errorMessage;

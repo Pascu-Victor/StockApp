@@ -135,8 +135,6 @@
         /// <exception cref="NewsPersistenceException">If loading fails.</exception>
         public async Task<List<NewsArticle>> GetUserArticlesAsync(Status status = Status.All, string topic = "All", string authorCNP = null)
         {
-            User user = await userRepository.GetByCnpAsync(authorCNP) ?? throw new Exception("User not found");
-
             try
             {
                 List<NewsArticle> userArticles = await newsRepository.GetNewsArticlesByAuthorCNPAsync(authorCNP);
@@ -229,10 +227,8 @@
         /// <exception cref="UnauthorizedAccessException">If current user is not an admin.</exception>
         /// <exception cref="ArgumentNullException">If <paramref name="articleId"/> is null or empty.</exception>
         /// <exception cref="NewsPersistenceException">If deletion fails.</exception>
-        public async Task<bool> DeleteUserArticleAsync(string articleId, string userCNP)
+        public async Task<bool> DeleteArticleAsync(string articleId)
         {
-            User user = await userRepository.GetByCnpAsync(userCNP) ?? throw new Exception("User not found");
-
             if (string.IsNullOrWhiteSpace(articleId))
             {
                 throw new ArgumentNullException(nameof(articleId));

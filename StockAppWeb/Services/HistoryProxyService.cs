@@ -28,7 +28,7 @@ namespace StockAppWeb.Services
         public async Task<List<CreditScoreHistory>> GetAllHistoryAsync()
         {
             var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>("api/history");
-            return response ?? new List<CreditScoreHistory>();
+            return response ?? [];
         }
 
         public async Task<CreditScoreHistory?> GetHistoryByIdAsync(int id)
@@ -39,7 +39,7 @@ namespace StockAppWeb.Services
         public async Task<List<CreditScoreHistory>> GetHistoryForUserAsync(string userCnp)
         {
             var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>($"api/history/user/{userCnp}");
-            return response ?? new List<CreditScoreHistory>();
+            return response ?? [];
         }
 
         public async Task<List<CreditScoreHistory>> GetHistoryMonthlyAsync(string? userCnp = null)
@@ -48,26 +48,26 @@ namespace StockAppWeb.Services
             {
                 // Current user
                 var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>("api/history/user/monthly");
-                return response ?? new List<CreditScoreHistory>();
+                return response ?? [];
             }
             else
             {
                 // Admin: get for specific user
                 var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>($"api/history/user/{userCnp}/monthly");
-                return response ?? new List<CreditScoreHistory>();
+                return response ?? [];
             }
         }
 
         public async Task<List<CreditScoreHistory>> GetHistoryWeeklyAsync(string userCnp)
         {
             var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>($"api/history/user/{userCnp}/weekly");
-            return response ?? new List<CreditScoreHistory>();
+            return response ?? [];
         }
 
         public async Task<List<CreditScoreHistory>> GetHistoryYearlyAsync(string userCnp)
         {
             var response = await _httpClient.GetFromJsonAsync<List<CreditScoreHistory>>($"api/history/user/{userCnp}/yearly");
-            return response ?? new List<CreditScoreHistory>();
+            return response ?? [];
         }
 
         public async Task UpdateHistoryAsync(CreditScoreHistory history)

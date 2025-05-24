@@ -57,14 +57,14 @@ namespace StockApp.Services
                 return sortType switch
                 {
                     "Date" => ascending
-                        ? transactions.OrderBy(t => t.Date).ToList()
-                        : transactions.OrderByDescending(t => t.Date).ToList(),
+                        ? [.. transactions.OrderBy(t => t.Date)]
+                        : [.. transactions.OrderByDescending(t => t.Date)],
                     "Stock Name" => ascending
-                        ? transactions.OrderBy(t => t.StockName).ToList()
-                        : transactions.OrderByDescending(t => t.StockName).ToList(),
+                        ? [.. transactions.OrderBy(t => t.StockName)]
+                        : [.. transactions.OrderByDescending(t => t.StockName)],
                     "Total Value" => ascending
-                        ? transactions.OrderBy(t => t.TotalValue).ToList()
-                        : transactions.OrderByDescending(t => t.TotalValue).ToList(),
+                        ? [.. transactions.OrderBy(t => t.TotalValue)]
+                        : [.. transactions.OrderByDescending(t => t.TotalValue)],
                     _ => throw new InvalidSortTypeException(sortType),
                 };
             }

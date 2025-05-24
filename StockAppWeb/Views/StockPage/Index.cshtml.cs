@@ -23,7 +23,7 @@ namespace StockAppWeb.Views.StockPage
 
         public Stock? SelectedStock { get; private set; }
         public UserStock? OwnedStocks { get; private set; }
-        public List<int> StockHistory { get; private set; } = new();
+        public List<int> StockHistory { get; private set; } = [];
         public bool IsFavorite { get; private set; }
         public int UserGems { get; private set; }
         public string? ErrorMessage { get; private set; }

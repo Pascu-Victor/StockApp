@@ -14,7 +14,7 @@ namespace StockAppWeb.Views.Alerts
             _alertService = alertService;
         }
 
-        public List<Alert> Alerts { get; private set; } = new();
+        public List<Alert> Alerts { get; private set; } = [];
         public string? ErrorMessage { get; private set; }
         public string? SuccessMessage { get; private set; }
         public string SelectedStockName { get; set; } = string.Empty;

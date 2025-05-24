@@ -8,7 +8,7 @@ namespace Common.Services
 
         Task<bool> CreateArticleAsync(NewsArticle article, string? authorCNP = null);
 
-        Task<bool> DeleteUserArticleAsync(string articleId, string? userCNP = null);
+        Task<bool> DeleteArticleAsync(string articleId);
 
         Task<NewsArticle> GetNewsArticleByIdAsync(string articleId);
 

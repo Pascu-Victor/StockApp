@@ -29,7 +29,7 @@ namespace StockAppWeb.Services
         public async Task<List<TransactionLogTransaction>> GetAllTransactionsAsync()
         {
             var transactions = await _httpClient.GetFromJsonAsync<IEnumerable<TransactionLogTransaction>>("api/transaction") ?? Array.Empty<TransactionLogTransaction>();
-            return transactions.ToList();
+            return [.. transactions];
         }
 
         public async Task<Transaction> GetTransactionByIdAsync(int id)
@@ -47,7 +47,7 @@ namespace StockAppWeb.Services
         public async Task<List<Transaction>> GetUserTransactionsAsync(string userId)
         {
             var transactions = await _httpClient.GetFromJsonAsync<IEnumerable<Transaction>>($"api/transaction/user/{userId}") ?? Array.Empty<Transaction>();
-            return transactions.ToList();
+            return [.. transactions];
         }
 
         public async Task<List<Transaction>> GetFilteredAndSortedTransactionsAsync(string searchTerm, string sortBy, bool ascending, string? userId = null)
@@ -58,7 +58,7 @@ namespace StockAppWeb.Services
                 url += $"&userId={userId}";
             }
             var transactions = await _httpClient.GetFromJsonAsync<IEnumerable<Transaction>>(url) ?? Array.Empty<Transaction>();
-            return transactions.ToList();
+            return [.. transactions];
         }
 
         public async Task<List<TransactionLogTransaction>> GetByFilterCriteriaAsync(TransactionFilterCriteria criteria)
@@ -66,7 +66,7 @@ namespace StockAppWeb.Services
             var response = await _httpClient.PostAsJsonAsync("api/transaction/filter", criteria);
             response.EnsureSuccessStatusCode();
             var transactions = await response.Content.ReadFromJsonAsync<IEnumerable<TransactionLogTransaction>>() ?? Array.Empty<TransactionLogTransaction>();
-            return transactions.ToList();
+            return [.. transactions];
         }
 
         public async Task AddTransactionAsync(TransactionLogTransaction transaction)

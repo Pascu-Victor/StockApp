@@ -304,7 +304,7 @@
                 {
                     this.IsLoading = true;
 
-                    var success = await this.newsService.DeleteUserArticleAsync(this.previewId);
+                    var success = await this.newsService.DeleteArticleAsync(this.previewId);
                     if (success)
                     {
                         var dialog = new ContentDialog

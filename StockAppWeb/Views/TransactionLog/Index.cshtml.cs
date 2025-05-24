@@ -17,7 +17,7 @@ namespace StockAppWeb.Views.TransactionLog
             _transactionLogService = transactionLogService;
         }
 
-        public List<TransactionLogTransaction> Transactions { get; private set; } = new();
+        public List<TransactionLogTransaction> Transactions { get; private set; } = [];
         public string? ErrorMessage { get; private set; }
         public string? SuccessMessage { get; private set; }
 

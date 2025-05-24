@@ -82,7 +82,7 @@ namespace StockApp.Service.Tests
         {
             // Arrange
             var userCNP = "1234567890123";
-            _mockMessagesRepository.Setup(x => x.GetMessagesForUserAsync(userCNP)).ReturnsAsync(new List<Message>());
+            _mockMessagesRepository.Setup(x => x.GetMessagesForUserAsync(userCNP)).ReturnsAsync([]);
 
             // Act
             var result = await _service.GetMessagesForUserAsync(userCNP);

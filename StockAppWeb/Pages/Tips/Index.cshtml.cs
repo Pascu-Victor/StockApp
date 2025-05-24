@@ -20,7 +20,7 @@ namespace StockAppWeb.Pages.Tips
             _userService = userService;
         }
 
-        public List<Message> Messages { get; set; } = new();
+        public List<Message> Messages { get; set; } = [];
         public string? ErrorMessage { get; set; }
         public string? SuccessMessage { get; set; }
 

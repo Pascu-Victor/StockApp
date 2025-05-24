@@ -1,12 +1,12 @@
 ﻿namespace BankApi.Repositories.Impl
 {
+    using BankApi.Data;
+    using Common.Models;
+    using Microsoft.EntityFrameworkCore;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using BankApi.Data;
-    using Common.Models;
-    using Microsoft.EntityFrameworkCore;
 
     public class NewsRepository(ApiDbContext dbContext) : INewsRepository
     {
@@ -161,11 +161,21 @@
         {
             try
             {
-                return await _dbContext.NewsArticles
-                    .Where(a => a.AuthorCNP == authorCNP)
-                    .Include(a => a.RelatedStocks)
-                    .Include(u => u.Author)
-                    .ToListAsync();
+                if (string.IsNullOrEmpty(authorCNP))
+                {
+                    return await _dbContext.NewsArticles
+                        .Include(a => a.RelatedStocks)
+                        .Include(u => u.Author)
+                        .ToListAsync();
+                }
+                else
+                {
+                    return await _dbContext.NewsArticles
+                        .Where(a => a.AuthorCNP == authorCNP)
+                        .Include(a => a.RelatedStocks)
+                        .Include(u => u.Author)
+                        .ToListAsync();
+                }
             }
             catch (Exception ex)
             {

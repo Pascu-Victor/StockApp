@@ -38,7 +38,7 @@ namespace StockApp.Repository.Tests
                 Name = "Apple Inc.",
                 Price = 21,
                 Quantity = 5,
-                Favorites = new List<FavoriteStock> { new FavoriteStock { Id = 1, UserCNP = "123" } }
+                Favorites = [new FavoriteStock { Id = 1, UserCNP = "123" }]
             };
 
             var stockDetails2 = new Stock
@@ -47,7 +47,7 @@ namespace StockApp.Repository.Tests
                 Name = "Tesla Inc.",
                 Price = 21,
                 Quantity = 5,
-                Favorites = new List<FavoriteStock>()
+                Favorites = []
             };
 
             _context.Stocks.AddRange(stockDetails1, stockDetails2);

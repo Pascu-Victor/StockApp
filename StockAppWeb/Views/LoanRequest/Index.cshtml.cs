@@ -15,8 +15,8 @@ namespace StockAppWeb.Views.LoanRequest
             _loanRequestService = loanRequestService;
         }
 
-        public List<LoanRequest> Requests { get; private set; } = new();
-        public Dictionary<int, string> Suggestions { get; private set; } = new();
+        public List<LoanRequest> Requests { get; private set; } = [];
+        public Dictionary<int, string> Suggestions { get; private set; } = [];
         public string? ErrorMessage { get; private set; }
 
         public async Task OnGetAsync()

@@ -15,7 +15,7 @@ namespace StockAppWeb.Services
         public async Task<List<ActivityLog>> GetActivityForUser(string userCNP)
         {
             var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>($"api/Activity/user/{userCNP}");
-            return response ?? new List<ActivityLog>();
+            return response ?? [];
         }
 
         public async Task<ActivityLog> AddActivity(string userCnp, string activityName, int amount, string details)
@@ -35,7 +35,7 @@ namespace StockAppWeb.Services
         public async Task<List<ActivityLog>> GetAllActivities()
         {
             var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>("api/Activity");
-            return response ?? new List<ActivityLog>();
+            return response ?? [];
         }
 
         public async Task<ActivityLog> GetActivityById(int id)

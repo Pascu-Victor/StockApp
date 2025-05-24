@@ -10,7 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+
+// Configure Razor Pages with routing options
+builder.Services.AddRazorPages(options => 
+{
+    // If needed, configure Razor Pages options here
+});
 
 // Configure authentication
 builder.Services.AddAuthentication(options =>
@@ -108,19 +113,17 @@ builder.Services.AddScoped<IUserService, UserProxyService>();
 builder.Services.AddScoped<ILoanService, LoanProxyService>();
 builder.Services.AddScoped<ILoanRequestService, LoanRequestProxyService>();
 builder.Services.AddScoped<IStockService, StockProxyService>();
-builder.Services.AddScoped<IStockService, StockProxyService>();
-builder.Services.AddScoped<IStockService, StockProxyService>();
 builder.Services.AddScoped<ITransactionService, TransactionProxyService>();
 builder.Services.AddScoped<ITransactionLogService, TransactionLogProxyService>();
 builder.Services.AddScoped<IChatReportService, ChatReportProxyService>();
 builder.Services.AddScoped<IProfanityChecker, ProfanityChecker>();
-builder.Services.AddScoped<IMessagesService, MessagesProxyService>();
 builder.Services.AddScoped<IMessagesService, MessagesProxyService>();
 builder.Services.AddScoped<IActivityService, ActivityProxyService>();
 builder.Services.AddScoped<IHistoryService, HistoryProxyService>();
 builder.Services.AddScoped<IAlertService, AlertProxyService>();
 builder.Services.AddScoped<IStockPageService, StockPageProxyService>();
 builder.Services.AddScoped<IStoreService, StoreProxyService>();
+builder.Services.AddScoped<INewsService, NewsProxyService>();
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
 
 builder.Services.AddHttpClient<IUserService, UserProxyService>(client =>
@@ -149,16 +152,6 @@ builder.Services.AddHttpClient<IActivityService, ActivityProxyService>(client =>
 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
 builder.Services.AddHttpClient<IHistoryService, HistoryProxyService>(client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-}).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
-
-builder.Services.AddHttpClient<IStockService, StockProxyService>(client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-}).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
-
-builder.Services.AddHttpClient<IStockService, StockProxyService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
@@ -203,6 +196,11 @@ builder.Services.AddHttpClient<IStoreService, StoreProxyService>(client =>
     client.BaseAddress = new Uri(apiBaseUrl);
 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
+builder.Services.AddHttpClient<INewsService, NewsProxyService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -229,6 +227,5 @@ app.MapControllerRoute(
     pattern: "{controller=Homepage}/{action=Index}/{id?}");
 
 app.MapRazorPages();
-
 
 app.Run();

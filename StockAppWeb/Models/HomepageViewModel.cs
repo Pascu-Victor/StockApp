@@ -12,8 +12,8 @@ namespace StockAppWeb.Models
         private readonly IStockService stockService;
         private readonly IAuthenticationService authenticationService;
 
-        public List<HomepageStock> FilteredStocks { get; private set; } = new();
-        public List<HomepageStock> FilteredFavoriteStocks { get; private set; } = new();
+        public List<HomepageStock> FilteredStocks { get; private set; } = [];
+        public List<HomepageStock> FilteredFavoriteStocks { get; private set; } = [];
 
         public string SearchQuery { get; set; } = string.Empty;
         public string SelectedSortOption { get; set; } = string.Empty;

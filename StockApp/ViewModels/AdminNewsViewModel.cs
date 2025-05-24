@@ -333,7 +333,7 @@
         /// <param name="articleId">The identifier of the article to delete.</param>
         private async Task DeleteArticleAsync(string articleId)
         {
-            var success = await this.newsService.DeleteUserArticleAsync(articleId);
+            var success = await this.newsService.DeleteArticleAsync(articleId);
             if (success)
             {
                 await this.RefreshArticlesAsync();

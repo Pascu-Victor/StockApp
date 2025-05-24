@@ -56,12 +56,12 @@ namespace StockAppWeb.Pages.Analysis
                 if (IsAdmin)
                 {
                     var users = await _userService.GetUsers();
-                    UserList = users.Select(u => new SelectListItem
+                    UserList = [.. users.Select(u => new SelectListItem
                     {
                         Value = u.CNP,
                         Text = $"{u.UserName} - {u.FirstName} {u.LastName}",
                         Selected = u.CNP == (userCnp ?? CurrentUser.CNP)
-                    }).ToList();
+                    })];
 
                     // Set the selected user CNP
                     SelectedUserCnp = userCnp ?? CurrentUser.CNP;

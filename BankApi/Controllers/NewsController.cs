@@ -64,34 +64,52 @@ namespace BankApi.Controllers
 
         [HttpPost("{articleId}/approve")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<bool>> ApproveUserArticle(string articleId)
+        public async Task<ActionResult<bool>> ApproveUserArticle(string articleId, [FromBody] string userCNP)
         {
-            var userCnp = await GetCurrentUserCnp();
-            return await _newsService.ApproveUserArticleAsync(userCnp, articleId);
+            if (string.IsNullOrEmpty(userCNP))
+            {
+                userCNP = await GetCurrentUserCnp();
+            }
+            return await _newsService.ApproveUserArticleAsync(articleId, userCNP);
         }
 
         [HttpPost("{articleId}/reject")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<bool>> RejectUserArticle(string articleId)
+        public async Task<ActionResult<bool>> RejectUserArticle(string articleId, [FromBody] string userCNP)
         {
-            var userCnp = await GetCurrentUserCnp();
-            return await _newsService.RejectUserArticleAsync(userCnp, articleId);
+            if (string.IsNullOrEmpty(userCNP))
+            {
+                userCNP = await GetCurrentUserCnp();
+            }
+            return await _newsService.RejectUserArticleAsync(articleId, userCNP);
         }
+
 
         [HttpDelete("{articleId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<bool>> DeleteUserArticle(string articleId)
         {
-            var userCnp = await GetCurrentUserCnp();
-            return await _newsService.DeleteUserArticleAsync(userCnp, articleId);
+            return await _newsService.DeleteArticleAsync(articleId);
         }
 
         [HttpPost("submit")]
-        public async Task<ActionResult<bool>> SubmitUserArticle([FromBody] NewsArticle article)
+        public async Task<ActionResult<bool>> SubmitUserArticle([FromBody] NewsArticleSubmissionDTO article)
         {
             var userCnp = await GetCurrentUserCnp();
+            NewsArticle newsArticle = new()
+            {
+                Title = article.Title,
+                Summary = article.Summary,
+                Content = article.Content,
+                PublishedDate = article.PublishedDate,
+                Topic = article.Topic,
+                RelatedStocks = article.RelatedStocks,
+                Status = article.Status,
+                Source = article.Source,
+                Category = article.Category
+            };
             // The service should handle setting the author based on the authenticated user
-            return await _newsService.SubmitUserArticleAsync(article, userCnp);
+            return await _newsService.SubmitUserArticleAsync(newsArticle, userCnp);
         }
 
         [HttpGet("{articleId}/relatedstocks")]
@@ -99,5 +117,19 @@ namespace BankApi.Controllers
         {
             return await _newsService.GetRelatedStocksForArticleAsync(articleId);
         }
+    }
+
+    public class NewsArticleSubmissionDTO
+    {
+        public string Title { get; set; }
+        public string Summary { get; set; }
+        public string Content { get; set; }
+        public DateTime PublishedDate { get; set; }
+        public string Topic { get; set; }
+        public List<Stock> RelatedStocks { get; set; }
+        public Status Status { get; set; }
+        public string Category { get; set; }
+
+        public string Source { get; set; }
     }
 }

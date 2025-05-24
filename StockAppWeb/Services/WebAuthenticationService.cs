@@ -87,7 +87,7 @@ namespace StockAppWeb.Services
             {
                 return tokenFromCookie;
             }
-            
+
             // Fallback to Authorization header if needed, though cookie is primary for web
             var authorizationHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].FirstOrDefault();
             if (authorizationHeader?.StartsWith("Bearer ") == true)
