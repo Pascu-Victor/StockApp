@@ -1,3 +1,5 @@
+using Common.Attributes;
+using Common.Models; // Added for Loan and LoanRequest
 using Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,30 +41,50 @@ namespace StockAppWeb.Views.Loans
                 return Page();
             }
 
-            var userCnp = User.FindFirstValue("CNP");
+            var userCnp = User.FindFirstValue("CNP"); // Assuming CNP is stored as a claim
 
             if (string.IsNullOrEmpty(userCnp))
             {
-                ErrorMessage = "Unable to identify user. Please log in again.";
+                ErrorMessage = "Unable to identify user (CNP claim not found). Please log in again.";
                 return Page();
             }
 
+            // Create the Loan object first
+            var loan = new Loan
+            {
+                UserCnp = userCnp,
+                LoanAmount = Input.Amount,
+                ApplicationDate = DateTime.UtcNow, // Use UtcNow for consistency
+                RepaymentDate = Input.RepaymentDate,
+                Status = "Pending", // Initial status for the loan itself
+                // Initialize other required Loan properties with sensible defaults or calculated values
+                InterestRate = 0m, // Placeholder - should be calculated by backend service
+                NumberOfMonths = 0, // Placeholder - should be calculated by backend service
+                MonthlyPaymentAmount = 0m, // Placeholder - should be calculated by backend service
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0m,
+                Penalty = 0m
+                // LoanRequest will be set after 'loanRequest' is initialized
+            };
+
+            // Create the LoanRequest and link it to the Loan
             var loanRequest = new Common.Models.LoanRequest
             {
                 UserCnp = userCnp,
-                Amount = Input.Amount,
-                ApplicationDate = DateTime.UtcNow,
-                RepaymentDate = Input.RepaymentDate,
-                Status = "Pending"
+                Status = "Pending", // Status for the request
+                Loan = loan // Assign the created Loan object
             };
+
+            // Complete the circular reference
+            loan.LoanRequest = loanRequest;
 
             try
             {
                 await _loanService.AddLoanAsync(loanRequest);
                 SuccessMessage = "Loan request submitted successfully!";
-                Input = new InputModel();
-                ModelState.Clear();
-                return Page();
+                Input = new InputModel(); // Reset form fields
+                ModelState.Clear(); // Clear model state after successful submission
+                return Page(); // Return to the same page, which will now show the success message
             }
             catch (System.Exception ex)
             {

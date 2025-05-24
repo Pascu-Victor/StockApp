@@ -2,9 +2,12 @@
 {
     using Common.Services;
     using Common.Services.Impl;
+    using Common.Services.Proxy;
+    using Microsoft.AspNetCore.Http.Json;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
     using Microsoft.UI.Xaml;
     using StockApp.Pages;
     using StockApp.Services;
@@ -58,19 +61,27 @@
                         client.BaseAddress = new Uri(apiBaseUrl);
                     });
 
+                    services.ConfigureHttpJsonOptions(options =>
+                    {
+                        options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+                        options.SerializerOptions.WriteIndented = true;
+                        options.SerializerOptions.PropertyNameCaseInsensitive = true;
+                    });
+
                     services.AddSingleton<IConfiguration>(config);
 
                     // Register the authentication service first
                     services.AddSingleton<IAuthenticationService>(sp =>
                         new AuthenticationService(
                             sp.GetRequiredService<IHttpClientFactory>().CreateClient("ApiClient"),
-                            sp.GetRequiredService<IConfiguration>()));
+                            sp.GetRequiredService<IConfiguration>(),
+                            sp.GetRequiredService<IOptions<JsonOptions>>()));
 
                     // Register the AuthenticationDelegatingHandler to automatically handle JWT tokens
                     services.AddTransient<AuthenticationDelegatingHandler>();
 
                     // Other Services
-                    services.AddScoped<ITransactionLogService, TransactionLogProxy>();
+                    services.AddScoped<ITransactionLogService, TransactionLogProxyService>();
                     services.AddScoped<IChatReportService, ChatReportProxyService>();
                     services.AddScoped<IHistoryService, HistoryProxyService>();
                     services.AddScoped<IBillSplitReportService, BillSplitReportProxyService>();
@@ -149,7 +160,7 @@
                     {
                         client.BaseAddress = new Uri(apiBaseUrl);
                     }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
-                    services.AddHttpClient<ITransactionLogService, TransactionLogProxy>(client =>
+                    services.AddHttpClient<ITransactionLogService, TransactionLogProxyService>(client =>
                     {
                         client.BaseAddress = new Uri(apiBaseUrl);
                     }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();

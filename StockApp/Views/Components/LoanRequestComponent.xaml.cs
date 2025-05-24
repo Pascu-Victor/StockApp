@@ -41,15 +41,6 @@ namespace StockApp.Views.Components
                 throw new Exception("Requesting user CNP cannot be null or empty.");
             }
 
-            LoanRequest loanRequest = new()
-            {
-                Id = this.RequestID,
-                UserCnp = this.RequestingUserCNP,
-                Amount = this.RequestedAmount,
-                ApplicationDate = this.ApplicationDate,
-                RepaymentDate = this.RepaymentDate,
-                Status = this.State,
-            };
             await this.loanRequestService.DeleteLoanRequest(this.RequestID);
             this.LoanRequestSolved?.Invoke(this, EventArgs.Empty);
         }
@@ -61,14 +52,30 @@ namespace StockApp.Views.Components
                 throw new Exception("Requesting user CNP cannot be null or empty.");
             }
 
+            // Create a Loan object with the necessary properties
+            var loan = new Loan
+            {
+                UserCnp = this.RequestingUserCNP,
+                LoanAmount = this.RequestedAmount,
+                ApplicationDate = this.ApplicationDate,
+                RepaymentDate = this.RepaymentDate,
+                Status = this.State,
+                // Initialize other required properties with default values
+                InterestRate = 0, // Will be calculated by the service
+                NumberOfMonths = 0, // Will be calculated by the service
+                MonthlyPaymentAmount = 0, // Will be calculated by the service
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0,
+                Penalty = 0
+            };
+
+            // Create the LoanRequest with the Loan object
             LoanRequest loanRequest = new()
             {
                 Id = this.RequestID,
                 UserCnp = this.RequestingUserCNP,
-                Amount = this.RequestedAmount,
-                ApplicationDate = this.ApplicationDate,
-                RepaymentDate = this.RepaymentDate,
                 Status = this.State,
+                Loan = loan
             };
 
             await this.loanServices.AddLoanAsync(loanRequest);

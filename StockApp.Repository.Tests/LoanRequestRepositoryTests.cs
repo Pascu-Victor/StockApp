@@ -45,11 +45,53 @@ namespace StockApp.Repository.Tests
         public async Task GetLoanRequestsAsync_ShouldReturnAllRequests()
         {
             // Arrange
-            var requests = new List<LoanRequest>
+            var requests = new List<LoanRequest>();
+
+            var request1 = new LoanRequest
             {
-                new() { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
-                new() { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
+                Id = 1,
+                UserCnp = "123",
+                Status = "Pending",
+                Loan = new Loan
+                {
+                    LoanAmount = 1000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 100,
+                    Status = "Pending",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "123"
+                }
             };
+
+            var request2 = new LoanRequest
+            {
+                Id = 2,
+                UserCnp = "456",
+                Status = "Solved",
+                Loan = new Loan
+                {
+                    LoanAmount = 2000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 200,
+                    Status = "Solved",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "456"
+                }
+            };
+
+            requests.Add(request1);
+            requests.Add(request2);
+
             await _context.LoanRequests.AddRangeAsync(requests);
             await _context.SaveChangesAsync();
 
@@ -66,12 +108,75 @@ namespace StockApp.Repository.Tests
         public async Task GetUnsolvedLoanRequestsAsync_ShouldReturnOnlyUnsolvedRequests()
         {
             // Arrange
-            var requests = new List<LoanRequest>
+            var requests = new List<LoanRequest>();
+
+            var request1 = new LoanRequest
             {
-                new() { Id = 1, UserCnp = "123", Amount = 1000, Status = "Pending", ApplicationDate = DateTime.UtcNow },
-                new() { Id = 2, UserCnp = "456", Amount = 2000, Status = "Solved", ApplicationDate = DateTime.UtcNow },
-                new() { Id = 3, UserCnp = "789", Amount = 3000, Status = "Solved", ApplicationDate = DateTime.UtcNow }
+                Id = 1,
+                UserCnp = "123",
+                Status = "Pending",
+                Loan = new Loan
+                {
+                    LoanAmount = 1000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 100,
+                    Status = "Pending",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "123"
+                }
             };
+
+            var request2 = new LoanRequest
+            {
+                Id = 2,
+                UserCnp = "456",
+                Status = "Solved",
+                Loan = new Loan
+                {
+                    LoanAmount = 2000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 200,
+                    Status = "Solved",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "456"
+                }
+            };
+
+            var request3 = new LoanRequest
+            {
+                Id = 3,
+                UserCnp = "789",
+                Status = "Solved",
+                Loan = new Loan
+                {
+                    LoanAmount = 3000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 300,
+                    Status = "Solved",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "789"
+                }
+            };
+
+            requests.Add(request1);
+            requests.Add(request2);
+            requests.Add(request3);
+
             await _context.LoanRequests.AddRangeAsync(requests);
             await _context.SaveChangesAsync();
 
@@ -91,10 +196,23 @@ namespace StockApp.Repository.Tests
             {
                 Id = 1,
                 UserCnp = "123",
-                Amount = 1000,
                 Status = "Pending",
-                ApplicationDate = DateTime.UtcNow
+                Loan = new Loan
+                {
+                    LoanAmount = 1000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 100,
+                    Status = "Pending",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "123"
+                }
             };
+
             await _context.LoanRequests.AddAsync(request);
             await _context.SaveChangesAsync();
 
@@ -128,10 +246,23 @@ namespace StockApp.Repository.Tests
             {
                 Id = 1,
                 UserCnp = "123",
-                Amount = 1000,
                 Status = "Pending",
-                ApplicationDate = DateTime.UtcNow
+                Loan = new Loan
+                {
+                    LoanAmount = 1000,
+                    ApplicationDate = DateTime.UtcNow,
+                    RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                    InterestRate = 5.0m,
+                    NumberOfMonths = 12,
+                    MonthlyPaymentAmount = 100,
+                    Status = "Pending",
+                    MonthlyPaymentsCompleted = 0,
+                    RepaidAmount = 0,
+                    Penalty = 0,
+                    UserCnp = "123"
+                }
             };
+
             await _context.LoanRequests.AddAsync(request);
             await _context.SaveChangesAsync();
 

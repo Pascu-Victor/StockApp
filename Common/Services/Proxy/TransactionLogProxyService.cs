@@ -1,23 +1,21 @@
 using Common.Models;
-using Common.Services;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
+using System.Text.Json;
 
-namespace StockAppWeb.Services
+namespace Common.Services.Proxy
 {
-    public class TransactionLogProxyService : ITransactionLogService
+    public class TransactionLogProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : ITransactionLogService
     {
-        private readonly HttpClient _httpClient;
-
-        public TransactionLogProxyService(HttpClient httpClient)
-        {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        }
+        private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task<List<TransactionLogTransaction>> GetFilteredTransactions(TransactionFilterCriteria criteria)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/transactionlog/filter", criteria);
+            var response = await _httpClient.PostAsJsonAsync("api/TransactionLog/filter", criteria);
             response.EnsureSuccessStatusCode();
-            var transactions = await response.Content.ReadFromJsonAsync<IEnumerable<TransactionLogTransaction>>() ?? Array.Empty<TransactionLogTransaction>();
+            var transactions = await response.Content.ReadFromJsonAsync<IEnumerable<TransactionLogTransaction>>(_jsonOptions) ?? [];
             return [.. transactions];
         }
 
@@ -50,8 +48,8 @@ namespace StockAppWeb.Services
         public void ExportTransactions(List<TransactionLogTransaction> transactions, string filePath, string format)
         {
             var url = $"api/transactionlog/export/{format}?filePath={filePath}";
-            var response = _httpClient.PostAsJsonAsync(url, transactions).GetAwaiter().GetResult();
+            var response = _httpClient.PostAsJsonAsync(url, transactions, _jsonOptions).GetAwaiter().GetResult();
             response.EnsureSuccessStatusCode();
         }
     }
-} 
+}

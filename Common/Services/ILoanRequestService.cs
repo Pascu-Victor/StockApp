@@ -1,8 +1,8 @@
 ﻿namespace Common.Services
 {
+    using Common.Models;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Common.Models;
 
     public interface ILoanRequestService
     {
@@ -15,5 +15,7 @@
         Task<List<LoanRequest>> GetLoanRequests();
 
         Task<List<LoanRequest>> GetUnsolvedLoanRequests();
+
+        Task<LoanRequest> CreateLoanRequest(LoanRequest loanRequest);
     }
 }

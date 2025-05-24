@@ -1,16 +1,15 @@
 using Common.Models;
-using Common.Services;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
+using System.Text.Json;
 
-namespace StockAppWeb.Services
+namespace Common.Services.Proxy
 {
-    public class AlertProxyService(HttpClient httpClient) : IProxyService, IAlertService
+    public class AlertProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : IProxyService, IAlertService
     {
         private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task<Alert> CreateAlertAsync(string stockName, string name, decimal upperBound, decimal lowerBound, bool toggleOnOff)
         {
@@ -23,27 +22,27 @@ namespace StockAppWeb.Services
                 ToggleOnOff = toggleOnOff
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/Alert", dto);
+            var response = await _httpClient.PostAsJsonAsync("api/Alert", dto, _jsonOptions);
             response.EnsureSuccessStatusCode();
-            
-            return await response.Content.ReadFromJsonAsync<Alert>() ??
+
+            return await response.Content.ReadFromJsonAsync<Alert>(_jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize alert response.");
         }
 
         public async Task<Alert?> GetAlertByIdAsync(int alertId)
         {
-            return await _httpClient.GetFromJsonAsync<Alert>($"api/Alert/{alertId}");
+            return await _httpClient.GetFromJsonAsync<Alert>($"api/Alert/{alertId}", _jsonOptions);
         }
 
         public async Task<List<Alert>> GetAllAlertsAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<Alert>>("api/Alert") ??
+            return await _httpClient.GetFromJsonAsync<List<Alert>>("api/Alert", _jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize alerts response.");
         }
 
         public async Task<List<Alert>> GetAllAlertsOnAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<Alert>>("api/Alert/on") ??
+            return await _httpClient.GetFromJsonAsync<List<Alert>>("api/Alert/on", _jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize active alerts response.");
         }
 
@@ -64,7 +63,7 @@ namespace StockAppWeb.Services
                 ToggleOnOff = alert.ToggleOnOff
             };
 
-            var response = await _httpClient.PutAsJsonAsync($"api/Alert/{alert.AlertId}", dto);
+            var response = await _httpClient.PutAsJsonAsync($"api/Alert/{alert.AlertId}", dto, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -79,13 +78,13 @@ namespace StockAppWeb.Services
                 ToggleOnOff = toggleOnOff
             };
 
-            var response = await _httpClient.PutAsJsonAsync($"api/Alert/{alertId}", dto);
+            var response = await _httpClient.PutAsJsonAsync($"api/Alert/{alertId}", dto, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task<List<TriggeredAlert>> GetTriggeredAlertsAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<TriggeredAlert>>("api/Alert/triggered") ??
+            return await _httpClient.GetFromJsonAsync<List<TriggeredAlert>>("api/Alert/triggered", _jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize triggered alerts response.");
         }
     }
@@ -107,4 +106,4 @@ namespace StockAppWeb.Services
         public decimal LowerBound { get; set; }
         public bool ToggleOnOff { get; set; }
     }
-} 
+}

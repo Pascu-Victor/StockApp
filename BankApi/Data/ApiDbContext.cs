@@ -220,19 +220,15 @@ namespace BankApi.Data
                     .IsRequired()
                     .HasMaxLength(13);
 
-                entity.Property(e => e.Amount)
-                    .IsRequired();
-
-                entity.Property(e => e.ApplicationDate)
-                    .IsRequired()
-                    .HasDefaultValueSql("GETUTCDATE()");
-
-                entity.Property(e => e.RepaymentDate)
-                    .IsRequired();
-
                 entity.Property(e => e.Status)
                     .IsRequired()
                     .HasMaxLength(100);
+
+                // Configure the one-to-one relationship with Loan
+                entity.HasOne(lr => lr.Loan)
+                      .WithOne(l => l.LoanRequest)
+                      .HasForeignKey<Loan>(l => l.LoanRequestId) // Specify the foreign key in the Loan entity
+                      .OnDelete(DeleteBehavior.Cascade); // Or an appropriate delete behavior
             });
 
             modelBuilder.Entity<TransactionLogTransaction>(entity =>

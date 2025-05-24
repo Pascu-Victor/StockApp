@@ -61,9 +61,9 @@
                 <div class="card-body">
                     <h5 class="card-title">Time Period</h5>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary" onclick="loadHistory('weekly')">Weekly</button>
-                        <button class="btn btn-primary" onclick="loadHistory('monthly')">Monthly</button>
-                        <button class="btn btn-primary" onclick="loadHistory('yearly')">Yearly</button>
+                        <button class="btn btn-primary" type="button" onclick="loadHistory('weekly')">Weekly</button>
+                        <button class="btn btn-primary" type="button" onclick="loadHistory('monthly')">Monthly</button>
+                        <button class="btn btn-primary" type="button" onclick="loadHistory('yearly')">Yearly</button>
                     </div>
                 </div>
             </div>
@@ -132,7 +132,7 @@
             })  
                 .then(response => response.json())
                 .then(data => {
-                    updateChart(data);
+                    updateChart(data["$values"]);
                 })
                 .catch(error => {
                     console.error('Error loading history:', error);

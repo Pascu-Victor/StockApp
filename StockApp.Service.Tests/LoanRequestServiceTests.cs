@@ -5,11 +5,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace StockApp.Service.Tests
 {
     [TestClass]
+    [SupportedOSPlatform("windows10.0.26100.0")]
     public class LoanRequestServiceTests
     {
         private Mock<ILoanRequestRepository> _mockLoanRequestRepository;
@@ -23,23 +25,43 @@ namespace StockApp.Service.Tests
             _mockUserRepository = new Mock<IUserRepository>();
             _service = new LoanRequestService(_mockLoanRequestRepository.Object, _mockUserRepository.Object);
         }
-        private LoanRequest CreateValidLoanRequest(int id = 1, string cnp = "1234567890123")
+
+        private LoanRequest CreateValidLoanRequest(int id = 1, string cnp = "1234567890123", decimal amount = 5000)
         {
-            return new LoanRequest
+            var loan = new Loan
+            {
+                UserCnp = cnp,
+                LoanAmount = amount,
+                ApplicationDate = DateTime.UtcNow,
+                RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                InterestRate = 5.0m,
+                NumberOfMonths = 12,
+                MonthlyPaymentAmount = amount / 12,
+                Status = "Pending",
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0,
+                Penalty = 0
+            };
+
+            var loanRequest = new LoanRequest
             {
                 Id = id,
                 UserCnp = cnp,
-                Amount = 5000,
-                ApplicationDate = DateTime.UtcNow,
-                RepaymentDate = DateTime.UtcNow.AddMonths(12),
-                Status = "Pending"
+                Status = "Pending",
+                Loan = loan
             };
+
+            // Establish the circular reference
+            loan.LoanRequest = loanRequest;
+
+            return loanRequest;
         }
+
         [TestMethod]
         public async Task GiveSuggestion_ReturnsEmptyString_WhenUserQualifies()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 5000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 5000);
             var user = new User { CNP = "123", Income = 10000, CreditScore = 400, RiskScore = 50 };
 
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync(user);
@@ -56,7 +78,7 @@ namespace StockApp.Service.Tests
         public async Task GiveSuggestion_ReturnsAmountTooHighMessage_WhenAmountExceedsIncome()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 110000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 110000);
             var user = new User { CNP = "123", Income = 10000, CreditScore = 400, RiskScore = 50 };
 
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync(user);
@@ -72,7 +94,7 @@ namespace StockApp.Service.Tests
         public async Task GiveSuggestion_ReturnsCreditScoreMessage_WhenCreditScoreLow()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 5000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 5000);
             var user = new User { CNP = "123", Income = 10000, CreditScore = 250, RiskScore = 50 };
 
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync(user);
@@ -88,7 +110,7 @@ namespace StockApp.Service.Tests
         public async Task GiveSuggestion_ReturnsRiskScoreMessage_WhenRiskScoreHigh()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 5000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 5000);
             var user = new User { CNP = "123", Income = 10000, CreditScore = 400, RiskScore = 80 };
 
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync(user);
@@ -104,7 +126,7 @@ namespace StockApp.Service.Tests
         public async Task GiveSuggestion_ReturnsCombinedMessages_WhenMultipleIssues()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 110000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 110000);
             var user = new User { CNP = "123", Income = 10000, CreditScore = 250, RiskScore = 80 };
 
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync(user);
@@ -123,7 +145,7 @@ namespace StockApp.Service.Tests
         public async Task GiveSuggestion_ThrowsException_WhenUserNotFound()
         {
             // Arrange
-            var loanRequest = new LoanRequest { UserCnp = "123", Amount = 5000 };
+            var loanRequest = CreateValidLoanRequest(1, "123", 5000);
             _mockUserRepository.Setup(x => x.GetByCnpAsync("123")).ReturnsAsync((User)null);
 
             // Act
@@ -172,11 +194,44 @@ namespace StockApp.Service.Tests
         public async Task GetLoanRequests_ReturnsList_WhenRepositorySucceeds()
         {
             // Arrange
-            var expectedRequests = new List<LoanRequest>
+            var loan1 = new Loan
             {
-                new LoanRequest { Id = 1, UserCnp = "123" },
-                new LoanRequest { Id = 2, UserCnp = "456" }
+                LoanAmount = 5000,
+                ApplicationDate = DateTime.UtcNow,
+                RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                Status = "Pending",
+                InterestRate = 5.0m,
+                NumberOfMonths = 12,
+                MonthlyPaymentAmount = 5000 / 12,
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0,
+                Penalty = 0,
+                UserCnp = "123"
             };
+
+            var loan2 = new Loan
+            {
+                LoanAmount = 7000,
+                ApplicationDate = DateTime.UtcNow,
+                RepaymentDate = DateTime.UtcNow.AddMonths(12),
+                Status = "Pending",
+                InterestRate = 5.0m,
+                NumberOfMonths = 12,
+                MonthlyPaymentAmount = 7000 / 12,
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0,
+                Penalty = 0,
+                UserCnp = "456"
+            };
+
+            var request1 = new LoanRequest { Id = 1, UserCnp = "123", Status = "Pending", Loan = loan1 };
+            var request2 = new LoanRequest { Id = 2, UserCnp = "456", Status = "Pending", Loan = loan2 };
+
+            // Complete the circular reference
+            loan1.LoanRequest = request1;
+            loan2.LoanRequest = request2;
+
+            var expectedRequests = new List<LoanRequest> { request1, request2 };
             _mockLoanRequestRepository.Setup(x => x.GetLoanRequestsAsync()).ReturnsAsync(expectedRequests);
 
             // Act
@@ -186,6 +241,5 @@ namespace StockApp.Service.Tests
             CollectionAssert.AreEqual(expectedRequests, result);
             _mockLoanRequestRepository.Verify(x => x.GetLoanRequestsAsync(), Times.Once);
         }
-
     }
 }

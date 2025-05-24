@@ -11,5 +11,7 @@ namespace BankApi.Repositories
         Task SolveLoanRequestAsync(int loanRequestId);
 
         Task DeleteLoanRequestAsync(int loanRequestId);
+
+        Task<LoanRequest> CreateLoanRequestAsync(LoanRequest loanRequest);
     }
 }

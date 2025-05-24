@@ -1,7 +1,10 @@
 using Common.Models;
 using Common.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace StockAppWeb.Services
 {
@@ -10,6 +13,7 @@ namespace StockAppWeb.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly JsonSerializerOptions _jsonOptions;
         private UserSession? _currentUserSession;
 
         public event EventHandler<UserLoggedInEventArgs>? UserLoggedIn;
@@ -18,7 +22,8 @@ namespace StockAppWeb.Services
         public WebAuthenticationService(
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IOptions<JsonOptions> jsonOptions)
         {
             _httpClient = httpClientFactory.CreateClient("BankApi")
                 ?? throw new ArgumentNullException(nameof(httpClientFactory));
@@ -26,6 +31,8 @@ namespace StockAppWeb.Services
                 ?? throw new ArgumentNullException(nameof(configuration));
             _httpContextAccessor = httpContextAccessor
                 ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _jsonOptions = jsonOptions.Value.JsonSerializerOptions
+                ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
             // Try to restore session from HttpContext User (ClaimsPrincipal)
             var user = _httpContextAccessor.HttpContext?.User;
@@ -127,7 +134,7 @@ namespace StockAppWeb.Services
                 Password = password
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginRequest);
+            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginRequest, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {

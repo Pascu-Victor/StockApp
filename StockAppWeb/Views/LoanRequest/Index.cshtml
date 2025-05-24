@@ -33,16 +33,16 @@ else
             {
                 <tr>
                     <td>@request.UserCnp</td>
-                    <td>@request.Amount</td>
-                    <td>@request.ApplicationDate.ToShortDateString()</td>
-                    <td>@request.RepaymentDate.ToShortDateString()</td>
+                    <td>@(request.Loan?.LoanAmount ?? 0)</td>
+                    <td>@(request.Loan?.ApplicationDate.ToShortDateString() ?? "N/A")</td>
+                    <td>@(request.Loan?.RepaymentDate.ToShortDateString() ?? "N/A")</td>
                     <td>@request.Status</td>
                     <td>@Model.Suggestions[request.Id]</td>
                     <td>
                         <form method="post">
                             <input type="hidden" name="id" value="@request.Id" />
-                            <button type="submit" asp-page-handler="Solve" class="btn btn-success">Solve</button>
-                            <button type="submit" asp-page-handler="Delete" class="btn btn-danger">Delete</button>
+                            <button type="submit" asp-action="Solve" class="btn btn-success">Solve</button>
+                            <button type="submit" asp-action="Delete" class="btn btn-danger">Delete</button>
                         </form>
                     </td>
                 </tr>

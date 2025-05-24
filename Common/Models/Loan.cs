@@ -50,6 +50,12 @@
         [Column(TypeName = "decimal(18,2)")]
         public decimal Penalty { get; set; }
 
+        // Foreign key for the one-to-one relationship with LoanRequest
+        public int LoanRequestId { get; set; }
+
+        [Required]
+        public LoanRequest LoanRequest { get; set; }
+
         public Loan() { }
 
         public Loan(int loanID, string userCnp, decimal loanAmount, DateTime applicationDate, DateTime repaymentDate, decimal interestRate, int numberOfMonths, decimal monthlyPaymentAmount, int monthlyPaymentsCompleted, decimal repaidAmount, decimal penalty, string status)

@@ -6,12 +6,14 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using StockApp.Services;
 
 namespace StockApp.ViewModels
 {
     public class CreateLoanDialogViewModel : INotifyPropertyChanged
     {
         private readonly ILoanService _loanService;
+        private readonly IAuthenticationService _authenticationService;
         private decimal _amount;
         private DateTimeOffset _repaymentDate = DateTime.Now.AddMonths(1);
         private string _errorMessage = string.Empty;
@@ -81,9 +83,10 @@ namespace StockApp.ViewModels
 
         public bool IsValid => ValidateInputs() && !IsSubmitting;
 
-        public CreateLoanDialogViewModel(ILoanService loanService)
+        public CreateLoanDialogViewModel(ILoanService loanService, IAuthenticationService authenticationService)
         {
             _loanService = loanService;
+            _authenticationService = authenticationService;
             SubmitCommand = new RelayCommand(async (o) => await SubmitAsync(), (o) => IsValid);
         }
 
@@ -102,13 +105,36 @@ namespace StockApp.ViewModels
             IsSubmitting = true;
             ErrorMessage = string.Empty;
 
+            string userCnp = _authenticationService.GetUserCNP();
+            if (string.IsNullOrEmpty(userCnp))
+            {
+                ErrorMessage = "Unable to retrieve user CNP. Please ensure you are logged in.";
+                IsSubmitting = false;
+                return;
+            }
+
+            var loan = new Loan
+            {
+                UserCnp = userCnp,
+                LoanAmount = _amount,
+                ApplicationDate = DateTime.UtcNow,
+                RepaymentDate = RepaymentDate.DateTime,
+                Status = "Pending",
+                InterestRate = 0m,
+                NumberOfMonths = 0,
+                MonthlyPaymentAmount = 0m,
+                MonthlyPaymentsCompleted = 0,
+                RepaidAmount = 0m,
+                Penalty = 0m
+            };
+
             var request = new LoanRequest
             {
-                Amount = _amount,
-                RepaymentDate = RepaymentDate.DateTime,
-                ApplicationDate = DateTime.UtcNow,
-                Status = "Pending"
+                UserCnp = userCnp,
+                Status = "Pending",
+                Loan = loan
             };
+            loan.LoanRequest = request;
 
             try
             {
@@ -116,7 +142,6 @@ namespace StockApp.ViewModels
                 SuccessMessage = "Loan request submitted successfully!";
                 LoanRequestSubmitted?.Invoke(this, request);
 
-                // Close the dialog after a short delay to show the success message
                 await Task.Delay(1000);
                 DialogClosed?.Invoke(this, EventArgs.Empty);
             }
@@ -124,6 +149,13 @@ namespace StockApp.ViewModels
             {
                 ErrorMessage = $"An error occurred while submitting your loan request: {ex.Message}";
                 IsSubmitting = false;
+            }
+            finally
+            {
+                if (IsSubmitting && ErrorMessage != string.Empty)
+                {
+                    IsSubmitting = false;
+                }
             }
         }
 

@@ -52,9 +52,6 @@
                         @if (AuthenticationService.IsUserLoggedIn())
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Loans" asp-action="Index">Loans</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Alerts" asp-action="Index">Alerts</a>
                             </li>
                             <li class="nav-item">
@@ -82,6 +79,23 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdownLoans" role="button"
+                                       data-bs-toggle="dropdown" aria-expanded="false">
+                                        Loans
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownLoans">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Loans" asp-action="Index">Browse Loans</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="LoanRequest" asp-action="Index">Loan Requests</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Loans" asp-action="Index">Loans</a>
                                 </li>
                             }
                         }

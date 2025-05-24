@@ -41,9 +41,9 @@ namespace StockApp.Views.Pages
                     requestComponent.SetRequestData(
                         request.Id,
                         request.UserCnp,
-                        request.Amount,
-                        request.ApplicationDate,
-                        request.RepaymentDate,
+                        request.Loan.LoanAmount,
+                        request.Loan.ApplicationDate,
+                        request.Loan.RepaymentDate,
                         request.Status,
                         await this.service.GiveSuggestion(request));
 

@@ -10,9 +10,10 @@ namespace BankApi.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class LoanController(ILoanService loanService, IUserRepository userRepository) : ControllerBase
+    public class LoanController(ILoanService loanService, IUserRepository userRepository, ILoanRequestService loanRequestService) : ControllerBase
     {
         private readonly ILoanService _loanService = loanService ?? throw new ArgumentNullException(nameof(loanService));
+        private readonly ILoanRequestService _loanRequestService = loanRequestService ?? throw new ArgumentNullException(nameof(loanRequestService));
         private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 
         private async Task<string> GetCurrentUserCnp()
@@ -84,21 +85,18 @@ namespace BankApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateLoan([FromBody] NewLoanDTO loanRequest)
+        public async Task<IActionResult> CreateLoan([FromBody] LoanRequest newLoan)
         {
             try
             {
                 var userCnp = await GetCurrentUserCnp();
-                loanRequest.UserCnp = userCnp;
-                await _loanService.AddLoanAsync(new()
-                {
-                    UserCnp = userCnp,
-                    Amount = loanRequest.Amount,
-                    ApplicationDate = DateTime.Now,
-                    RepaymentDate = loanRequest.RepaymentDate,
-                    Status = "Pending",
-                });
-                return CreatedAtAction(nameof(GetAllLoans), new { id = loanRequest.Id }, loanRequest);
+
+                newLoan.Loan.UserCnp = userCnp; // Ensure the loan request is associated with the current user
+
+                await _loanService.AddLoanAsync(newLoan);
+
+                // Assuming AddLoanAsync populates the Id of the loanRequest.
+                return CreatedAtAction(nameof(GetAllLoans), new { id = newLoan.Id }, newLoan);
             }
             catch (UnauthorizedAccessException)
             {

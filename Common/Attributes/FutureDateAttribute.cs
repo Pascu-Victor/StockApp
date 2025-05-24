@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Common.Services
+namespace Common.Attributes
 {
     public class FutureDateAttribute : ValidationAttribute
     {

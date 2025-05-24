@@ -1,11 +1,11 @@
 ﻿namespace BankApi.Services
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
     using BankApi.Repositories;
     using Common.Models;
     using Common.Services;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public class LoanRequestService(ILoanRequestRepository loanRequestRepository, IUserRepository userRepository) : ILoanRequestService
     {
@@ -19,7 +19,7 @@
 
             string givenSuggestion = string.Empty;
 
-            if (loanRequest.Amount > user.Income * 10)
+            if (loanRequest.Loan.LoanAmount > user.Income * 10)
             {
                 givenSuggestion = "Amount requested is too high for user income";
             }
@@ -70,6 +70,11 @@
         public async Task<List<LoanRequest>> GetUnsolvedLoanRequests()
         {
             return await loanRequestRepository.GetUnsolvedLoanRequestsAsync();
+        }
+
+        public async Task<LoanRequest> CreateLoanRequest(LoanRequest loanRequest)
+        {
+            return await loanRequestRepository.CreateLoanRequestAsync(loanRequest);
         }
     }
 }

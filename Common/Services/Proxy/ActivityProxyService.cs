@@ -1,20 +1,19 @@
 using Common.Models;
-using Common.Services;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Json;
+using System.Text.Json;
 
-namespace StockAppWeb.Services
+namespace Common.Services.Proxy
 {
-    public class ActivityProxyService : IActivityService
+    public class ActivityProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : IActivityService
     {
-        private readonly HttpClient _httpClient;
-
-        public ActivityProxyService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task<List<ActivityLog>> GetActivityForUser(string userCNP)
         {
-            var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>($"api/Activity/user/{userCNP}");
+            var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>($"api/Activity/user/{userCNP}", _jsonOptions);
             return response ?? [];
         }
 
@@ -26,21 +25,21 @@ namespace StockAppWeb.Services
                 ActivityName = activityName,
                 LastModifiedAmount = amount,
                 ActivityDetails = details
-            });
+            }, _jsonOptions);
 
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ActivityLog>() ?? throw new Exception("Failed to deserialize activity log");
+            return await response.Content.ReadFromJsonAsync<ActivityLog>(_jsonOptions) ?? throw new Exception("Failed to deserialize activity log");
         }
 
         public async Task<List<ActivityLog>> GetAllActivities()
         {
-            var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>("api/Activity");
+            var response = await _httpClient.GetFromJsonAsync<List<ActivityLog>>("api/Activity", _jsonOptions);
             return response ?? [];
         }
 
         public async Task<ActivityLog> GetActivityById(int id)
         {
-            var response = await _httpClient.GetFromJsonAsync<ActivityLog>($"api/Activity/{id}");
+            var response = await _httpClient.GetFromJsonAsync<ActivityLog>($"api/Activity/{id}", _jsonOptions);
             return response ?? throw new Exception($"Activity with ID {id} not found");
         }
 

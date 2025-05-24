@@ -1,20 +1,19 @@
 using Common.Models;
-using Common.Services;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
+using System.Text.Json;
 
-namespace StockApp.Services
+namespace Common.Services.Proxy
 {
-    public class ChatReportProxyService(HttpClient httpClient) : IProxyService, IChatReportService
+    public class ChatReportProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : IProxyService, IChatReportService
     {
         private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task<List<ChatReport>> GetAllChatReportsAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<ChatReport>>("api/ChatReport") ??
+            return await _httpClient.GetFromJsonAsync<List<ChatReport>>("api/ChatReport", _jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize chat reports response.");
         }
 
@@ -22,7 +21,7 @@ namespace StockApp.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<ChatReport>($"api/ChatReport/{id}");
+                return await _httpClient.GetFromJsonAsync<ChatReport>($"api/ChatReport/{id}", _jsonOptions);
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -37,7 +36,7 @@ namespace StockApp.Services
                 throw new ArgumentNullException(nameof(report), "Chat report cannot be null");
             }
 
-            var response = await _httpClient.PostAsJsonAsync("api/ChatReport", report);
+            var response = await _httpClient.PostAsJsonAsync("api/ChatReport", report, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -56,20 +55,20 @@ namespace StockApp.Services
             var response = await _httpClient.GetAsync(endpoint);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<int>();
+            return await response.Content.ReadFromJsonAsync<int>(_jsonOptions);
         }
 
         public async Task UpdateActivityLogAsync(int amount, string? userCnp = null)
         {
             var updateDto = new ActivityLogUpdateDto { Amount = amount };
-            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/activity-log", updateDto);
+            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/activity-log", updateDto, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task UpdateScoreHistoryForUserAsync(int newScore, string? userCnp = null)
         {
             var updateDto = new ScoreHistoryUpdateDto { NewScore = newScore };
-            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/score-history", updateDto);
+            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/score-history", updateDto, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -89,7 +88,7 @@ namespace StockApp.Services
 
             var response = await _httpClient.PostAsJsonAsync(
                 $"api/ChatReport/punish-with-message/{chatReportToBeSolved.Id}",
-                punishmentDto);
+                punishmentDto, _jsonOptions);
 
             response.EnsureSuccessStatusCode();
         }
@@ -109,7 +108,7 @@ namespace StockApp.Services
 
             var response = await _httpClient.PostAsJsonAsync(
                 $"api/ChatReport/punish-with-message/{chatReportToBeSolved.Id}",
-                punishmentDto);
+                punishmentDto, _jsonOptions);
 
             response.EnsureSuccessStatusCode();
         }
@@ -125,10 +124,10 @@ namespace StockApp.Services
             {
                 var response = await _httpClient.PostAsJsonAsync(
                     "api/ChatReport/check-message",
-                    new { Message = messageToBeChecked });
+                    new { Message = messageToBeChecked }, _jsonOptions);
 
                 response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<bool>();
+                return await response.Content.ReadFromJsonAsync<bool>(_jsonOptions);
             }
             catch
             {
@@ -157,7 +156,7 @@ namespace StockApp.Services
                 MessageContent = messageContent
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/send-message", messageDto);
+            var response = await _httpClient.PostAsJsonAsync("api/ChatReport/send-message", messageDto, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
     }

@@ -1,12 +1,14 @@
 using Common.Models;
 using Common.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace StockApp.Services
@@ -15,14 +17,16 @@ namespace StockApp.Services
     {
         private readonly HttpClient _httpClient;
         private readonly TokenStorageService _tokenStorage;
+        private readonly JsonSerializerOptions _jsonOptions;
         private UserSession? _currentUserSession;
         public event EventHandler<UserLoggedInEventArgs>? UserLoggedIn;
         public event EventHandler<UserLoggedOutEventArgs>? UserLoggedOut;
 
-        public AuthenticationService(HttpClient httpClient, IConfiguration configuration)
+        public AuthenticationService(HttpClient httpClient, IConfiguration configuration, IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions> jsonOptions)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _tokenStorage = new TokenStorageService(configuration);
+            _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
             // Try to restore session from storage
             _currentUserSession = _tokenStorage.GetUserSession();
         }
@@ -47,7 +51,7 @@ namespace StockApp.Services
             };
 
             // Call the auth endpoint
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginRequest);
+            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginRequest, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -55,7 +59,7 @@ namespace StockApp.Services
             }
 
             // Deserialize the token response
-            var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>();
+            var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>(_jsonOptions);
             if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.Token))
             {
                 throw new Exception("Invalid token response");
@@ -77,7 +81,7 @@ namespace StockApp.Services
                 UserName = userName,
                 Token = tokenResponse.Token,
                 Roles = roles,
-                ExpiryTimestamp = token.ValidTo
+                ExpiryTimestamp = token.ValidTo,
             };
 
             // Save token in secure storage

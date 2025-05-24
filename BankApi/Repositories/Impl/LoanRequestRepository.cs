@@ -14,7 +14,8 @@ namespace BankApi.Repositories.Impl
             try
             {
                 return await _context.LoanRequests
-                    .OrderByDescending(lr => lr.ApplicationDate)
+                    .Include(lr => lr.Loan) // Include the related Loan
+                    .OrderByDescending(lr => lr.Loan.ApplicationDate) // Order by Loan.ApplicationDate
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -29,8 +30,9 @@ namespace BankApi.Repositories.Impl
             try
             {
                 return await _context.LoanRequests
+                    .Include(lr => lr.Loan) // Include the related Loan
                     .Where(lr => lr.Status != "Solved" || lr.Status == null)
-                    .OrderByDescending(lr => lr.ApplicationDate)
+                    .OrderByDescending(lr => lr.Loan.ApplicationDate) // Order by Loan.ApplicationDate
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -47,8 +49,9 @@ namespace BankApi.Repositories.Impl
 
             try
             {
-                var request = await _context.LoanRequests.FindAsync(loanRequestId) ?? throw new KeyNotFoundException($"Loan request with ID {loanRequestId} not found");
+                var request = await _context.LoanRequests.Include(lr => lr.Loan).FirstAsync(lr => lr.Id == loanRequestId) ?? throw new KeyNotFoundException($"Loan request with ID {loanRequestId} not found");
                 request.Status = "Solved";
+                request.Loan.Status = "Approved";
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Loan request {LoanRequestId} marked as solved", loanRequestId);
@@ -76,6 +79,21 @@ namespace BankApi.Repositories.Impl
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting loan request {LoanRequestId}", loanRequestId);
+                throw;
+            }
+        }
+
+        public async Task<LoanRequest> CreateLoanRequestAsync(LoanRequest loanRequest)
+        {
+            try
+            {
+                var newLoanRequest = await _context.LoanRequests.AddAsync(loanRequest);
+                await _context.SaveChangesAsync();
+                return newLoanRequest.Entity;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating loan request for UserCnp {UserCnp} {Id}", loanRequest.UserCnp, loanRequest.Id);
                 throw;
             }
         }

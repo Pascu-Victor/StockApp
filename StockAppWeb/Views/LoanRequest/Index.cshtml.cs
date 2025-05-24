@@ -1,12 +1,10 @@
 using Common.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace StockAppWeb.Views.LoanRequest
 {
     using Common.Models;
 
-    public partial class IndexModel : PageModel
+    public class IndexModel
     {
         private readonly ILoanRequestService _loanRequestService;
 
@@ -17,7 +15,7 @@ namespace StockAppWeb.Views.LoanRequest
 
         public List<LoanRequest> Requests { get; private set; } = [];
         public Dictionary<int, string> Suggestions { get; private set; } = [];
-        public string? ErrorMessage { get; private set; }
+        public string? ErrorMessage { get; set; } // Added setter
 
         public async Task OnGetAsync()
         {
@@ -34,34 +32,6 @@ namespace StockAppWeb.Views.LoanRequest
             catch (Exception ex)
             {
                 ErrorMessage = $"Error loading loan requests: {ex.Message}";
-            }
-        }
-
-        public async Task<IActionResult> OnPostSolveAsync(int id)
-        {
-            try
-            {
-                await _loanRequestService.SolveLoanRequest(id);
-                return RedirectToPage();
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Failed to solve loan request: {ex.Message}";
-                return Page();
-            }
-        }
-
-        public async Task<IActionResult> OnPostDeleteAsync(int id)
-        {
-            try
-            {
-                await _loanRequestService.DeleteLoanRequest(id);
-                return RedirectToPage();
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Failed to delete loan request: {ex.Message}";
-                return Page();
             }
         }
     }

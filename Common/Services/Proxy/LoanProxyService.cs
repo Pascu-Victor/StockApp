@@ -1,20 +1,19 @@
 using Common.Models;
-using Common.Services;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
+using System.Text.Json;
 
-namespace StockApp.Services
+namespace Common.Services.Proxy
 {
-    public class LoanProxyService(HttpClient httpClient) : IProxyService, ILoanService
+    public class LoanProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : IProxyService, ILoanService
     {
         private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task<List<Loan>> GetLoansAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<Loan>>("api/Loan") ??
+            return await _httpClient.GetFromJsonAsync<List<Loan>>("api/Loan", _jsonOptions) ??
                 throw new InvalidOperationException("Failed to deserialize loans response.");
         }
 
@@ -23,20 +22,20 @@ namespace StockApp.Services
             if (string.IsNullOrEmpty(userCNP))
             {
                 // Get current user's loans
-                return await _httpClient.GetFromJsonAsync<List<Loan>>("api/Loan/user") ??
+                return await _httpClient.GetFromJsonAsync<List<Loan>>("api/Loan/user", _jsonOptions) ??
                     throw new InvalidOperationException("Failed to deserialize user loans response.");
             }
             else
             {
                 // Get loans for a specific user (admin only)
-                return await _httpClient.GetFromJsonAsync<List<Loan>>($"api/Loan/user/{userCNP}") ??
+                return await _httpClient.GetFromJsonAsync<List<Loan>>($"api/Loan/user/{userCNP}", _jsonOptions) ??
                     throw new InvalidOperationException("Failed to deserialize user loans response.");
             }
         }
 
         public async Task AddLoanAsync(LoanRequest loanRequest)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/Loan", loanRequest);
+            var response = await _httpClient.PostAsJsonAsync("api/Loan", loanRequest, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -49,7 +48,7 @@ namespace StockApp.Services
         public async Task IncrementMonthlyPaymentsCompletedAsync(int loanID, decimal penalty)
         {
             var payment = new PaymentDto { Penalty = penalty };
-            var response = await _httpClient.PostAsJsonAsync($"api/Loan/{loanID}/increment-payment", payment);
+            var response = await _httpClient.PostAsJsonAsync($"api/Loan/{loanID}/increment-payment", payment, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 

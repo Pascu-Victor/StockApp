@@ -1,4 +1,4 @@
-﻿namespace StockAppWeb.Services
+﻿namespace Common.Services
 {
     public class IProxyService
     {

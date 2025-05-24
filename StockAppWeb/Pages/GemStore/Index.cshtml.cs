@@ -1,4 +1,4 @@
-using Common.Models;
+﻿using Common.Models;
 using Common.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -230,10 +230,18 @@ namespace StockAppWeb.Pages.GemStore
 
                 AvailableDeals =
                 [
-                    new GemDeal("Starter Pack", 100, 1.99),
-                    new GemDeal("Pro Pack", 500, 8.99, true, 60),
-                    new GemDeal("Premium Pack", 1000, 15.99),
-                    new GemDeal("Limited Special", 300, 4.99, true, 30)
+                    new ("LEGENDARY DEAL!!!!", 4999, 100.0),
+                    new ("MYTHIC DEAL!!!!", 3999, 90.0),
+                    new ("INSANE DEAL!!!!", 3499, 85.0),
+                    new ("GIGA DEAL!!!!", 3249, 82.0),
+                    new ("WOW DEAL!!!!", 3000, 80.0),
+                    new ("YAY DEAL!!!!", 2500, 50.0),
+                    new ("YUPY DEAL!!!!", 2000, 49.0),
+                    new ("HELL NAH DEAL!!!", 1999, 48.0),
+                    new ("BAD DEAL!!!!", 1000, 45.0),
+                    new ("MEGA BAD DEAL!!!!", 500, 40.0),
+                    new ("BAD DEAL!!!!", 1, 35.0),
+                    new ("🔥 SPECIAL DEAL", 2, 2.0, true, 1),
                 ];
                 UserBankAccounts = ["Account1", "Account2", "Account3"];
                 SelectedBankAccount ??= UserBankAccounts.FirstOrDefault();

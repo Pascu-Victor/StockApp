@@ -1,5 +1,6 @@
 using Common.Services;
 using Common.Services.Impl;
+using Common.Services.Proxy;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StockAppWeb.Services;
@@ -9,10 +10,15 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 // Configure Razor Pages with routing options
-builder.Services.AddRazorPages(options => 
+builder.Services.AddRazorPages(options =>
 {
     // If needed, configure Razor Pages options here
 });
@@ -98,6 +104,13 @@ builder.Services.AddHttpContextAccessor();
 // Configure HttpClient for BankApi
 string apiBaseUrl = builder.Configuration["ApiBase"]
     ?? throw new InvalidOperationException("API base URL is not configured in appsettings.json");
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    options.SerializerOptions.WriteIndented = true;
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
 
 builder.Services.AddHttpClient("BankApi", client =>
 {

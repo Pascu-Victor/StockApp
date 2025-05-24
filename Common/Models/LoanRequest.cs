@@ -11,21 +11,14 @@ namespace Common.Models
 
         [Required]
         [MaxLength(13)]
-        public string UserCnp { get; set; }
+        public required string UserCnp { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Amount { get; set; }
-
-        [Required]
-        public DateTime ApplicationDate { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime RepaymentDate { get; set; }
+        public required Loan Loan { get; set; }
 
         [Required]
         [MaxLength(100)]
-        public string Status { get; set; }
+        public required string Status { get; set; }
 
     }
 }

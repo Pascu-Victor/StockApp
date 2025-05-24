@@ -1,28 +1,19 @@
 using Common.Models;
-using Common.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace StockApp.Services
+namespace Common.Services.Proxy
 {
-    public class UserProxyService : IProxyService, IUserService
+    public class UserProxyService(HttpClient httpClient, IOptions<JsonOptions> jsonOptions) : IProxyService, IUserService
     {
-        private readonly HttpClient _httpClient;
-        private readonly JsonSerializerOptions _options = new() { PropertyNameCaseInsensitive = true };
-
-        public UserProxyService(HttpClient httpClient)
-        {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        }
+        private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions ?? throw new ArgumentNullException(nameof(jsonOptions), "JsonSerializerOptions cannot be null.");
 
         public async Task CreateUser(User user)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/User", user);
+            var response = await _httpClient.PostAsJsonAsync("api/User", user, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -38,7 +29,7 @@ namespace StockApp.Services
             // A dedicated GetUserByCnpAsync will handle the other case.
             var response = await _httpClient.GetAsync("api/User/current");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<User>(_options) ?? throw new InvalidOperationException("Failed to deserialize user.");
+            return await response.Content.ReadFromJsonAsync<User>(_jsonOptions) ?? throw new InvalidOperationException("Failed to deserialize user.");
         }
 
         public async Task<int> GetCurrentUserGemsAsync(string? userCNP = null)
@@ -52,7 +43,7 @@ namespace StockApp.Services
             // For now, we assume the API uses the authenticated user.
             var response = await _httpClient.GetAsync("api/Store/user-gem-balance");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<int>(_options);
+            return await response.Content.ReadFromJsonAsync<int>(_jsonOptions);
         }
 
         public async Task<User> GetUserByCnpAsync(string cnp)
@@ -64,14 +55,14 @@ namespace StockApp.Services
 
             var response = await _httpClient.GetAsync($"api/User/{cnp}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<User>(_options) ?? throw new InvalidOperationException("Failed to deserialize user.");
+            return await response.Content.ReadFromJsonAsync<User>(_jsonOptions) ?? throw new InvalidOperationException("Failed to deserialize user.");
         }
 
         public async Task<List<User>> GetUsers()
         {
             var response = await _httpClient.GetAsync("api/User");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<User>>(_options) ?? [];
+            return await response.Content.ReadFromJsonAsync<List<User>>(_jsonOptions) ?? [];
         }
 
         public async Task UpdateIsAdminAsync(bool newIsAdmin, string? userCNP = null)
@@ -82,7 +73,7 @@ namespace StockApp.Services
             }
 
             var payload = new { IsAdmin = newIsAdmin };
-            var response = await _httpClient.PutAsJsonAsync($"api/User/{userCNP}/admin-status", payload);
+            var response = await _httpClient.PutAsJsonAsync($"api/User/{userCNP}/admin-status", payload, _jsonOptions);
             response.EnsureSuccessStatusCode();
         }
 
@@ -93,12 +84,12 @@ namespace StockApp.Services
             if (string.IsNullOrEmpty(userCNP))
             {
                 // Update current user
-                response = await _httpClient.PutAsJsonAsync("api/User/current", payload);
+                response = await _httpClient.PutAsJsonAsync("api/User/current", payload, _jsonOptions);
             }
             else
             {
                 // Update user by CNP (typically admin action)
-                response = await _httpClient.PutAsJsonAsync($"api/User/{userCNP}", payload);
+                response = await _httpClient.PutAsJsonAsync($"api/User/{userCNP}", payload, _jsonOptions);
             }
 
             response.EnsureSuccessStatusCode();
@@ -111,7 +102,7 @@ namespace StockApp.Services
             response.EnsureSuccessStatusCode();
 
             // Parse the response - it returns a message with the count of updated users
-            var result = await response.Content.ReadFromJsonAsync<DefaultRoleResponse>(_options);
+            var result = await response.Content.ReadFromJsonAsync<DefaultRoleResponse>(_jsonOptions);
             if (result == null)
             {
                 return 0;
