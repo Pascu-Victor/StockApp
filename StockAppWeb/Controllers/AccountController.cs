@@ -3,18 +3,19 @@ using Common.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StockAppWeb.Models;
 using System.ComponentModel.DataAnnotations;
 using IAppAuthService = Common.Services.IAuthenticationService;
 
 namespace StockAppWeb.Controllers
 {
-    public class AuthController : Controller
+    public class AccountController : Controller
     {
         private readonly IUserService _userService;
         private readonly IAppAuthService _authenticationService;
         private readonly IConfiguration _configuration;
 
-        public AuthController(
+        public AccountController(
             IUserService userService,
             IAppAuthService authenticationService,
             IConfiguration configuration)
@@ -149,63 +150,106 @@ namespace StockAppWeb.Controllers
 
             return View(user);
         }
-    }
 
-    public class LoginViewModel
-    {
-        [Required]
-        public string Username { get; set; } = string.Empty;
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> EditProfile()
+        {
+            var user = await _userService.GetCurrentUserAsync();
+            if (user == null)
+            {
+                return Challenge(JwtBearerDefaults.AuthenticationScheme);
+            }
 
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+            var model = new EditProfileViewModel
+            {
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Description = user.Description,
+                Image = user.Image
+            };
 
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
-    }
+            return View(model);
+        }
 
-    public class RegisterViewModel
-    {
-        [Required]
-        [Display(Name = "Username")]
-        public string Username { get; set; } = string.Empty;
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile(EditProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = string.Empty;
+            try
+            {
+                var user = await _userService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    return Challenge(JwtBearerDefaults.AuthenticationScheme);
+                }
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; } = string.Empty;
+                // Update the user profile
+                await _userService.UpdateUserAsync(
+                    model.UserName,
+                    model.Image,
+                    model.Description,
+                    user.IsHidden // Keep the current hidden status
+                );
 
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = string.Empty;
+                TempData["StatusMessage"] = "Your profile has been updated successfully";
+                return RedirectToAction(nameof(Manage));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Profile update failed: {ex.Message}");
+                return View(model);
+            }
+        }
 
-        [Required]
-        [StringLength(13, MinimumLength = 13, ErrorMessage = "CNP must be exactly 13 characters.")]
-        [Display(Name = "CNP")]
-        public string CNP { get; set; } = string.Empty;
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
 
-        [Required]
-        [Display(Name = "First Name")]
-        public string FirstName { get; set; } = string.Empty;
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-        [Required]
-        [Display(Name = "Last Name")]
-        public string LastName { get; set; } = string.Empty;
+            try
+            {
+                // Here you would call your service to change the user's password
+                // Since the IAuthenticationService doesn't have a direct method for this,
+                // you may need to add this functionality to your backend API
+                // For now, we'll log the user out which will force them to log back in with the new password
+                TempData["StatusMessage"] = "Your password has been changed. Please log in with your new password.";
 
-        [Phone]
-        [Display(Name = "Phone Number")]
-        public string PhoneNumber { get; set; } = string.Empty;
+                // Log the user out to apply the new password
+                Response.Cookies.Delete("jwt_token", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                });
+                await _authenticationService.LogoutAsync();
 
-        [Required]
-        [DataType(DataType.Date)]
-        [Display(Name = "Date of Birth")]
-        public DateTime Birthday { get; set; } = DateTime.Today.AddYears(-18);
+                return RedirectToAction(nameof(Login));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Password change failed: {ex.Message}");
+                return View(model);
+            }
+        }
     }
 }

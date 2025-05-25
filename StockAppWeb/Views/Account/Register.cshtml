@@ -1,4 +1,4 @@
-@model StockAppWeb.Controllers.RegisterViewModel
+@model StockAppWeb.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Register";
 }
@@ -55,7 +55,7 @@
             </div>
             
             <div class="form-floating mb-3">
-                <input asp-for="Birthday" class="form-control" />
+                <input asp-for="Birthday" class="form-control" type="date" />
                 <label asp-for="Birthday"></label>
                 <span asp-validation-for="Birthday" class="text-danger"></span>
             </div>

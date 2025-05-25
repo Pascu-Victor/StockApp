@@ -13,8 +13,8 @@
             <li><a class="dropdown-item" asp-controller="Account" asp-action="Manage">Manage Account</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
-                <form class="form-inline" asp-controller="Auth" asp-action="Logout" method="post">
-                    <button type="submit" class="dropdown-item">Logout</button>
+                <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="dropdown-item">Logout</button>
                 </form>
             </li>
         </ul>
@@ -23,10 +23,10 @@
 else
 {
     <li class="nav-item me-2">
-        <a class="btn btn-outline-primary" asp-controller="Auth" asp-action="Login">Login</a>
+        <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Login">Login</a>
     </li>
     <li class="nav-item">
-        <a class="btn btn-primary text-white" asp-controller="Auth" asp-action="Register">Register</a>
+        <a class="btn btn-primary text-white" asp-controller="Account" asp-action="Register">Register</a>
     </li>
 }
 </ul>

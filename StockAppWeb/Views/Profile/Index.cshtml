@@ -13,7 +13,7 @@
                         @if (Model.IsAuthenticated)
                         {
                             <a asp-controller="Profile" asp-action="Update" class="btn btn-light me-2">Update Profile</a>
-                            <a asp-controller="Auth" asp-action="Logout" class="btn btn-danger">Log out</a>
+                            <a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log out</a>
                         }
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                     @if (!Model.IsAuthenticated)
                     {
                         <div class="alert alert-warning">
-                            <p>You are not logged in. Please <a asp-controller="Auth" asp-action="Login">log in</a> to view your profile.</p>
+                            <p>You are not logged in. Please <a asp-controller="Account" asp-action="Login">log in</a> to view your profile.</p>
                         </div>
                     }
                     else

@@ -9,6 +9,23 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
+                <h4>Profile Picture</h4>
+            </div>
+            <div class="card-body text-center">
+                @if (!string.IsNullOrEmpty(Model.Image))
+                {
+                    <img src="@Model.Image" alt="Profile Image" class="img-fluid rounded-circle mb-3" style="max-width: 150px; max-height: 150px;" />
+                }
+                else
+                {
+                    <div class="profile-image-placeholder rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px; background-color: #f0f0f0; margin: auto;">
+                        <span class="display-4">@(Model.UserName?.FirstOrDefault().ToString().ToUpper() ?? "U")</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header">
                 <h4>Personal Information</h4>
             </div>
             <div class="card-body">
@@ -54,8 +71,8 @@
                 </div>
             </div>
             <div class="card-footer">
-                <a class="btn btn-primary" href="#">Edit Profile</a>
-                <a class="btn btn-outline-primary" href="#">Change Password</a>
+                <a class="btn btn-primary" asp-action="EditProfile" asp-controller="Account">Edit Profile</a>
+                <a class="btn btn-outline-primary" asp-action="ChangePassword" asp-controller="Account">Change Password</a>
             </div>
         </div>
     </div>

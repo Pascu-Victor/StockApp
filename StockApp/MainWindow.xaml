@@ -26,8 +26,8 @@
                     <NavigationViewItem Content="Chat reports" Tag="ChatReports" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
                     <NavigationViewItem Content="Loan requests" Tag="LoanRequest" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
                     <NavigationViewItem Content="Loans" Tag="Loans" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
-                    <NavigationViewItem Content="BillSplit reports" Tag="BillSplitReports" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
-                    <NavigationViewItem Content="Investments" Tag="Investments" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
+                    <!--<NavigationViewItem Content="BillSplit reports" Tag="BillSplitReports" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>-->
+                    <!--<NavigationViewItem Content="Investments" Tag="Investments" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>-->
                     <NavigationViewItem Content="News" Tag="NewsListPage"/>
                     <NavigationViewItem Content="Create Stock" Tag="CreateStockPage" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
                     <NavigationViewItem Content="History" Tag="TransactionLogPage" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
