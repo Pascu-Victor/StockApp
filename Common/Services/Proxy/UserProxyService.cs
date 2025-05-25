@@ -77,10 +77,21 @@ namespace Common.Services.Proxy
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task UpdateUserAsync(string newUsername, string newImage, string newDescription, bool newHidden, string? userCNP = null)
+        public async Task UpdateUserAsync(User user, string? userCNP = null)
         {
-            var payload = new { UserName = newUsername, Image = newImage, Description = newDescription, IsHidden = newHidden };
+            ArgumentNullException.ThrowIfNull(user);
+
+            var payload = new { 
+                UserName = user.UserName, 
+                Image = user.Image, 
+                Description = user.Description, 
+                IsHidden = user.IsHidden,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            };
+
             HttpResponseMessage response;
+            
             if (string.IsNullOrEmpty(userCNP))
             {
                 // Update current user

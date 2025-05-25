@@ -36,25 +36,30 @@
         }
 
         /// <summary>
-        /// Updates the current user's profile with new information.
+        /// Updates the user's profile with new information.
         /// </summary>
-        /// <param name="newUsername"> The new username.</param>
-        /// <param name="newImage"> The new image URL.</param>
-        /// <param name="newDescription"> The new description.</param>
-        /// <param name="newHidden"> Indicates if the user should be hidden.</param>
-        public async Task UpdateUserAsync(string newUsername, string newImage, string newDescription, bool newHidden, string userCNP)
+        /// <param name="user">The user object with updated information.</param>
+        /// <param name="userCNP">The CNP of the user to update.</param>
+        public async Task UpdateUserAsync(User updatedUser, string userCNP)
         {
-            if (string.IsNullOrWhiteSpace(newUsername) || string.IsNullOrWhiteSpace(newImage) || string.IsNullOrWhiteSpace(newDescription))
+            ArgumentNullException.ThrowIfNull(updatedUser);
+            
+            if (string.IsNullOrWhiteSpace(userCNP))
             {
-                throw new ArgumentException("Username, image, and description cannot be empty");
+                throw new ArgumentException("User CNP cannot be empty");
             }
 
-            User user = await this.GetUserByCnpAsync(userCNP) ?? throw new KeyNotFoundException($"User with CNP {userCNP} not found.");
-            user.UserName = newUsername;
-            user.Image = newImage;
-            user.Description = newDescription;
-            user.IsHidden = newHidden;
-            await userRepository.UpdateAsync(user);
+            User existingUser = await this.GetUserByCnpAsync(userCNP) ?? throw new KeyNotFoundException($"User with CNP {userCNP} not found.");
+            
+            // Update only the fields that are allowed to be updated
+            existingUser.UserName = updatedUser.UserName;
+            existingUser.Image = updatedUser.Image;
+            existingUser.Description = updatedUser.Description;
+            existingUser.IsHidden = updatedUser.IsHidden;
+            existingUser.Email = updatedUser.Email;
+            existingUser.PhoneNumber = updatedUser.PhoneNumber;
+            
+            await userRepository.UpdateAsync(existingUser);
         }
 
         /// <summary>

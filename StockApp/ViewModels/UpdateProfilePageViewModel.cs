@@ -88,7 +88,26 @@
         {
             // TODO: Validate inputs (e.g., non-null, length constraints)
             // FIXME: Consider handling exceptions from service to provide user feedback
-            await this.userService.UpdateUserAsync(newUsername, newImage, newDescription, newHidden); // Inline: perform bulk update
+
+            // Get current user to maintain other properties
+            var currentUser = await this.userService.GetCurrentUserAsync();
+
+            // Create an updated user object with the new values
+            var updatedUser = new User
+            {
+                UserName = newUsername,
+                Image = newImage,
+                Description = newDescription,
+                IsHidden = newHidden,
+                // Maintain other properties from current user
+                Email = currentUser.Email,
+                PhoneNumber = currentUser.PhoneNumber,
+                FirstName = currentUser.FirstName,
+                LastName = currentUser.LastName,
+                Birthday = currentUser.Birthday
+            };
+
+            await this.userService.UpdateUserAsync(updatedUser);
         }
 
         /// <summary>

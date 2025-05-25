@@ -74,24 +74,48 @@ namespace StockApp.Service.Tests
         [TestMethod]
         public async Task UpdateUserAsync_HappyCase_UpdatesUser()
         {
-            var user = new User { CNP = "123", UserName = "Old", Image = "old.png", Description = "old", IsHidden = false };
-            _mockRepo.Setup(r => r.GetByCnpAsync("123")).ReturnsAsync(user);
+            var existingUser = new User { CNP = "123", UserName = "Old", Image = "old.png", Description = "old", IsHidden = false };
+            _mockRepo.Setup(r => r.GetByCnpAsync("123")).ReturnsAsync(existingUser);
             _mockRepo.Setup(r => r.UpdateAsync(It.IsAny<User>())).Returns(Task.FromResult(true));
-            await _service.UpdateUserAsync("New", "new.png", "new desc", true, "123");
-            _mockRepo.Verify(r => r.UpdateAsync(It.Is<User>(u => u.UserName == "New" && u.Image == "new.png" && u.Description == "new desc" && u.IsHidden)), Times.Once);
+            
+            var updatedUser = new User
+            {
+                UserName = "New",
+                Image = "new.png",
+                Description = "new desc",
+                IsHidden = true,
+                Email = "test@example.com",
+                PhoneNumber = "1234567890"
+            };
+            
+            await _service.UpdateUserAsync(updatedUser, "123");
+            
+            _mockRepo.Verify(r => r.UpdateAsync(It.Is<User>(u => 
+                u.UserName == "New" && 
+                u.Image == "new.png" && 
+                u.Description == "new desc" && 
+                u.IsHidden == true)), Times.Once);
         }
 
         [TestMethod]
-        public async Task UpdateUserAsync_EmptyFields_ThrowsArgumentException()
+        public async Task UpdateUserAsync_NullUser_ThrowsArgumentNullException()
         {
-            await Assert.ThrowsExactlyAsync<ArgumentException>(async () => await _service.UpdateUserAsync("", "", "", true, "123"));
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await _service.UpdateUserAsync(null, "123"));
         }
 
         [TestMethod]
         public async Task UpdateUserAsync_UserNotFound_ThrowsKeyNotFoundException()
         {
+            var updatedUser = new User
+            {
+                UserName = "New",
+                Image = "new.png",
+                Description = "new desc",
+                IsHidden = true
+            };
+            
             _mockRepo.Setup(r => r.GetByCnpAsync("123")).ReturnsAsync((User)null);
-            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _service.UpdateUserAsync("New", "new.png", "new desc", true, "123"));
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(async () => await _service.UpdateUserAsync(updatedUser, "123"));
         }
 
         [TestMethod]

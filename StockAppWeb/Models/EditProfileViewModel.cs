@@ -18,9 +18,20 @@ namespace StockAppWeb.Models
         public string PhoneNumber { get; set; } = string.Empty;
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } // Made nullable
 
         [Url(ErrorMessage = "Please enter a valid URL for the profile image")]
-        public string Image { get; set; } = string.Empty;
+        public string? Image { get; set; } // Made nullable
+
+        [Required(ErrorMessage = "First name is required")]
+        [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Last name is required")]
+        [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
+        public string LastName { get; set; } = string.Empty;
+
+        [DataType(DataType.Date)]
+        public DateTime Birthday { get; set; }
     }
 }

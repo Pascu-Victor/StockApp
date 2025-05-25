@@ -13,6 +13,8 @@ namespace BankApi.Controllers
         public string Image { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public bool IsHidden { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 
     public class UpdateAdminStatusDto
@@ -146,7 +148,18 @@ namespace BankApi.Controllers
             try
             {
                 var userCnp = await GetCurrentUserCnp();
-                await _userService.UpdateUserAsync(dto.UserName, dto.Image, dto.Description, dto.IsHidden, userCnp);
+                // Create a User object with updated fields
+                var user = new User
+                {
+                    UserName = dto.UserName,
+                    Image = dto.Image,
+                    Description = dto.Description,
+                    IsHidden = dto.IsHidden,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber
+                };
+
+                await _userService.UpdateUserAsync(user, userCnp);
                 return NoContent(); // Or Ok(updatedUser) if the service returns the updated user.
             }
             catch (UnauthorizedAccessException)
@@ -173,7 +186,18 @@ namespace BankApi.Controllers
         {
             try
             {
-                await _userService.UpdateUserAsync(dto.UserName, dto.Image, dto.Description, dto.IsHidden, cnp);
+                // Create a User object with updated fields
+                var user = new User
+                {
+                    UserName = dto.UserName,
+                    Image = dto.Image,
+                    Description = dto.Description,
+                    IsHidden = dto.IsHidden,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber
+                };
+
+                await _userService.UpdateUserAsync(user, cnp);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)

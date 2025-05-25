@@ -14,7 +14,7 @@
 
         Task UpdateIsAdminAsync(bool newIsAdmin, string? userCNP = null);
 
-        Task UpdateUserAsync(string newUsername, string newImage, string newDescription, bool newHidden, string? userCNP = null);
+        Task UpdateUserAsync(User user, string? userCNP = null);
 
         Task<User> GetCurrentUserAsync(string? userCNP = null);
 

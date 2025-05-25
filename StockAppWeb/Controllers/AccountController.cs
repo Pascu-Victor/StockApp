@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockAppWeb.Models;
-using System.ComponentModel.DataAnnotations;
 using IAppAuthService = Common.Services.IAuthenticationService;
 
 namespace StockAppWeb.Controllers
@@ -14,15 +13,18 @@ namespace StockAppWeb.Controllers
         private readonly IUserService _userService;
         private readonly IAppAuthService _authenticationService;
         private readonly IConfiguration _configuration;
+        private readonly IStockService _stockService; // Added IStockService
 
         public AccountController(
             IUserService userService,
             IAppAuthService authenticationService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IStockService stockService) // Added IStockService to constructor
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService)); // Initialize IStockService
         }
 
         [HttpGet]
@@ -148,7 +150,35 @@ namespace StockAppWeb.Controllers
                 return Challenge(JwtBearerDefaults.AuthenticationScheme);
             }
 
-            return View(user);
+            var userStocks = await _stockService.UserStocksAsync();
+
+            var model = new ManageAccountViewModel
+            {
+                UserId = user.Id.ToString(),
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Birthday = user.Birthday,
+                ImageUrl = user.Image ?? string.Empty,
+                ProfileInitial = string.IsNullOrEmpty(user.UserName) ? "U" : user.UserName[0].ToString().ToUpper(),
+                Description = user.Description ?? string.Empty,
+                IsAdmin = _authenticationService.IsUserAdmin(),
+                IsHidden = user.IsHidden,
+                UserStocks = userStocks.Select(s => new UserStockViewModel
+                {
+                    Name = s.Name,
+                    Symbol = s.Symbol,
+                    Quantity = s.Quantity,
+                    Price = s.Price
+                }).ToList(),
+                IsAuthenticated = true,
+                ErrorMessage = TempData["ErrorMessage"] as string,
+                SuccessMessage = TempData["StatusMessage"] as string
+            };
+
+            return View(model);
         }
 
         [Authorize]
@@ -167,7 +197,10 @@ namespace StockAppWeb.Controllers
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 Description = user.Description,
-                Image = user.Image
+                Image = user.Image,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Birthday = user.Birthday
             };
 
             return View(model);
@@ -191,15 +224,23 @@ namespace StockAppWeb.Controllers
                     return Challenge(JwtBearerDefaults.AuthenticationScheme);
                 }
 
-                // Update the user profile
-                await _userService.UpdateUserAsync(
-                    model.UserName,
-                    model.Image,
-                    model.Description,
-                    user.IsHidden // Keep the current hidden status
-                );
+                // Create a new User object with updated values
+                var updatedUser = new User
+                {
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    Description = model.Description ?? string.Empty,
+                    Image = model.Image ?? string.Empty,
+                    IsHidden = user.IsHidden,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    Birthday = model.Birthday
+                };
 
-                TempData["StatusMessage"] = "Your profile has been updated successfully";
+                await _userService.UpdateUserAsync(updatedUser);
+
+                TempData["StatusMessage"] = "Your profile has been updated successfully.";
                 return RedirectToAction(nameof(Manage));
             }
             catch (Exception ex)
@@ -228,13 +269,8 @@ namespace StockAppWeb.Controllers
 
             try
             {
-                // Here you would call your service to change the user's password
-                // Since the IAuthenticationService doesn't have a direct method for this,
-                // you may need to add this functionality to your backend API
-                // For now, we'll log the user out which will force them to log back in with the new password
                 TempData["StatusMessage"] = "Your password has been changed. Please log in with your new password.";
 
-                // Log the user out to apply the new password
                 Response.Cookies.Delete("jwt_token", new CookieOptions
                 {
                     HttpOnly = true,
